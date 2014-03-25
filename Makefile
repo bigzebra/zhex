@@ -15,13 +15,12 @@
 #     AUTHOR => [q[Double Z <zacharyz@gmail.com>]]
 #     BUILD_REQUIRES => { Test::More=>q[0] }
 #     CONFIGURE_REQUIRES => { ExtUtils::MakeMaker=>q[0] }
-#     INST_SCRIPT => q[zhexsh.pl]
 #     LICENSE => q[Artistic_2_0]
 #     MAKE => q[dmake]
 #     MIN_PERL_VERSION => q[5.006]
 #     NAME => q[ZHex]
 #     PL_FILES => {  }
-#     PREREQ_PM => { Test::More=>q[0], Win32::Console=>q[0], Getopt::Long=>q[0], Time::HiRes=>q[0] }
+#     PREREQ_PM => { Win32::Console=>q[0], Time::HiRes=>q[0], Test::More=>q[0], Getopt::Long=>q[0] }
 #     TEST_REQUIRES => {  }
 #     VERSION_FROM => q[lib/ZHex.pm]
 #     clean => { FILES=>q[ZHex-* t/test.txt] }
@@ -76,7 +75,7 @@ XS_VERSION = 0.01
 XS_VERSION_MACRO = XS_VERSION
 XS_DEFINE_VERSION = -D$(XS_VERSION_MACRO)=\"$(XS_VERSION)\"
 INST_ARCHLIB = blib\arch
-INST_SCRIPT = zhexsh.pl
+INST_SCRIPT = blib\script
 INST_BIN = blib\bin
 INST_LIB = blib\lib
 INST_MAN1DIR = blib\man1
@@ -596,7 +595,7 @@ realclean_subdirs :
 # Delete temporary files (via clean) and also delete dist files
 realclean purge ::  clean realclean_subdirs
 	- $(RM_F) \
-	  $(FIRST_MAKEFILE) $(MAKEFILE_OLD) 
+	  $(MAKEFILE_OLD) $(FIRST_MAKEFILE) 
 	- $(RM_RF) \
 	  $(DISTVNAME) 
 

@@ -1,0 +1,9 @@
+/blib/
+/lib/t.txt
+/t/test.txt
+/Makefile
+/Makefile.old
+/MANIFEST.bak
+/META.yml
+/META.json
+/MYMETA.*

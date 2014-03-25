@@ -24,8 +24,7 @@ WriteMakefile(
         'Time::HiRes'    => 0
     },
     dist  => { COMPRESS => 'gzip -9f', SUFFIX => 'gz', },
-    clean => { FILES => 'ZHex-* t/test.txt' },
-    'INST_SCRIPT' => 'zhexsh.pl',
+    clean => { FILES => 'ZHex-* t/test.txt' }
 );
 
 

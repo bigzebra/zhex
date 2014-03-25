@@ -28,9 +28,11 @@ lib/ZHex/Event.pm
 lib/ZHex/EventLoop.pm
 lib/ZHex/File.pm
 lib/zhexsh.pl
+Makefile
 Makefile.PL
 MANIFEST			This list of files
-MANIFEST.bak
+MYMETA.json
+MYMETA.yml
 README
 README.md
 t/00-load.t
