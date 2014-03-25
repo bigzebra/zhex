@@ -1,0 +1,5 @@
+make_manifest.pl
+MANIFEST.SKIP
+MANIFEST.BAK
+lib/t.txt
+lib/t/test.txt

@@ -1,0 +1,160 @@
+﻿#!/usr/bin/perl
+
+if (-f $ARGV[0])	{
+
+	# User provided argument is a file
+}
+else	{
+
+	# User provided argument is not a file
+
+	die "Provide a filename w/ path as first argument.\n";
+}
+
+# stat()
+#
+#   Returns a 13-element list giving the status info for a file,
+#   either the file opened via FILEHANDLE or DIRHANDLE, or named by
+#   EXPR. If EXPR is omitted, it stats $_ (not "_"!). Returns the
+#   empty list if "stat" fails. Typically used as follows:
+#
+#     ($dev,$ino,$mode,$nlink,$uid,$gid,$rdev,$size,
+#        $atime,$mtime,$ctime,$blksize,$blocks)
+#            = stat($filename);
+#
+#   Not all fields are supported on all filesystem types. Here are
+#   the meanings of the fields:
+#
+#      0 dev      device number of filesystem
+#      1 ino      inode number
+#      2 mode     file mode  (type and permissions)
+#      3 nlink    number of (hard) links to the file
+#      4 uid      numeric user ID of file's owner
+#      5 gid      numeric group ID of file's owner
+#      6 rdev     the device identifier (special files only)
+#      7 size     total size of file, in bytes
+#      8 atime    last access time in seconds since the epoch
+#      9 mtime    last modify time in seconds since the epoch
+#     10 ctime    inode change time in seconds since the epoch (*)
+#     11 blksize  preferred block size for file system I/O
+#     12 blocks   actual number of blocks allocated
+
+($dev, $ino, $mode, $nlink, $uid, $gid, $rdev, $size, 
+ $atime, $mtime, $ctime, $blksize, $blocks) = stat ($ARGV[0]);
+
+print 
+  "file:      " . $ARGV[0] . "\n" . 
+  "  dev:     " . $dev     . "\n" . 
+  "  ino:     " . $ino     . "\n" .  
+  "  mode:    " . $mode    . "\n" . 
+  "  nlink:   " . $nlink   . "\n" . 
+  "  uid:     " . $uid     . "\n" . 
+  "  gid:     " . $gid     . "\n" . 
+  "  rdev:    " . $rdev    . "\n" . 
+  "  size:    " . $size    . "\n" . 
+  "  atime:   " . $atime   . "\n" . 
+  "  mtime:   " . $mtime   . "\n" . 
+  "  ctime:   " . $ctime   . "\n" . 
+  "  blksize: " . $blksize . "\n" . 
+  "  blocks:  " . $blocks  . "\n\n";
+
+undef $/; # Turn off record seperator for read (file-at-once)
+open my $fh, $ARGV[0] or die "Can't open file $file $!\n";
+binmode $fh;
+my $data = <$fh>;
+close $fh;
+
+# Convert data to hex form
+
+my $first3chars = unpack 'H6', $data;
+if ($first3chars eq "efbbbf")	{
+
+	$hex_offset = $hex_offset + 3;
+}
+else	{
+
+	print "NO-I!!!, $first3chars\n\n";
+	exit (0);
+}
+
+my $hex = unpack 'H*', $data;
+my $hex_len = length ($hex);
+
+my $hex_offset       = 0;
+my $data_offset      = 0;
+my $hex_substr_len   = 8;
+my $data_substr_len  = 4;
+
+my $hdr = 
+"-Offset-(Hex)---------  -Offset-(Decimal)-  -Word--#1- -Word--#2- -Word--#3- -Word--#4-\n" . 
+"____First_->_Last_____  __First_->_Last___  _(4_Byte)_ _(4_Byte)_ _(4_Byte)_ _(4_Byte)_\n";
+
+print $hdr;
+
+while ($hex_offset < $hex_len)	{
+
+	# substr (EXPR, OFFSET, LENGTH) 
+
+	my $hex_substr_word1 = substr ($hex, $hex_offset + ($hex_substr_len * 0), $hex_substr_len);
+
+	my ($hex_chr1, $hex_chr2, $hex_chr3, $hex_chr4) = 
+	  (  "0x" . substr ($hex, ($hex_offset + 0), 2), 
+	     "0x" . substr ($hex, ($hex_offset + 2), 2), 
+	     "0x" . substr ($hex, ($hex_offset + 4), 2), 
+	     "0x" . substr ($hex, ($hex_offset + 6), 2)  );
+
+	my ($data_chr1, $data_chr2, $data_chr3, $data_chr4) = 
+	  (  pack ("W4", $hex_chr1), 
+	     pack ("W4", $hex_chr2), 
+	     pack ("W4", $hex_chr3), 
+	     pack ("W4", $hex_chr4)  );
+	
+	my ($unicode_chr1, $unicode_chr2, $unicode_chr3, $unicode_chr4);
+
+	if ($data_chr1 =~ /[\x30-\x39]|[\x41-\x5a]|[\x61-\x7a]/)	{ 
+
+		$unicode_chr1 = $data_chr1;
+	}
+	else	{
+
+		$unicode_chr1 = $hex_chr1;
+	}
+		
+	# 0xefbbbf30  0x31323334  0x35363738  0x39616263
+	# 0x64656667  0x68696a6b  0x6c6d6e6f  0x70717273
+	# 0x74757677  0x78797a41  0x42434445  0x46474849
+	# 0x4a4b4c4d  0x4e4f5051  0x52535455  0x56575859
+	# 0x5a214023  0x24255e26  0x2a28295f  0x2b2d3d5b
+	# 0x5d7b7d3b  0x3a27223c  0x3e2c2e2f  0x3f607e
+
+	my $hex_substr_word2 = substr ($hex, $hex_offset + ($hex_substr_len * 1), $hex_substr_len);
+	my $hex_substr_word3 = substr ($hex, $hex_offset + ($hex_substr_len * 2), $hex_substr_len);
+	my $hex_substr_word4 = substr ($hex, $hex_offset + ($hex_substr_len * 3), $hex_substr_len);
+
+	$fmt_offset_start_hex  = sprintf ("%08x",  $data_offset);
+	$fmt_offset_finish_hex = sprintf ("%08x", ($data_offset + ($data_substr_len * 4)));
+	$fmt_offset_start_dec  = sprintf ("%08d",  $data_offset);
+	$fmt_offset_finish_dec = sprintf ("%08d", ($data_offset + ($data_substr_len * 4)));
+
+	print 
+	  "0x" . $fmt_offset_start_hex  . 
+	  "->" . 
+	  "0x" . $fmt_offset_finish_hex . 
+	  " " x 2 . 
+	  $fmt_offset_start_dec  . 
+	  "->" . 
+	  $fmt_offset_finish_dec . 
+	  " " x 2 . 
+	  "0x" . $hex_substr_word1  . " " x 1 . 
+	  "0x" . $hex_substr_word2  . " " x 1 . 
+	  "0x" . $hex_substr_word3  . " " x 1 . 
+	  "0x" . $hex_substr_word4  . " " x 1 . 
+	  "HEX CHR 1: [" . $hex_chr1 . "] DATA CHR 1: [" . $data_chr1 . "]\n";
+
+	$hex_offset  += ($hex_substr_len  * 4);
+	$data_offset += ($data_substr_len * 4);
+}
+
+# print $hex;
+
+exit (0);

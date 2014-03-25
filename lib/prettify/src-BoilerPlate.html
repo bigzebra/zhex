@@ -1,0 +1,290 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="UTF-8">
+	<title>ZHex - ZebraHex Editor v0.01: Project Source Code</title>
+	<link rel="stylesheet" type="text/css" href="desert.css"/>
+</head>
+<body>
+	<h2>ZHex - ZebraHex Editor v0.01</h2>
+	<p>Source code file: ../ZHex/BoilerPlate.pm</p>
+	<pre class="prettyprint"><span class="com">#!/usr/bin/perl
+</span><span class="pln">
+</span><span class="lit">package</span><span class="pln"> </span><span class="atn">ZHex::BoilerPlate</span><span class="pun">;</span><span class="pln">
+</span><span class="pln">
+</span><span class="kwd">use</span><span class="pln"> </span><span class="atv">5.006</span><span class="pun">;</span><span class="pln">
+</span><span class="kwd">use</span><span class="pln"> </span><span class="kwd">strict</span><span class="pun">;</span><span class="pln">
+</span><span class="kwd">use</span><span class="pln"> </span><span class="kwd">warnings</span><span class="pln"> </span><span class="str">FATAL</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;all&#39;</span><span class="pun">;</span><span class="pln">
+</span><span class="pln">
+</span><span class="kwd">BEGIN</span><span class="pln"> </span><span class="pun">{</span><span class="pln"> </span><span class="kwd">require</span><span class="pln"> </span><span class="pln">Exporter</span><span class="pun">;</span><span class="pln">
+</span><span class="pln">	</span><span class="kwd">our</span><span class="pln"> </span><span class="typ">$VERS</span><span class="pln">      </span><span class="pun">=</span><span class="pln"> </span><span class="atv">0.01</span><span class="pun">;</span><span class="pln">
+</span><span class="pln">	</span><span class="kwd">our</span><span class="pln"> </span><span class="typ">$VERSION</span><span class="pln">   </span><span class="pun">=</span><span class="pln"> </span><span class="typ">$VERS</span><span class="pun">;</span><span class="pln">
+</span><span class="pln">	</span><span class="kwd">our</span><span class="pln"> </span><span class="typ">@ISA</span><span class="pln">       </span><span class="pun">=</span><span class="pln"> </span><span class="str">qw(Exporter)</span><span class="pun">;</span><span class="pln">
+</span><span class="pln">	</span><span class="kwd">our</span><span class="pln"> </span><span class="typ">@EXPORT</span><span class="pln">    </span><span class="pun">=</span><span class="pln"> </span><span class="str">qw()</span><span class="pun">;</span><span class="pln">
+</span><span class="pln">	</span><span class="kwd">our</span><span class="pln"> </span><span class="typ">@EXPORT_OK</span><span class="pln"> </span><span class="pun">=</span><span class="pln"> </span><span class="str">qw(new 
+                            init 
+                            obj_init
+                            $VERS)</span><span class="pun">;</span><span class="pln">
+</span><span class="pun">}</span><span class="pln">
+</span><span class="pln">
+</span><span class="com"># Functions: Start-up/initialization.
+</span><span class="com">#
+</span><span class="com">#   _____________	___________
+</span><span class="com">#   Function Name	Description
+</span><span class="com">#   _____________	___________
+</span><span class="com">#   new()		Object constructor method
+</span><span class="com">#   init()		Global variable declarations
+</span><span class="com">#   obj_init()		Takes arguement: reference to hash w/ key/value 
+</span><span class="com">#   			pairs in the form: 
+</span><span class="com">#   			    object_name =&gt; object_reference.
+</span><span class="com">#   			Evaluates argument to make sure that key/value 
+</span><span class="com">#   			pairs are defined, w/ value which refers to 
+</span><span class="com">#   			correct type of object.
+</span><span class="com">#                       Stores hash ref in:  $self-&gt;{&#39;obj&#39;}.
+</span><span class="pln">
+</span><span class="lit">sub</span><span class="pln"> </span><span class="typ">new</span><span class="pln"> </span><span class="pun">{</span><span class="pln">
+</span><span class="pln">
+	</span><span class="kwd">my</span><span class="pln"> </span><span class="typ">$class</span><span class="pln"> </span><span class="pun">=</span><span class="pln"> </span><span class="kwd">shift</span><span class="pun">;</span><span class="pln">
+</span><span class="pln">
+	</span><span class="kwd">my</span><span class="pln"> </span><span class="typ">$self</span><span class="pln"> </span><span class="pun">=</span><span class="pln"> </span><span class="pun">{</span><span class="pun">}</span><span class="pun">;</span><span class="pln">
+</span><span class="pln">	</span><span class="kwd">bless</span><span class="pln"> </span><span class="typ">$self</span><span class="pun">,</span><span class="pln"> </span><span class="typ">$class</span><span class="pun">;</span><span class="pln">
+</span><span class="pln">	</span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="typ">init</span><span class="pln"> </span><span class="pun">(</span><span class="typ">@_</span><span class="pun">)</span><span class="pun">;</span><span class="pln">
+</span><span class="pln">
+	</span><span class="kwd">return</span><span class="pln"> </span><span class="pun">(</span><span class="typ">$self</span><span class="pun">)</span><span class="pun">;</span><span class="pln">
+</span><span class="pun">}</span><span class="pln">
+</span><span class="pln">
+</span><span class="com"># Function stub: init() function (used by modules with nothing to initialize).
+</span><span class="pln">
+</span><span class="lit">sub</span><span class="pln"> </span><span class="typ">init</span><span class="pln"> </span><span class="pun">{</span><span class="pln">
+</span><span class="pln">
+	</span><span class="kwd">my</span><span class="pln"> </span><span class="typ">$self</span><span class="pln"> </span><span class="pun">=</span><span class="pln"> </span><span class="kwd">shift</span><span class="pun">;</span><span class="pln">
+</span><span class="pln">
+	</span><span class="kwd">return</span><span class="pln"> </span><span class="pun">(</span><span class="atv">1</span><span class="pun">)</span><span class="pun">;</span><span class="pln">
+</span><span class="pun">}</span><span class="pln">
+</span><span class="pln">
+</span><span class="com"># Object hash initialization function: used by all modules.
+</span><span class="pln">
+</span><span class="lit">sub</span><span class="pln"> </span><span class="typ">obj_init</span><span class="pln"> </span><span class="pun">{</span><span class="pln">
+</span><span class="pln">
+	</span><span class="kwd">my</span><span class="pln"> </span><span class="typ">$self</span><span class="pln"> </span><span class="pun">=</span><span class="pln"> </span><span class="kwd">shift</span><span class="pun">;</span><span class="pln">
+</span><span class="pln">	</span><span class="kwd">my</span><span class="pln"> </span><span class="typ">$arg</span><span class="pln">  </span><span class="pun">=</span><span class="pln"> </span><span class="kwd">shift</span><span class="pun">;</span><span class="pln">
+</span><span class="pln">
+	</span><span class="kwd">if</span><span class="pln"> </span><span class="pun">(</span><span class="pun">!</span><span class="pln"> </span><span class="kwd">defined</span><span class="pln"> </span><span class="typ">$arg</span><span class="pln"> </span><span class="pun">||</span><span class="pln"> 
+</span><span class="pln">	      </span><span class="pun">!</span><span class="pln"> </span><span class="pun">(</span><span class="kwd">ref</span><span class="pln"> </span><span class="pun">(</span><span class="typ">$arg</span><span class="pun">)</span><span class="pln"> </span><span class="pun">eq</span><span class="pln"> </span><span class="str">&#39;HASH&#39;</span><span class="pun">)</span><span class="pun">)</span><span class="pln"> 
+</span><span class="pln">		</span><span class="pun">{</span><span class="pln"> </span><span class="kwd">die</span><span class="pln"> </span><span class="str">&quot;Call to obj_init() failed, argument must be hash reference&quot;</span><span class="pun">;</span><span class="pln"> </span><span class="pun">}</span><span class="pln">
+</span><span class="pln">
+	</span><span class="kwd">if</span><span class="pln"> </span><span class="pun">(</span><span class="pun">!</span><span class="pln"> </span><span class="kwd">exists</span><span class="pln">  </span><span class="typ">$arg</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;obj&#39;</span><span class="pun">}</span><span class="pln"> </span><span class="pun">||</span><span class="pln"> 
+</span><span class="pln">	    </span><span class="pun">!</span><span class="pln"> </span><span class="kwd">defined</span><span class="pln"> </span><span class="typ">$arg</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;obj&#39;</span><span class="pun">}</span><span class="pln"> </span><span class="pun">||</span><span class="pln"> 
+</span><span class="pln">	      </span><span class="pun">!</span><span class="pln"> </span><span class="pun">(</span><span class="kwd">ref</span><span class="pln"> </span><span class="pun">(</span><span class="typ">$arg</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;obj&#39;</span><span class="pun">}</span><span class="pun">)</span><span class="pln"> </span><span class="pun">eq</span><span class="pln"> </span><span class="str">&#39;HASH&#39;</span><span class="pun">)</span><span class="pun">)</span><span class="pln"> 
+</span><span class="pln">		</span><span class="pun">{</span><span class="pln"> </span><span class="kwd">die</span><span class="pln"> </span><span class="str">&quot;Call to obj_init() failed, value associated w/ key &#39;obj&#39; must be hash reference&quot;</span><span class="pun">;</span><span class="pln"> </span><span class="pun">}</span><span class="pln">
+</span><span class="pln">
+</span><span class="com">	# Verify that obj hash defines correct key/value pairs:
+</span><span class="com">	#
+</span><span class="com">	#   Hash Key	Perl Module	Package
+</span><span class="com">	#   ________	___________	_______
+</span><span class="com">	#   charmap	CharMap.pm	ZHex::CharMap
+</span><span class="com">	#   console	Console.pm	ZHex::Console
+</span><span class="com">	#   cursor	Cursor.pm	ZHex::Cursor
+</span><span class="com">	#   debug	Debug.pm	ZHex::Debug
+</span><span class="com">	#   display	Display.pm	ZHex::Display
+</span><span class="com">	#   editor	Editor.pm	ZHex::Editor
+</span><span class="com">	#   event	Event.pm	ZHex::Event
+</span><span class="com">	#   eventloop	EventLoop.pm	ZHex::EventLoop
+</span><span class="com">	#   file	File.pm		ZHex::File
+</span><span class="pln">
+	</span><span class="kwd">if</span><span class="pln"> </span><span class="pun">(</span><span class="pun">!</span><span class="pln"> </span><span class="kwd">exists</span><span class="pln">  </span><span class="typ">$arg</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;obj&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;charmap&#39;</span><span class="pun">}</span><span class="pln"> </span><span class="pun">||</span><span class="pln"> 
+</span><span class="pln">	    </span><span class="pun">!</span><span class="pln"> </span><span class="kwd">defined</span><span class="pln"> </span><span class="typ">$arg</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;obj&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;charmap&#39;</span><span class="pun">}</span><span class="pln"> </span><span class="pun">||</span><span class="pln"> 
+</span><span class="pln">	      </span><span class="pun">!</span><span class="pln"> </span><span class="pun">(</span><span class="kwd">ref</span><span class="pln"> </span><span class="pun">(</span><span class="typ">$arg</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;obj&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;charmap&#39;</span><span class="pun">}</span><span class="pun">)</span><span class="pln"> </span><span class="pun">eq</span><span class="pln"> </span><span class="str">&#39;ZHex::CharMap&#39;</span><span class="pun">)</span><span class="pln"> </span><span class="pun">||</span><span class="pln"> 
+</span><span class="pln">
+	    </span><span class="pun">!</span><span class="pln"> </span><span class="kwd">exists</span><span class="pln">  </span><span class="typ">$arg</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;obj&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;console&#39;</span><span class="pun">}</span><span class="pln"> </span><span class="pun">||</span><span class="pln"> 
+</span><span class="pln">	    </span><span class="pun">!</span><span class="pln"> </span><span class="kwd">defined</span><span class="pln"> </span><span class="typ">$arg</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;obj&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;console&#39;</span><span class="pun">}</span><span class="pln"> </span><span class="pun">||</span><span class="pln"> 
+</span><span class="pln">	      </span><span class="pun">!</span><span class="pln"> </span><span class="pun">(</span><span class="kwd">ref</span><span class="pln"> </span><span class="pun">(</span><span class="typ">$arg</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;obj&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;console&#39;</span><span class="pun">}</span><span class="pun">)</span><span class="pln"> </span><span class="pun">eq</span><span class="pln"> </span><span class="str">&#39;ZHex::Console&#39;</span><span class="pun">)</span><span class="pln"> </span><span class="pun">||</span><span class="pln"> 
+</span><span class="pln">
+	    </span><span class="pun">!</span><span class="pln"> </span><span class="kwd">exists</span><span class="pln">  </span><span class="typ">$arg</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;obj&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;cursor&#39;</span><span class="pun">}</span><span class="pln"> </span><span class="pun">||</span><span class="pln"> 
+</span><span class="pln">	    </span><span class="pun">!</span><span class="pln"> </span><span class="kwd">defined</span><span class="pln"> </span><span class="typ">$arg</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;obj&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;cursor&#39;</span><span class="pun">}</span><span class="pln"> </span><span class="pun">||</span><span class="pln"> 
+</span><span class="pln">	      </span><span class="pun">!</span><span class="pln"> </span><span class="pun">(</span><span class="kwd">ref</span><span class="pln"> </span><span class="pun">(</span><span class="typ">$arg</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;obj&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;cursor&#39;</span><span class="pun">}</span><span class="pun">)</span><span class="pln"> </span><span class="pun">eq</span><span class="pln"> </span><span class="str">&#39;ZHex::Cursor&#39;</span><span class="pun">)</span><span class="pln"> </span><span class="pun">||</span><span class="pln"> 
+</span><span class="pln">
+	    </span><span class="pun">!</span><span class="pln"> </span><span class="kwd">exists</span><span class="pln">  </span><span class="typ">$arg</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;obj&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;debug&#39;</span><span class="pun">}</span><span class="pln"> </span><span class="pun">||</span><span class="pln"> 
+</span><span class="pln">	    </span><span class="pun">!</span><span class="pln"> </span><span class="kwd">defined</span><span class="pln"> </span><span class="typ">$arg</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;obj&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;debug&#39;</span><span class="pun">}</span><span class="pln"> </span><span class="pun">||</span><span class="pln"> 
+</span><span class="pln">	      </span><span class="pun">!</span><span class="pln"> </span><span class="pun">(</span><span class="kwd">ref</span><span class="pln"> </span><span class="pun">(</span><span class="typ">$arg</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;obj&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;debug&#39;</span><span class="pun">}</span><span class="pun">)</span><span class="pln"> </span><span class="pun">eq</span><span class="pln"> </span><span class="str">&#39;ZHex::Debug&#39;</span><span class="pun">)</span><span class="pln"> </span><span class="pun">||</span><span class="pln"> 
+</span><span class="pln">
+	    </span><span class="pun">!</span><span class="pln"> </span><span class="kwd">exists</span><span class="pln">  </span><span class="typ">$arg</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;obj&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;display&#39;</span><span class="pun">}</span><span class="pln"> </span><span class="pun">||</span><span class="pln"> 
+</span><span class="pln">	    </span><span class="pun">!</span><span class="pln"> </span><span class="kwd">defined</span><span class="pln"> </span><span class="typ">$arg</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;obj&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;display&#39;</span><span class="pun">}</span><span class="pln"> </span><span class="pun">||</span><span class="pln"> 
+</span><span class="pln">	      </span><span class="pun">!</span><span class="pln"> </span><span class="pun">(</span><span class="kwd">ref</span><span class="pln"> </span><span class="pun">(</span><span class="typ">$arg</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;obj&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;display&#39;</span><span class="pun">}</span><span class="pun">)</span><span class="pln"> </span><span class="pun">eq</span><span class="pln"> </span><span class="str">&#39;ZHex::Display&#39;</span><span class="pun">)</span><span class="pln"> </span><span class="pun">||</span><span class="pln"> 
+</span><span class="pln">
+	    </span><span class="pun">!</span><span class="pln"> </span><span class="kwd">exists</span><span class="pln">  </span><span class="typ">$arg</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;obj&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;editor&#39;</span><span class="pun">}</span><span class="pln"> </span><span class="pun">||</span><span class="pln"> 
+</span><span class="pln">	    </span><span class="pun">!</span><span class="pln"> </span><span class="kwd">defined</span><span class="pln"> </span><span class="typ">$arg</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;obj&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;editor&#39;</span><span class="pun">}</span><span class="pln"> </span><span class="pun">||</span><span class="pln"> 
+</span><span class="pln">	      </span><span class="pun">!</span><span class="pln"> </span><span class="pun">(</span><span class="kwd">ref</span><span class="pln"> </span><span class="pun">(</span><span class="typ">$arg</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;obj&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;editor&#39;</span><span class="pun">}</span><span class="pun">)</span><span class="pln"> </span><span class="pun">eq</span><span class="pln"> </span><span class="str">&#39;ZHex::Editor&#39;</span><span class="pun">)</span><span class="pln"> </span><span class="pun">||</span><span class="pln"> 
+</span><span class="pln">
+	    </span><span class="pun">!</span><span class="pln"> </span><span class="kwd">exists</span><span class="pln">  </span><span class="typ">$arg</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;obj&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;event&#39;</span><span class="pun">}</span><span class="pln"> </span><span class="pun">||</span><span class="pln"> 
+</span><span class="pln">	    </span><span class="pun">!</span><span class="pln"> </span><span class="kwd">defined</span><span class="pln"> </span><span class="typ">$arg</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;obj&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;event&#39;</span><span class="pun">}</span><span class="pln"> </span><span class="pun">||</span><span class="pln"> 
+</span><span class="pln">	      </span><span class="pun">!</span><span class="pln"> </span><span class="pun">(</span><span class="kwd">ref</span><span class="pln"> </span><span class="pun">(</span><span class="typ">$arg</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;obj&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;event&#39;</span><span class="pun">}</span><span class="pun">)</span><span class="pln"> </span><span class="pun">eq</span><span class="pln"> </span><span class="str">&#39;ZHex::Event&#39;</span><span class="pun">)</span><span class="pln"> </span><span class="pun">||</span><span class="pln"> 
+</span><span class="pln">
+	    </span><span class="pun">!</span><span class="pln"> </span><span class="kwd">exists</span><span class="pln">  </span><span class="typ">$arg</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;obj&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;eventloop&#39;</span><span class="pun">}</span><span class="pln"> </span><span class="pun">||</span><span class="pln"> 
+</span><span class="pln">	    </span><span class="pun">!</span><span class="pln"> </span><span class="kwd">defined</span><span class="pln"> </span><span class="typ">$arg</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;obj&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;eventloop&#39;</span><span class="pun">}</span><span class="pln"> </span><span class="pun">||</span><span class="pln"> 
+</span><span class="pln">	      </span><span class="pun">!</span><span class="pln"> </span><span class="pun">(</span><span class="kwd">ref</span><span class="pln"> </span><span class="pun">(</span><span class="typ">$arg</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;obj&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;eventloop&#39;</span><span class="pun">}</span><span class="pun">)</span><span class="pln"> </span><span class="pun">eq</span><span class="pln"> </span><span class="str">&#39;ZHex::EventLoop&#39;</span><span class="pun">)</span><span class="pln"> </span><span class="pun">||</span><span class="pln"> 
+</span><span class="pln">
+	    </span><span class="pun">!</span><span class="pln"> </span><span class="kwd">exists</span><span class="pln">  </span><span class="typ">$arg</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;obj&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;file&#39;</span><span class="pun">}</span><span class="pln"> </span><span class="pun">||</span><span class="pln"> 
+</span><span class="pln">	    </span><span class="pun">!</span><span class="pln"> </span><span class="kwd">defined</span><span class="pln"> </span><span class="typ">$arg</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;obj&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;file&#39;</span><span class="pun">}</span><span class="pln"> </span><span class="pun">||</span><span class="pln"> 
+</span><span class="pln">	      </span><span class="pun">!</span><span class="pln"> </span><span class="pun">(</span><span class="kwd">ref</span><span class="pln"> </span><span class="pun">(</span><span class="typ">$arg</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;obj&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;file&#39;</span><span class="pun">}</span><span class="pun">)</span><span class="pln"> </span><span class="pun">eq</span><span class="pln"> </span><span class="str">&#39;ZHex::File&#39;</span><span class="pun">)</span><span class="pun">)</span><span class="pln"> 
+</span><span class="pln">
+		</span><span class="pun">{</span><span class="pln"> </span><span class="kwd">die</span><span class="pln"> </span><span class="str">&quot;Call to obj_init() failed: argument &#39;obj&#39; missing one (or more) required key/value pairs&quot;</span><span class="pun">;</span><span class="pln"> </span><span class="pun">}</span><span class="pln">
+</span><span class="pln">
+</span><span class="com">	# Store reference to obj hash in self.
+</span><span class="pln">
+	</span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;obj&#39;</span><span class="pun">}</span><span class="pln"> </span><span class="pun">=</span><span class="pln"> </span><span class="typ">$arg</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;obj&#39;</span><span class="pun">}</span><span class="pun">;</span><span class="pln">
+</span><span class="pln">
+	</span><span class="kwd">return</span><span class="pln"> </span><span class="pun">(</span><span class="atv">1</span><span class="pun">)</span><span class="pun">;</span><span class="pln">
+</span><span class="pun">}</span><span class="pln">
+</span><span class="pln">
+</span><span class="pln">
+</span><span class="kwd">END</span><span class="pln"> </span><span class="pun">{</span><span class="pln"> </span><span class="kwd">undef</span><span class="pun">;</span><span class="pln"> </span><span class="pun">}</span><span class="pln">
+</span><span class="atv">1</span><span class="pun">;</span><span class="pln">
+</span><span class="pln">
+</span><span class="pln">
+</span><span class="kwd">__END__</span><span class="pln">
+</span><span class="com">
+
+</span><span class="com">=head1 NAME
+
+ZHex::BoilerPlate (ZHex/BoilerPlate.pm) - BoilerPlate Module, ZebraHex Editor.
+
+=head1 VERSION
+
+Version 0.01
+
+=cut
+</span><span class="com">
+our $VERSION = &#39;0.01&#39;;
+
+
+</span><span class="com">=head1 SYNOPSIS
+
+The ZHex::BoilerPlate module provides several functions which are 
+imported by most of the modules within the ZHex::* namespace. These are 
+basically a constructor method, and a method for accessing all of the 
+other modules (called within each module at startup).
+
+Usage:
+
+    use ZHex;
+
+    my $editorObj = ZHex-&gt;new();
+    ...
+
+=head1 EXPORT
+
+No functions are exported.
+
+=head1 SUBROUTINES/METHODS
+
+
+=head2 init
+Method init()...
+= cut
+
+=head2 new
+Method new()...
+= cut
+
+=head2 obj_init
+Method obj_init()...
+= cut
+
+
+=head1 AUTHOR
+
+Double Z, C&lt;&lt; &lt;zacharyz at gmail.com&gt; &gt;&gt;
+
+=head1 BUGS
+
+Please report any bugs or feature requests to C&lt;bug-ZHex at rt.cpan.org&gt;, or through
+the web interface at L&lt;http://rt.cpan.org/NoAuth/ReportBug.html?Queue=ZHex&gt;.  I will be notified, and then you&#39;ll
+automatically be notified of progress on your bug as I make changes.
+
+
+
+
+=head1 SUPPORT
+
+You can find documentation for this module with the perldoc command.
+
+    perldoc ZHex
+
+
+You can also look for information at:
+
+=over 4
+
+=item * RT: CPAN&#39;s request tracker (report bugs here)
+
+L&lt;http://rt.cpan.org/NoAuth/Bugs.html?Dist=ZHex&gt;
+
+=item * AnnoCPAN: Annotated CPAN documentation
+
+L&lt;http://annocpan.org/dist/ZHex&gt;
+
+=item * CPAN Ratings
+
+L&lt;http://cpanratings.perl.org/d/ZHex&gt;
+
+=item * Search CPAN
+
+L&lt;http://search.cpan.org/dist/ZHex/&gt;
+
+=back
+
+
+=head1 ACKNOWLEDGEMENTS
+
+
+=head1 LICENSE AND COPYRIGHT
+
+Copyright 2014 Double Z.
+
+This program is free software; you can redistribute it and/or modify it
+under the terms of the the Artistic License (2.0). You may obtain a
+copy of the full license at:
+
+L&lt;http://www.perlfoundation.org/artistic_license_2_0&gt;
+
+Any use, modification, and distribution of the Standard or Modified
+Versions is governed by this Artistic License. By using, modifying or
+distributing the Package, you accept this license. Do not use, modify,
+or distribute the Package, if you do not accept this license.
+
+If your Modified Version has been derived from a Modified Version made
+by someone other than you, you are nevertheless required to ensure that
+your Modified Version complies with the requirements of this license.
+
+This license does not grant you the right to use any trademark, service
+mark, tradename, or logo of the Copyright Holder.
+
+This license includes the non-exclusive, worldwide, free-of-charge
+patent license to make, have made, use, offer to sell, sell, import and
+otherwise transfer the Package with respect to any patent claims
+licensable by the Copyright Holder that are necessarily infringed by the
+Package. If you institute patent litigation (including a cross-claim or
+counterclaim) against any party alleging that the Package constitutes
+direct or contributory patent infringement, then this Artistic License
+to you shall terminate on the date that such litigation is filed.
+
+Disclaimer of Warranty: THE PACKAGE IS PROVIDED BY THE COPYRIGHT HOLDER
+AND CONTRIBUTORS &quot;AS IS&#39; AND WITHOUT ANY EXPRESS OR IMPLIED WARRANTIES.
+THE IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR
+PURPOSE, OR NON-INFRINGEMENT ARE DISCLAIMED TO THE EXTENT PERMITTED BY
+YOUR LOCAL LAW. UNLESS REQUIRED BY LAW, NO COPYRIGHT HOLDER OR
+CONTRIBUTOR WILL BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, OR
+CONSEQUENTIAL DAMAGES ARISING IN ANY WAY OUT OF THE USE OF THE PACKAGE,
+EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+
+=cut
+</span><span class="com">
+1;
+
+</span></pre>
+</body>
+</html>
+

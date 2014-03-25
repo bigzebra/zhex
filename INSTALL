@@ -1,0 +1,16 @@
+The ZHex distribution uses ExtUtils::MakeMaker. To build ZHex, use the steps 
+typically used to build an ExtUtils::MakeMaker module:
+
+	perl Makefile.PL
+	make
+	make test
+	make install
+
+ZHex is organized as a Perl module. The main program, named 'zhexsh.pl' uses 
+the ZHex.pm module, which in turn uses several more modules from the directory 
+'ZHex'.
+
+Once installed, invoke ZHex by calling zhexsh.pl from the command line:
+
+	> zhexsh.pl --file some.exe
+

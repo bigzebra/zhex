@@ -1,0 +1,616 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="UTF-8">
+	<title>ZHex - ZebraHex Editor v0.01: Project Source Code</title>
+	<link rel="stylesheet" type="text/css" href="desert.css"/>
+</head>
+<body>
+	<h2>ZHex - ZebraHex Editor v0.01</h2>
+	<p>Source code file: ../ZHex/CharMap.pm</p>
+	<pre class="prettyprint"><span class="com">#!/usr/bin/perl
+</span><span class="pln">
+</span><span class="lit">package</span><span class="pln"> </span><span class="atn">ZHex::CharMap</span><span class="pun">;</span><span class="pln">
+</span><span class="pln">
+</span><span class="kwd">use</span><span class="pln"> </span><span class="atv">5.006</span><span class="pun">;</span><span class="pln">
+</span><span class="kwd">use</span><span class="pln"> </span><span class="kwd">strict</span><span class="pun">;</span><span class="pln">
+</span><span class="kwd">use</span><span class="pln"> </span><span class="kwd">warnings</span><span class="pln"> </span><span class="str">FATAL</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;all&#39;</span><span class="pun">;</span><span class="pln">
+</span><span class="pln">
+</span><span class="kwd">use</span><span class="pln"> </span><span class="pln">ZHex::BoilerPlate</span><span class="pln"> </span><span class="str">qw(new obj_init $VERS)</span><span class="pun">;</span><span class="pln">
+</span><span class="pln">
+</span><span class="kwd">BEGIN</span><span class="pln"> </span><span class="pun">{</span><span class="pln"> </span><span class="kwd">require</span><span class="pln"> </span><span class="pln">Exporter</span><span class="pun">;</span><span class="pln">
+</span><span class="pln">	</span><span class="kwd">our</span><span class="pln"> </span><span class="typ">$VERSION</span><span class="pln">   </span><span class="pun">=</span><span class="pln"> </span><span class="typ">$VERS</span><span class="pun">;</span><span class="pln">
+</span><span class="pln">	</span><span class="kwd">our</span><span class="pln"> </span><span class="typ">@ISA</span><span class="pln">       </span><span class="pun">=</span><span class="pln"> </span><span class="str">qw(Exporter)</span><span class="pun">;</span><span class="pln">
+</span><span class="pln">	</span><span class="kwd">our</span><span class="pln"> </span><span class="typ">@EXPORT</span><span class="pln">    </span><span class="pun">=</span><span class="pln"> </span><span class="str">qw()</span><span class="pun">;</span><span class="pln">
+</span><span class="pln">	</span><span class="kwd">our</span><span class="pln"> </span><span class="typ">@EXPORT_OK</span><span class="pln"> </span><span class="pun">=</span><span class="pln"> </span><span class="str">qw()</span><span class="pun">;</span><span class="pln">
+</span><span class="pun">}</span><span class="pln">
+</span><span class="pln">
+</span><span class="com"># Functions: Start-Up/Initialization.
+</span><span class="com">#
+</span><span class="com">#   _____________	___________
+</span><span class="com">#   Function Name	Description
+</span><span class="com">#   _____________	___________
+</span><span class="com">#   init()		Global variable declarations.
+</span><span class="pln">
+</span><span class="lit">sub</span><span class="pln"> </span><span class="typ">init</span><span class="pln"> </span><span class="pun">{</span><span class="pln">
+</span><span class="pln">
+	</span><span class="kwd">my</span><span class="pln"> </span><span class="typ">$self</span><span class="pln"> </span><span class="pun">=</span><span class="pln"> </span><span class="kwd">shift</span><span class="pun">;</span><span class="pln">
+</span><span class="pln">
+	</span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;chr_map&#39;</span><span class="pun">}</span><span class="pln"> </span><span class="pun">=</span><span class="pln"> </span><span class="str">&#39;&#39;</span><span class="pun">;</span><span class="pln">
+</span><span class="pln">
+	</span><span class="kwd">return</span><span class="pln"> </span><span class="pun">(</span><span class="atv">1</span><span class="pun">)</span><span class="pun">;</span><span class="pln">
+</span><span class="pun">}</span><span class="pln">
+</span><span class="pln">
+</span><span class="com"># Functions: Character Mapping.
+</span><span class="com">#
+</span><span class="com">#   _____________	___________
+</span><span class="com">#   Function Name	Description
+</span><span class="com">#   _____________	___________
+</span><span class="com">#   chr_map_set()	...
+</span><span class="com">#   chr_map()		...
+</span><span class="pln">
+</span><span class="lit">sub</span><span class="pln"> </span><span class="typ">chr_map_set</span><span class="pln"> </span><span class="pun">{</span><span class="pln">
+</span><span class="pln">
+	</span><span class="kwd">my</span><span class="pln"> </span><span class="typ">$self</span><span class="pln"> </span><span class="pun">=</span><span class="pln"> </span><span class="kwd">shift</span><span class="pun">;</span><span class="pln">
+</span><span class="pln">	</span><span class="kwd">my</span><span class="pln"> </span><span class="typ">$arg</span><span class="pln">  </span><span class="pun">=</span><span class="pln"> </span><span class="kwd">shift</span><span class="pun">;</span><span class="pln">
+</span><span class="pln">
+	</span><span class="kwd">if</span><span class="pln"> </span><span class="pun">(</span><span class="pun">!</span><span class="pln"> </span><span class="kwd">defined</span><span class="pln"> </span><span class="typ">$arg</span><span class="pln"> </span><span class="pun">||</span><span class="pln"> 
+</span><span class="pln">	      </span><span class="pun">!</span><span class="pln"> </span><span class="pun">(</span><span class="kwd">ref</span><span class="pln"> </span><span class="pun">(</span><span class="typ">$arg</span><span class="pun">)</span><span class="pln"> </span><span class="pun">eq</span><span class="pln"> </span><span class="str">&#39;HASH&#39;</span><span class="pun">)</span><span class="pun">)</span><span class="pln"> 
+</span><span class="pln">		</span><span class="pun">{</span><span class="pln"> </span><span class="kwd">die</span><span class="pln"> </span><span class="str">&quot;Call to chr_map_set() failed, argument must be hash reference&quot;</span><span class="pun">;</span><span class="pln"> </span><span class="pun">}</span><span class="pln">
+</span><span class="pln">
+	</span><span class="kwd">if</span><span class="pln"> </span><span class="pun">(</span><span class="pun">!</span><span class="pln"> </span><span class="kwd">exists</span><span class="pln">  </span><span class="typ">$arg</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;chr_map&#39;</span><span class="pun">}</span><span class="pln"> </span><span class="pun">||</span><span class="pln"> 
+</span><span class="pln">	    </span><span class="pun">!</span><span class="pln"> </span><span class="kwd">defined</span><span class="pln"> </span><span class="typ">$arg</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;chr_map&#39;</span><span class="pun">}</span><span class="pln"> </span><span class="pun">||</span><span class="pln"> 
+</span><span class="pln">	      </span><span class="pun">!</span><span class="pln"> </span><span class="pun">(</span><span class="kwd">ref</span><span class="pln"> </span><span class="pun">(</span><span class="typ">$arg</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;chr_map&#39;</span><span class="pun">}</span><span class="pun">)</span><span class="pln"> </span><span class="pun">eq</span><span class="pln"> </span><span class="str">&#39;HASH&#39;</span><span class="pun">)</span><span class="pun">)</span><span class="pln"> 
+</span><span class="pln">		</span><span class="pun">{</span><span class="pln"> </span><span class="kwd">die</span><span class="pln"> </span><span class="str">&quot;Call to chr_map_set() failed, value associated w/ key &#39;chr_map&#39; must be hash reference&quot;</span><span class="pun">;</span><span class="pln"> </span><span class="pun">}</span><span class="pln">
+</span><span class="pln">
+	</span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;chr_map&#39;</span><span class="pun">}</span><span class="pln"> </span><span class="pun">=</span><span class="pln"> </span><span class="typ">$arg</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;chr_map&#39;</span><span class="pun">}</span><span class="pun">;</span><span class="pln">
+</span><span class="pln">
+	</span><span class="kwd">return</span><span class="pln"> </span><span class="pun">(</span><span class="atv">1</span><span class="pun">)</span><span class="pun">;</span><span class="pln">
+</span><span class="pun">}</span><span class="pln">
+</span><span class="pln">
+</span><span class="lit">sub</span><span class="pln"> </span><span class="typ">chr_map</span><span class="pln"> </span><span class="pun">{</span><span class="pln">
+</span><span class="pln">
+	</span><span class="kwd">my</span><span class="pln"> </span><span class="typ">$self</span><span class="pln"> </span><span class="pun">=</span><span class="pln"> </span><span class="kwd">shift</span><span class="pun">;</span><span class="pln">
+</span><span class="pln">
+	</span><span class="kwd">my</span><span class="pln"> </span><span class="typ">$chr_map</span><span class="pln"> </span><span class="pun">=</span><span class="pln"> 
+</span><span class="pln">	  </span><span class="pun">{</span><span class="pln"> </span><span class="str">&#39;NULL&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> 
+</span><span class="pln">	    </span><span class="pun">{</span><span class="pln"> </span><span class="str">&#39;byte&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;0&#39;</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	      </span><span class="str">&#39;hex&#39;</span><span class="pln">  </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;00&#39;</span><span class="pln"> </span><span class="pun">}</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	  </span><span class="str">&#39;START OF HEADING&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> 
+</span><span class="pln">	    </span><span class="pun">{</span><span class="pln"> </span><span class="str">&#39;byte&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;1&#39;</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	      </span><span class="str">&#39;hex&#39;</span><span class="pln">  </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;01&#39;</span><span class="pun">}</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	  </span><span class="str">&#39;START OF TEXT&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> 
+</span><span class="pln">	    </span><span class="pun">{</span><span class="pln"> </span><span class="str">&#39;byte&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;2&#39;</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	      </span><span class="str">&#39;hex&#39;</span><span class="pln">  </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;02&#39;</span><span class="pun">}</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	  </span><span class="str">&#39;END OF TEXT&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> 
+</span><span class="pln">	    </span><span class="pun">{</span><span class="pln"> </span><span class="str">&#39;byte&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;3&#39;</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	      </span><span class="str">&#39;hex&#39;</span><span class="pln">  </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;03&#39;</span><span class="pun">}</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	  </span><span class="str">&#39;END OF TRANSMISSION&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> 
+</span><span class="pln">	    </span><span class="pun">{</span><span class="pln"> </span><span class="str">&#39;byte&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;4&#39;</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	      </span><span class="str">&#39;hex&#39;</span><span class="pln">  </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;04&#39;</span><span class="pun">}</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	  </span><span class="str">&#39;ENQUIRY&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> 
+</span><span class="pln">	    </span><span class="pun">{</span><span class="pln"> </span><span class="str">&#39;byte&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;5&#39;</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	      </span><span class="str">&#39;hex&#39;</span><span class="pln">  </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;05&#39;</span><span class="pun">}</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	  </span><span class="str">&#39;ACKNOWLEDGE&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> 
+</span><span class="pln">	    </span><span class="pun">{</span><span class="pln"> </span><span class="str">&#39;byte&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;6&#39;</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	      </span><span class="str">&#39;hex&#39;</span><span class="pln">  </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;06&#39;</span><span class="pun">}</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	  </span><span class="str">&#39;BELL&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> 
+</span><span class="pln">	    </span><span class="pun">{</span><span class="pln"> </span><span class="str">&#39;byte&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;7&#39;</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	      </span><span class="str">&#39;hex&#39;</span><span class="pln">  </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;07&#39;</span><span class="pun">}</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	  </span><span class="str">&#39;BACKSPACE&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> 
+</span><span class="pln">	    </span><span class="pun">{</span><span class="pln"> </span><span class="str">&#39;byte&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;8&#39;</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	      </span><span class="str">&#39;hex&#39;</span><span class="pln">  </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;08&#39;</span><span class="pun">}</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	  </span><span class="str">&#39;CHARACTER TABULATION&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> 
+</span><span class="pln">	    </span><span class="pun">{</span><span class="pln"> </span><span class="str">&#39;byte&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;9&#39;</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	      </span><span class="str">&#39;hex&#39;</span><span class="pln">  </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;09&#39;</span><span class="pun">}</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	  </span><span class="str">&#39;LINE FEED (LF)&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> 
+</span><span class="pln">	    </span><span class="pun">{</span><span class="pln"> </span><span class="str">&#39;byte&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;10&#39;</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	      </span><span class="str">&#39;hex&#39;</span><span class="pln">  </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;0a&#39;</span><span class="pun">}</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	  </span><span class="str">&#39;LINE TABULATION&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> 
+</span><span class="pln">	    </span><span class="pun">{</span><span class="pln"> </span><span class="str">&#39;byte&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;11&#39;</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	      </span><span class="str">&#39;hex&#39;</span><span class="pln">  </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;0b&#39;</span><span class="pun">}</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	  </span><span class="str">&#39;FORM FEED (FF)&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> 
+</span><span class="pln">	    </span><span class="pun">{</span><span class="pln"> </span><span class="str">&#39;byte&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;12&#39;</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	      </span><span class="str">&#39;hex&#39;</span><span class="pln">  </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;0c&#39;</span><span class="pun">}</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	  </span><span class="str">&#39;CARRIAGE RETURN (CR)&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> 
+</span><span class="pln">	    </span><span class="pun">{</span><span class="pln"> </span><span class="str">&#39;byte&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;13&#39;</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	      </span><span class="str">&#39;hex&#39;</span><span class="pln">  </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;0d&#39;</span><span class="pun">}</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	  </span><span class="str">&#39;SHIFT OUT&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> 
+</span><span class="pln">	    </span><span class="pun">{</span><span class="pln"> </span><span class="str">&#39;byte&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;14&#39;</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	      </span><span class="str">&#39;hex&#39;</span><span class="pln">  </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;0e&#39;</span><span class="pun">}</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	  </span><span class="str">&#39;SHIFT IN&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> 
+</span><span class="pln">	    </span><span class="pun">{</span><span class="pln"> </span><span class="str">&#39;byte&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;15&#39;</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	      </span><span class="str">&#39;hex&#39;</span><span class="pln">  </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;0f&#39;</span><span class="pun">}</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	  </span><span class="str">&#39;DATA LINK ESCAPE&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> 
+</span><span class="pln">	    </span><span class="pun">{</span><span class="pln"> </span><span class="str">&#39;byte&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;16&#39;</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	      </span><span class="str">&#39;hex&#39;</span><span class="pln">  </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;10&#39;</span><span class="pun">}</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	  </span><span class="str">&#39;DEVICE CONTROL ONE&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> 
+</span><span class="pln">	    </span><span class="pun">{</span><span class="pln"> </span><span class="str">&#39;byte&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;17&#39;</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	      </span><span class="str">&#39;hex&#39;</span><span class="pln">  </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;11&#39;</span><span class="pun">}</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	  </span><span class="str">&#39;DEVICE CONTROL TWO&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> 
+</span><span class="pln">	    </span><span class="pun">{</span><span class="pln"> </span><span class="str">&#39;byte&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;18&#39;</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	      </span><span class="str">&#39;hex&#39;</span><span class="pln">  </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;12&#39;</span><span class="pun">}</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	  </span><span class="str">&#39;DEVICE CONTROL THREE&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> 
+</span><span class="pln">	    </span><span class="pun">{</span><span class="pln"> </span><span class="str">&#39;byte&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;19&#39;</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	      </span><span class="str">&#39;hex&#39;</span><span class="pln">  </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;13&#39;</span><span class="pun">}</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	  </span><span class="str">&#39;DEVICE CONTROL FOUR&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> 
+</span><span class="pln">	    </span><span class="pun">{</span><span class="pln"> </span><span class="str">&#39;byte&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;20&#39;</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	      </span><span class="str">&#39;hex&#39;</span><span class="pln">  </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;14&#39;</span><span class="pun">}</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	  </span><span class="str">&#39;NEGATIVE ACKNOWLEDGE&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> 
+</span><span class="pln">	    </span><span class="pun">{</span><span class="pln"> </span><span class="str">&#39;byte&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;21&#39;</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	      </span><span class="str">&#39;hex&#39;</span><span class="pln">  </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;15&#39;</span><span class="pun">}</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	  </span><span class="str">&#39;SYNCHRONOUS IDLE&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> 
+</span><span class="pln">	    </span><span class="pun">{</span><span class="pln"> </span><span class="str">&#39;byte&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;22&#39;</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	      </span><span class="str">&#39;hex&#39;</span><span class="pln">  </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;16&#39;</span><span class="pun">}</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	  </span><span class="str">&#39;END OF TRANSMISSION BLOCK&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> 
+</span><span class="pln">	    </span><span class="pun">{</span><span class="pln"> </span><span class="str">&#39;byte&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;23&#39;</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	      </span><span class="str">&#39;hex&#39;</span><span class="pln">  </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;17&#39;</span><span class="pun">}</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	  </span><span class="str">&#39;CANCEL&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> 
+</span><span class="pln">	    </span><span class="pun">{</span><span class="pln"> </span><span class="str">&#39;byte&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;24&#39;</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	      </span><span class="str">&#39;hex&#39;</span><span class="pln">  </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;18&#39;</span><span class="pun">}</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	  </span><span class="str">&#39;END OF MEDIUM&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> 
+</span><span class="pln">	    </span><span class="pun">{</span><span class="pln"> </span><span class="str">&#39;byte&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;25&#39;</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	      </span><span class="str">&#39;hex&#39;</span><span class="pln">  </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;19&#39;</span><span class="pun">}</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	  </span><span class="str">&#39;SUBSTITUTE&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> 
+</span><span class="pln">	    </span><span class="pun">{</span><span class="pln"> </span><span class="str">&#39;byte&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;26&#39;</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	      </span><span class="str">&#39;hex&#39;</span><span class="pln">  </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;1a&#39;</span><span class="pun">}</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	  </span><span class="str">&#39;ESCAPE&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> 
+</span><span class="pln">	    </span><span class="pun">{</span><span class="pln"> </span><span class="str">&#39;byte&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;27&#39;</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	      </span><span class="str">&#39;hex&#39;</span><span class="pln">  </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;1b&#39;</span><span class="pun">}</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	  </span><span class="str">&#39;INFORMATION SEPARATOR FOUR&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> 
+</span><span class="pln">	    </span><span class="pun">{</span><span class="pln"> </span><span class="str">&#39;byte&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;28&#39;</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	      </span><span class="str">&#39;hex&#39;</span><span class="pln">  </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;1c&#39;</span><span class="pun">}</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	  </span><span class="str">&#39;INFORMATION SEPARATOR THREE&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> 
+</span><span class="pln">	    </span><span class="pun">{</span><span class="pln"> </span><span class="str">&#39;byte&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;29&#39;</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	      </span><span class="str">&#39;hex&#39;</span><span class="pln">  </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;1d&#39;</span><span class="pun">}</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	  </span><span class="str">&#39;INFORMATION SEPARATOR TWO&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> 
+</span><span class="pln">	    </span><span class="pun">{</span><span class="pln"> </span><span class="str">&#39;byte&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;30&#39;</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	      </span><span class="str">&#39;hex&#39;</span><span class="pln">  </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;1e&#39;</span><span class="pun">}</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	  </span><span class="str">&#39;INFORMATION SEPARATOR ONE&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> 
+</span><span class="pln">	    </span><span class="pun">{</span><span class="pln"> </span><span class="str">&#39;byte&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;31&#39;</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	      </span><span class="str">&#39;hex&#39;</span><span class="pln">  </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;1f&#39;</span><span class="pun">}</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	  </span><span class="str">&#39;SPACE&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> 
+</span><span class="pln">	    </span><span class="pun">{</span><span class="pln"> </span><span class="str">&#39;byte&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;32&#39;</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	      </span><span class="str">&#39;hex&#39;</span><span class="pln">  </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;20&#39;</span><span class="pun">}</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	  </span><span class="str">&#39;EXCLAMATION MARK&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> 
+</span><span class="pln">	    </span><span class="pun">{</span><span class="pln"> </span><span class="str">&#39;byte&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;33&#39;</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	      </span><span class="str">&#39;hex&#39;</span><span class="pln">  </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;21&#39;</span><span class="pun">}</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	  </span><span class="str">&#39;QUOTATION MARK&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> 
+</span><span class="pln">	    </span><span class="pun">{</span><span class="pln"> </span><span class="str">&#39;byte&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;34&#39;</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	      </span><span class="str">&#39;hex&#39;</span><span class="pln">  </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;22&#39;</span><span class="pun">}</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	  </span><span class="str">&#39;NUMBER SIGN&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> 
+</span><span class="pln">	    </span><span class="pun">{</span><span class="pln"> </span><span class="str">&#39;byte&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;35&#39;</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	      </span><span class="str">&#39;hex&#39;</span><span class="pln">  </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;23&#39;</span><span class="pun">}</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	  </span><span class="str">&#39;DOLLAR SIGN&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> 
+</span><span class="pln">	    </span><span class="pun">{</span><span class="pln"> </span><span class="str">&#39;byte&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;36&#39;</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	      </span><span class="str">&#39;hex&#39;</span><span class="pln">  </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;24&#39;</span><span class="pun">}</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	  </span><span class="str">&#39;PERCENT SIGN&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> 
+</span><span class="pln">	    </span><span class="pun">{</span><span class="pln"> </span><span class="str">&#39;byte&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;37&#39;</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	      </span><span class="str">&#39;hex&#39;</span><span class="pln">  </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;25&#39;</span><span class="pun">}</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	  </span><span class="str">&#39;AMPERSAND&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln">  
+</span><span class="pln">	    </span><span class="pun">{</span><span class="pln"> </span><span class="str">&#39;byte&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;38&#39;</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	      </span><span class="str">&#39;hex&#39;</span><span class="pln">  </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;26&#39;</span><span class="pun">}</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	  </span><span class="str">&#39;APOSTROPHE&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln">  
+</span><span class="pln">	    </span><span class="pun">{</span><span class="pln"> </span><span class="str">&#39;byte&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;39&#39;</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	      </span><span class="str">&#39;hex&#39;</span><span class="pln">  </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;27&#39;</span><span class="pun">}</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	  </span><span class="str">&#39;LEFT PARENTHESIS&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> 
+</span><span class="pln">	    </span><span class="pun">{</span><span class="pln"> </span><span class="str">&#39;byte&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;40&#39;</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	      </span><span class="str">&#39;hex&#39;</span><span class="pln">  </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;28&#39;</span><span class="pun">}</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	  </span><span class="str">&#39;RIGHT PARENTHESIS&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> 
+</span><span class="pln">	    </span><span class="pun">{</span><span class="pln"> </span><span class="str">&#39;byte&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;41&#39;</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	      </span><span class="str">&#39;hex&#39;</span><span class="pln">  </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;29&#39;</span><span class="pun">}</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	  </span><span class="str">&#39;ASTERISK&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> 
+</span><span class="pln">	    </span><span class="pun">{</span><span class="pln"> </span><span class="str">&#39;byte&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;42&#39;</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	      </span><span class="str">&#39;hex&#39;</span><span class="pln">  </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;2a&#39;</span><span class="pun">}</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	  </span><span class="str">&#39;PLUS SIGN&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> 
+</span><span class="pln">	    </span><span class="pun">{</span><span class="pln"> </span><span class="str">&#39;byte&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;43&#39;</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	      </span><span class="str">&#39;hex&#39;</span><span class="pln">  </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;2b&#39;</span><span class="pun">}</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	  </span><span class="str">&#39;COMMA&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> 
+</span><span class="pln">	    </span><span class="pun">{</span><span class="pln"> </span><span class="str">&#39;byte&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;44&#39;</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	      </span><span class="str">&#39;hex&#39;</span><span class="pln">  </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;2c&#39;</span><span class="pun">}</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	  </span><span class="str">&#39;HYPHEN-MINUS&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> 
+</span><span class="pln">	    </span><span class="pun">{</span><span class="pln"> </span><span class="str">&#39;byte&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;45&#39;</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	      </span><span class="str">&#39;hex&#39;</span><span class="pln">  </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;2d&#39;</span><span class="pun">}</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	  </span><span class="str">&#39;FULL STOP&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> 
+</span><span class="pln">	    </span><span class="pun">{</span><span class="pln"> </span><span class="str">&#39;byte&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;46&#39;</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	      </span><span class="str">&#39;hex&#39;</span><span class="pln">  </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;2e&#39;</span><span class="pun">}</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	  </span><span class="str">&#39;SOLIDUS&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> 
+</span><span class="pln">	    </span><span class="pun">{</span><span class="pln"> </span><span class="str">&#39;byte&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;47&#39;</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	      </span><span class="str">&#39;hex&#39;</span><span class="pln">  </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;2f&#39;</span><span class="pun">}</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	  </span><span class="str">&#39;DIGIT ZERO&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> 
+</span><span class="pln">	    </span><span class="pun">{</span><span class="pln"> </span><span class="str">&#39;byte&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;48&#39;</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	      </span><span class="str">&#39;hex&#39;</span><span class="pln">  </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;30&#39;</span><span class="pun">}</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	  </span><span class="str">&#39;DIGIT ONE&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> 
+</span><span class="pln">	    </span><span class="pun">{</span><span class="pln"> </span><span class="str">&#39;byte&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;49&#39;</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	      </span><span class="str">&#39;hex&#39;</span><span class="pln">  </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;31&#39;</span><span class="pun">}</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	  </span><span class="str">&#39;DIGIT TWO&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> 
+</span><span class="pln">	    </span><span class="pun">{</span><span class="pln"> </span><span class="str">&#39;byte&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;50&#39;</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	      </span><span class="str">&#39;hex&#39;</span><span class="pln">  </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;32&#39;</span><span class="pun">}</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	  </span><span class="str">&#39;DIGIT THREE&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> 
+</span><span class="pln">	    </span><span class="pun">{</span><span class="pln"> </span><span class="str">&#39;byte&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;51&#39;</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	      </span><span class="str">&#39;hex&#39;</span><span class="pln">  </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;33&#39;</span><span class="pun">}</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	  </span><span class="str">&#39;DIGIT FOUR&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> 
+</span><span class="pln">	    </span><span class="pun">{</span><span class="pln"> </span><span class="str">&#39;byte&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;52&#39;</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	      </span><span class="str">&#39;hex&#39;</span><span class="pln">  </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;34&#39;</span><span class="pun">}</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	  </span><span class="str">&#39;DIGIT FIVE&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> 
+</span><span class="pln">	    </span><span class="pun">{</span><span class="pln"> </span><span class="str">&#39;byte&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;53&#39;</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	      </span><span class="str">&#39;hex&#39;</span><span class="pln">  </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;35&#39;</span><span class="pun">}</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	  </span><span class="str">&#39;DIGIT SIX&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> 
+</span><span class="pln">	    </span><span class="pun">{</span><span class="pln"> </span><span class="str">&#39;byte&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;54&#39;</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	      </span><span class="str">&#39;hex&#39;</span><span class="pln">  </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;36&#39;</span><span class="pun">}</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	  </span><span class="str">&#39;DIGIT SEVEN&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> 
+</span><span class="pln">	    </span><span class="pun">{</span><span class="pln"> </span><span class="str">&#39;byte&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;55&#39;</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	      </span><span class="str">&#39;hex&#39;</span><span class="pln">  </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;37&#39;</span><span class="pun">}</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	  </span><span class="str">&#39;DIGIT EIGHT&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> 
+</span><span class="pln">	    </span><span class="pun">{</span><span class="pln"> </span><span class="str">&#39;byte&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;56&#39;</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	      </span><span class="str">&#39;hex&#39;</span><span class="pln">  </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;38&#39;</span><span class="pun">}</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	  </span><span class="str">&#39;DIGIT NINE&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> 
+</span><span class="pln">	    </span><span class="pun">{</span><span class="pln"> </span><span class="str">&#39;byte&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;57&#39;</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	      </span><span class="str">&#39;hex&#39;</span><span class="pln">  </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;39&#39;</span><span class="pun">}</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	  </span><span class="str">&#39;COLON&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> 
+</span><span class="pln">	    </span><span class="pun">{</span><span class="pln"> </span><span class="str">&#39;byte&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;58&#39;</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	      </span><span class="str">&#39;hex&#39;</span><span class="pln">  </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;3a&#39;</span><span class="pun">}</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	  </span><span class="str">&#39;SEMICOLON&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> 
+</span><span class="pln">	    </span><span class="pun">{</span><span class="pln"> </span><span class="str">&#39;byte&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;59&#39;</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	      </span><span class="str">&#39;hex&#39;</span><span class="pln">  </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;3b&#39;</span><span class="pun">}</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	  </span><span class="str">&#39;LESS-THAN SIGN&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> 
+</span><span class="pln">	    </span><span class="pun">{</span><span class="pln"> </span><span class="str">&#39;byte&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;60&#39;</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	      </span><span class="str">&#39;hex&#39;</span><span class="pln">  </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;3c&#39;</span><span class="pun">}</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	  </span><span class="str">&#39;EQUALS SIGN&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> 
+</span><span class="pln">	    </span><span class="pun">{</span><span class="pln"> </span><span class="str">&#39;byte&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;61&#39;</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	      </span><span class="str">&#39;hex&#39;</span><span class="pln">  </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;3d&#39;</span><span class="pun">}</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	  </span><span class="str">&#39;GREATER-THAN SIGN&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> 
+</span><span class="pln">	    </span><span class="pun">{</span><span class="pln"> </span><span class="str">&#39;byte&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;62&#39;</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	      </span><span class="str">&#39;hex&#39;</span><span class="pln">  </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;3e&#39;</span><span class="pun">}</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	  </span><span class="str">&#39;QUESTION MARK&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> 
+</span><span class="pln">	    </span><span class="pun">{</span><span class="pln"> </span><span class="str">&#39;byte&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;63&#39;</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	      </span><span class="str">&#39;hex&#39;</span><span class="pln">  </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;3f&#39;</span><span class="pun">}</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	  </span><span class="str">&#39;COMMERCIAL AT&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> 
+</span><span class="pln">	    </span><span class="pun">{</span><span class="pln"> </span><span class="str">&#39;byte&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;64&#39;</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	      </span><span class="str">&#39;hex&#39;</span><span class="pln">  </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;40&#39;</span><span class="pun">}</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	  </span><span class="str">&#39;LATIN CAPITAL LETTER A&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> 
+</span><span class="pln">	    </span><span class="pun">{</span><span class="pln"> </span><span class="str">&#39;byte&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;65&#39;</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	      </span><span class="str">&#39;hex&#39;</span><span class="pln">  </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;41&#39;</span><span class="pun">}</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	  </span><span class="str">&#39;LATIN CAPITAL LETTER B&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> 
+</span><span class="pln">	    </span><span class="pun">{</span><span class="pln"> </span><span class="str">&#39;byte&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;66&#39;</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	      </span><span class="str">&#39;hex&#39;</span><span class="pln">  </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;42&#39;</span><span class="pun">}</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	  </span><span class="str">&#39;LATIN CAPITAL LETTER C&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> 
+</span><span class="pln">	    </span><span class="pun">{</span><span class="pln"> </span><span class="str">&#39;byte&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;67&#39;</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	      </span><span class="str">&#39;hex&#39;</span><span class="pln">  </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;43&#39;</span><span class="pun">}</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	  </span><span class="str">&#39;LATIN CAPITAL LETTER D&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> 
+</span><span class="pln">	    </span><span class="pun">{</span><span class="pln"> </span><span class="str">&#39;byte&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;68&#39;</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	      </span><span class="str">&#39;hex&#39;</span><span class="pln">  </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;44&#39;</span><span class="pun">}</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	  </span><span class="str">&#39;LATIN CAPITAL LETTER E&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> 
+</span><span class="pln">	    </span><span class="pun">{</span><span class="pln"> </span><span class="str">&#39;byte&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;69&#39;</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	      </span><span class="str">&#39;hex&#39;</span><span class="pln">  </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;45&#39;</span><span class="pun">}</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	  </span><span class="str">&#39;LATIN CAPITAL LETTER F&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> 
+</span><span class="pln">	    </span><span class="pun">{</span><span class="pln"> </span><span class="str">&#39;byte&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;70&#39;</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	      </span><span class="str">&#39;hex&#39;</span><span class="pln">  </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;46&#39;</span><span class="pun">}</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	  </span><span class="str">&#39;LATIN CAPITAL LETTER G&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> 
+</span><span class="pln">	    </span><span class="pun">{</span><span class="pln"> </span><span class="str">&#39;byte&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;71&#39;</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	      </span><span class="str">&#39;hex&#39;</span><span class="pln">  </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;47&#39;</span><span class="pun">}</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	  </span><span class="str">&#39;LATIN CAPITAL LETTER H&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> 
+</span><span class="pln">	    </span><span class="pun">{</span><span class="pln"> </span><span class="str">&#39;byte&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;72&#39;</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	      </span><span class="str">&#39;hex&#39;</span><span class="pln">  </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;48&#39;</span><span class="pun">}</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	  </span><span class="str">&#39;LATIN CAPITAL LETTER I&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> 
+</span><span class="pln">	    </span><span class="pun">{</span><span class="pln"> </span><span class="str">&#39;byte&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;73&#39;</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	      </span><span class="str">&#39;hex&#39;</span><span class="pln">  </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;49&#39;</span><span class="pun">}</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	  </span><span class="str">&#39;LATIN CAPITAL LETTER J&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> 
+</span><span class="pln">	    </span><span class="pun">{</span><span class="pln"> </span><span class="str">&#39;byte&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;74&#39;</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	      </span><span class="str">&#39;hex&#39;</span><span class="pln">  </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;4a&#39;</span><span class="pun">}</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	  </span><span class="str">&#39;LATIN CAPITAL LETTER K&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> 
+</span><span class="pln">	    </span><span class="pun">{</span><span class="pln"> </span><span class="str">&#39;byte&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;75&#39;</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	      </span><span class="str">&#39;hex&#39;</span><span class="pln">  </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;4b&#39;</span><span class="pun">}</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	  </span><span class="str">&#39;LATIN CAPITAL LETTER L&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> 
+</span><span class="pln">	    </span><span class="pun">{</span><span class="pln"> </span><span class="str">&#39;byte&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;76&#39;</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	      </span><span class="str">&#39;hex&#39;</span><span class="pln">  </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;4c&#39;</span><span class="pun">}</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	  </span><span class="str">&#39;LATIN CAPITAL LETTER M&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> 
+</span><span class="pln">	    </span><span class="pun">{</span><span class="pln"> </span><span class="str">&#39;byte&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;77&#39;</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	      </span><span class="str">&#39;hex&#39;</span><span class="pln">  </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;4d&#39;</span><span class="pun">}</span><span class="pun">,</span><span class="pln">
+</span><span class="pln">	  </span><span class="str">&#39;LATIN CAPITAL LETTER N&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> 
+</span><span class="pln">	    </span><span class="pun">{</span><span class="pln"> </span><span class="str">&#39;byte&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;78&#39;</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	      </span><span class="str">&#39;hex&#39;</span><span class="pln">  </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;4e&#39;</span><span class="pun">}</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	  </span><span class="str">&#39;LATIN CAPITAL LETTER O&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> 
+</span><span class="pln">	    </span><span class="pun">{</span><span class="pln"> </span><span class="str">&#39;byte&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;79&#39;</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	      </span><span class="str">&#39;hex&#39;</span><span class="pln">  </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;4f&#39;</span><span class="pun">}</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	  </span><span class="str">&#39;LATIN CAPITAL LETTER P&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> 
+</span><span class="pln">	    </span><span class="pun">{</span><span class="pln"> </span><span class="str">&#39;byte&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;80&#39;</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	      </span><span class="str">&#39;hex&#39;</span><span class="pln">  </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;50&#39;</span><span class="pun">}</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	  </span><span class="str">&#39;LATIN CAPITAL LETTER Q&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> 
+</span><span class="pln">	    </span><span class="pun">{</span><span class="pln"> </span><span class="str">&#39;byte&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;81&#39;</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	      </span><span class="str">&#39;hex&#39;</span><span class="pln">  </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;51&#39;</span><span class="pun">}</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	  </span><span class="str">&#39;LATIN CAPITAL LETTER R&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> 
+</span><span class="pln">	    </span><span class="pun">{</span><span class="pln"> </span><span class="str">&#39;byte&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;82&#39;</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	      </span><span class="str">&#39;hex&#39;</span><span class="pln">  </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;52&#39;</span><span class="pun">}</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	  </span><span class="str">&#39;LATIN CAPITAL LETTER S&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> 
+</span><span class="pln">	    </span><span class="pun">{</span><span class="pln"> </span><span class="str">&#39;byte&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;83&#39;</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	      </span><span class="str">&#39;hex&#39;</span><span class="pln">  </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;53&#39;</span><span class="pun">}</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	  </span><span class="str">&#39;LATIN CAPITAL LETTER T&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> 
+</span><span class="pln">	    </span><span class="pun">{</span><span class="pln"> </span><span class="str">&#39;byte&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;84&#39;</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	      </span><span class="str">&#39;hex&#39;</span><span class="pln">  </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;54&#39;</span><span class="pun">}</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	  </span><span class="str">&#39;LATIN CAPITAL LETTER U&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> 
+</span><span class="pln">	    </span><span class="pun">{</span><span class="pln"> </span><span class="str">&#39;byte&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;85&#39;</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	      </span><span class="str">&#39;hex&#39;</span><span class="pln">  </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;55&#39;</span><span class="pun">}</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	  </span><span class="str">&#39;LATIN CAPITAL LETTER V&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> 
+</span><span class="pln">	    </span><span class="pun">{</span><span class="pln"> </span><span class="str">&#39;byte&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;86&#39;</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	      </span><span class="str">&#39;hex&#39;</span><span class="pln">  </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;56&#39;</span><span class="pun">}</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	  </span><span class="str">&#39;LATIN CAPITAL LETTER W&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> 
+</span><span class="pln">	    </span><span class="pun">{</span><span class="pln"> </span><span class="str">&#39;byte&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;87&#39;</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	      </span><span class="str">&#39;hex&#39;</span><span class="pln">  </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;57&#39;</span><span class="pun">}</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	  </span><span class="str">&#39;LATIN CAPITAL LETTER X&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> 
+</span><span class="pln">	    </span><span class="pun">{</span><span class="pln"> </span><span class="str">&#39;byte&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;88&#39;</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	      </span><span class="str">&#39;hex&#39;</span><span class="pln">  </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;58&#39;</span><span class="pun">}</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	  </span><span class="str">&#39;LATIN CAPITAL LETTER Y&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> 
+</span><span class="pln">	    </span><span class="pun">{</span><span class="pln"> </span><span class="str">&#39;byte&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;89&#39;</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	      </span><span class="str">&#39;hex&#39;</span><span class="pln">  </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;59&#39;</span><span class="pun">}</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	  </span><span class="str">&#39;LATIN CAPITAL LETTER Z&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> 
+</span><span class="pln">	    </span><span class="pun">{</span><span class="pln"> </span><span class="str">&#39;byte&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;90&#39;</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	      </span><span class="str">&#39;hex&#39;</span><span class="pln">  </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;5a&#39;</span><span class="pun">}</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	  </span><span class="str">&#39;LEFT SQUARE BRACKET&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> 
+</span><span class="pln">	    </span><span class="pun">{</span><span class="pln"> </span><span class="str">&#39;byte&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;91&#39;</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	      </span><span class="str">&#39;hex&#39;</span><span class="pln">  </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;5b&#39;</span><span class="pun">}</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	  </span><span class="str">&#39;REVERSE SOLIDUS&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> 
+</span><span class="pln">	    </span><span class="pun">{</span><span class="pln"> </span><span class="str">&#39;byte&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;92&#39;</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	      </span><span class="str">&#39;hex&#39;</span><span class="pln">  </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;5c&#39;</span><span class="pun">}</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	  </span><span class="str">&#39;RIGHT SQUARE BRACKET&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> 
+</span><span class="pln">	    </span><span class="pun">{</span><span class="pln"> </span><span class="str">&#39;byte&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;93&#39;</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	      </span><span class="str">&#39;hex&#39;</span><span class="pln">  </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;5d&#39;</span><span class="pun">}</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	  </span><span class="str">&#39;CIRCUMFLEX ACCENT&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> 
+</span><span class="pln">	    </span><span class="pun">{</span><span class="pln"> </span><span class="str">&#39;byte&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;94&#39;</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	      </span><span class="str">&#39;hex&#39;</span><span class="pln">  </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;5e&#39;</span><span class="pun">}</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	  </span><span class="str">&#39;LOW LINE&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> 
+</span><span class="pln">	    </span><span class="pun">{</span><span class="pln"> </span><span class="str">&#39;byte&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;95&#39;</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	      </span><span class="str">&#39;hex&#39;</span><span class="pln">  </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;5f&#39;</span><span class="pun">}</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	  </span><span class="str">&#39;GRAVE ACCENT&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> 
+</span><span class="pln">	    </span><span class="pun">{</span><span class="pln"> </span><span class="str">&#39;byte&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;96&#39;</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	      </span><span class="str">&#39;hex&#39;</span><span class="pln">  </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;60&#39;</span><span class="pun">}</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	  </span><span class="str">&#39;LATIN SMALL LETTER A&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> 
+</span><span class="pln">	    </span><span class="pun">{</span><span class="pln"> </span><span class="str">&#39;byte&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;97&#39;</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	      </span><span class="str">&#39;hex&#39;</span><span class="pln">  </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;61&#39;</span><span class="pun">}</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	  </span><span class="str">&#39;LATIN SMALL LETTER B&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> 
+</span><span class="pln">	    </span><span class="pun">{</span><span class="pln"> </span><span class="str">&#39;byte&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;98&#39;</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	      </span><span class="str">&#39;hex&#39;</span><span class="pln">  </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;62&#39;</span><span class="pun">}</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	  </span><span class="str">&#39;LATIN SMALL LETTER C&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> 
+</span><span class="pln">	    </span><span class="pun">{</span><span class="pln"> </span><span class="str">&#39;byte&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;99&#39;</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	      </span><span class="str">&#39;hex&#39;</span><span class="pln">  </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;63&#39;</span><span class="pun">}</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	  </span><span class="str">&#39;LATIN SMALL LETTER D&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> 
+</span><span class="pln">	    </span><span class="pun">{</span><span class="pln"> </span><span class="str">&#39;byte&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;100&#39;</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	      </span><span class="str">&#39;hex&#39;</span><span class="pln">  </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;64&#39;</span><span class="pun">}</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	  </span><span class="str">&#39;LATIN SMALL LETTER E&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> 
+</span><span class="pln">	    </span><span class="pun">{</span><span class="pln"> </span><span class="str">&#39;byte&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;101&#39;</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	      </span><span class="str">&#39;hex&#39;</span><span class="pln">  </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;65&#39;</span><span class="pun">}</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	  </span><span class="str">&#39;LATIN SMALL LETTER F&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> 
+</span><span class="pln">	    </span><span class="pun">{</span><span class="pln"> </span><span class="str">&#39;byte&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;102&#39;</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	      </span><span class="str">&#39;hex&#39;</span><span class="pln">  </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;66&#39;</span><span class="pun">}</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	  </span><span class="str">&#39;LATIN SMALL LETTER G&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> 
+</span><span class="pln">	    </span><span class="pun">{</span><span class="pln"> </span><span class="str">&#39;byte&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;103&#39;</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	      </span><span class="str">&#39;hex&#39;</span><span class="pln">  </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;67&#39;</span><span class="pun">}</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	  </span><span class="str">&#39;LATIN SMALL LETTER H&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> 
+</span><span class="pln">	    </span><span class="pun">{</span><span class="pln"> </span><span class="str">&#39;byte&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;104&#39;</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	      </span><span class="str">&#39;hex&#39;</span><span class="pln">  </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;68&#39;</span><span class="pun">}</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	  </span><span class="str">&#39;LATIN SMALL LETTER I&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> 
+</span><span class="pln">	    </span><span class="pun">{</span><span class="pln"> </span><span class="str">&#39;byte&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;105&#39;</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	      </span><span class="str">&#39;hex&#39;</span><span class="pln">  </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;69&#39;</span><span class="pun">}</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	  </span><span class="str">&#39;LATIN SMALL LETTER J&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> 
+</span><span class="pln">	    </span><span class="pun">{</span><span class="pln"> </span><span class="str">&#39;byte&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;106&#39;</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	      </span><span class="str">&#39;hex&#39;</span><span class="pln">  </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;6a&#39;</span><span class="pun">}</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	  </span><span class="str">&#39;LATIN SMALL LETTER K&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> 
+</span><span class="pln">	    </span><span class="pun">{</span><span class="pln"> </span><span class="str">&#39;byte&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;107&#39;</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	      </span><span class="str">&#39;hex&#39;</span><span class="pln">  </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;6b&#39;</span><span class="pun">}</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	  </span><span class="str">&#39;LATIN SMALL LETTER L&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> 
+</span><span class="pln">	    </span><span class="pun">{</span><span class="pln"> </span><span class="str">&#39;byte&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;108&#39;</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	      </span><span class="str">&#39;hex&#39;</span><span class="pln">  </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;6c&#39;</span><span class="pun">}</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	  </span><span class="str">&#39;LATIN SMALL LETTER M&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> 
+</span><span class="pln">	    </span><span class="pun">{</span><span class="pln"> </span><span class="str">&#39;byte&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;109&#39;</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	      </span><span class="str">&#39;hex&#39;</span><span class="pln">  </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;6d&#39;</span><span class="pun">}</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	  </span><span class="str">&#39;LATIN SMALL LETTER N&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> 
+</span><span class="pln">	    </span><span class="pun">{</span><span class="pln"> </span><span class="str">&#39;byte&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;110&#39;</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	      </span><span class="str">&#39;hex&#39;</span><span class="pln">  </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;6e&#39;</span><span class="pun">}</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	  </span><span class="str">&#39;LATIN SMALL LETTER O&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> 
+</span><span class="pln">	    </span><span class="pun">{</span><span class="pln"> </span><span class="str">&#39;byte&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;111&#39;</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	      </span><span class="str">&#39;hex&#39;</span><span class="pln">  </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;6f&#39;</span><span class="pun">}</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	  </span><span class="str">&#39;LATIN SMALL LETTER P&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> 
+</span><span class="pln">	    </span><span class="pun">{</span><span class="pln"> </span><span class="str">&#39;byte&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;112&#39;</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	      </span><span class="str">&#39;hex&#39;</span><span class="pln">  </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;70&#39;</span><span class="pun">}</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	  </span><span class="str">&#39;LATIN SMALL LETTER Q&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> 
+</span><span class="pln">	    </span><span class="pun">{</span><span class="pln"> </span><span class="str">&#39;byte&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;113&#39;</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	      </span><span class="str">&#39;hex&#39;</span><span class="pln">  </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;71&#39;</span><span class="pun">}</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	  </span><span class="str">&#39;LATIN SMALL LETTER R&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> 
+</span><span class="pln">	    </span><span class="pun">{</span><span class="pln"> </span><span class="str">&#39;byte&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;114&#39;</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	      </span><span class="str">&#39;hex&#39;</span><span class="pln">  </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;72&#39;</span><span class="pun">}</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	  </span><span class="str">&#39;LATIN SMALL LETTER S&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> 
+</span><span class="pln">	    </span><span class="pun">{</span><span class="pln"> </span><span class="str">&#39;byte&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;115&#39;</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	      </span><span class="str">&#39;hex&#39;</span><span class="pln">  </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;73&#39;</span><span class="pun">}</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	  </span><span class="str">&#39;LATIN SMALL LETTER T&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> 
+</span><span class="pln">	    </span><span class="pun">{</span><span class="pln"> </span><span class="str">&#39;byte&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;116&#39;</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	      </span><span class="str">&#39;hex&#39;</span><span class="pln">  </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;74&#39;</span><span class="pun">}</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	  </span><span class="str">&#39;LATIN SMALL LETTER U&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> 
+</span><span class="pln">	    </span><span class="pun">{</span><span class="pln"> </span><span class="str">&#39;byte&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;117&#39;</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	      </span><span class="str">&#39;hex&#39;</span><span class="pln">  </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;75&#39;</span><span class="pun">}</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	  </span><span class="str">&#39;LATIN SMALL LETTER V&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> 
+</span><span class="pln">	    </span><span class="pun">{</span><span class="pln"> </span><span class="str">&#39;byte&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;118&#39;</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	      </span><span class="str">&#39;hex&#39;</span><span class="pln">  </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;76&#39;</span><span class="pun">}</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	  </span><span class="str">&#39;LATIN SMALL LETTER W&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> 
+</span><span class="pln">	    </span><span class="pun">{</span><span class="pln"> </span><span class="str">&#39;byte&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;119&#39;</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	      </span><span class="str">&#39;hex&#39;</span><span class="pln">  </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;77&#39;</span><span class="pun">}</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	  </span><span class="str">&#39;LATIN SMALL LETTER X&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> 
+</span><span class="pln">	    </span><span class="pun">{</span><span class="pln"> </span><span class="str">&#39;byte&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;120&#39;</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	      </span><span class="str">&#39;hex&#39;</span><span class="pln">  </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;78&#39;</span><span class="pun">}</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	  </span><span class="str">&#39;LATIN SMALL LETTER Y&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> 
+</span><span class="pln">	    </span><span class="pun">{</span><span class="pln"> </span><span class="str">&#39;byte&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;121&#39;</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	      </span><span class="str">&#39;hex&#39;</span><span class="pln">  </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;79&#39;</span><span class="pun">}</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	  </span><span class="str">&#39;LATIN SMALL LETTER Z&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> 
+</span><span class="pln">	    </span><span class="pun">{</span><span class="pln"> </span><span class="str">&#39;byte&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;122&#39;</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	      </span><span class="str">&#39;hex&#39;</span><span class="pln">  </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;7a&#39;</span><span class="pun">}</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	  </span><span class="str">&#39;LEFT CURLY BRACKET&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> 
+</span><span class="pln">	    </span><span class="pun">{</span><span class="pln"> </span><span class="str">&#39;byte&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;123&#39;</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	      </span><span class="str">&#39;hex&#39;</span><span class="pln">  </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;7b&#39;</span><span class="pun">}</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	  </span><span class="str">&#39;VERTICAL LINE&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> 
+</span><span class="pln">	    </span><span class="pun">{</span><span class="pln"> </span><span class="str">&#39;byte&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;124&#39;</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	      </span><span class="str">&#39;hex&#39;</span><span class="pln">  </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;7c&#39;</span><span class="pun">}</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	  </span><span class="str">&#39;RIGHT CURLY BRACKET&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> 
+</span><span class="pln">	    </span><span class="pun">{</span><span class="pln"> </span><span class="str">&#39;byte&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;125&#39;</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	      </span><span class="str">&#39;hex&#39;</span><span class="pln">  </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;7d&#39;</span><span class="pun">}</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	  </span><span class="str">&#39;TILDE&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> 
+</span><span class="pln">	    </span><span class="pun">{</span><span class="pln"> </span><span class="str">&#39;byte&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;126&#39;</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	      </span><span class="str">&#39;hex&#39;</span><span class="pln">  </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;7e&#39;</span><span class="pun">}</span><span class="pln">
+</span><span class="pln">	</span><span class="pun">}</span><span class="pun">;</span><span class="pln">
+</span><span class="pln">
+	</span><span class="kwd">return</span><span class="pln"> </span><span class="pun">(</span><span class="typ">$chr_map</span><span class="pun">)</span><span class="pun">;</span><span class="pln">
+</span><span class="pun">}</span><span class="pln">
+</span><span class="pln">
+</span><span class="pln">
+</span><span class="kwd">END</span><span class="pln"> </span><span class="pun">{</span><span class="pln"> </span><span class="kwd">undef</span><span class="pun">;</span><span class="pln"> </span><span class="pun">}</span><span class="pln">
+</span><span class="atv">1</span><span class="pun">;</span><span class="pln">
+</span><span class="pln">
+</span><span class="pln">
+</span><span class="kwd">__END__</span><span class="pln">
+</span><span class="com">
+
+</span><span class="com">=head1 NAME
+
+ZHex::CharMap (ZHex/CharMap.pm) - CharMap Module, ZebraHex Editor.
+
+
+=head1 VERSION
+
+Version 0.01
+
+=cut
+</span><span class="com">
+our $VERSION = &#39;0.01&#39;;
+
+
+</span><span class="com">=head1 SYNOPSIS
+
+The ZHex::CharMap module maps characters (&#39;z&#39; for example) to their 
+ordinal values and unicode names. The following code is an example of 
+the data structure defined by the chr_map() function:
+
+	  &#39;LATIN SMALL LETTER Z&#39; =&gt; 
+	    { &#39;byte&#39; =&gt; &#39;122&#39;, 
+	      &#39;hex&#39;  =&gt; &#39;7a&#39;}, 
+
+Usage:
+
+    use ZHex;
+
+    my $editorObj = ZHex-&gt;new();
+    ...
+
+=head1 EXPORT
+
+No functions are exported.
+
+=head1 SUBROUTINES/METHODS
+
+
+=head2 chr_map
+Method chr_map()...
+= cut
+
+=head2 chr_map_set
+Method chr_map_set()...
+= cut
+
+=head2 init
+Method init()...
+= cut
+
+
+=head1 AUTHOR
+
+Double Z, C&lt;&lt; &lt;zacharyz at gmail.com&gt; &gt;&gt;
+
+=head1 BUGS
+
+Please report any bugs or feature requests to C&lt;bug-ZHex at rt.cpan.org&gt;, or through
+the web interface at L&lt;http://rt.cpan.org/NoAuth/ReportBug.html?Queue=ZHex&gt;.  I will be notified, and then you&#39;ll
+automatically be notified of progress on your bug as I make changes.
+
+
+
+
+=head1 SUPPORT
+
+You can find documentation for this module with the perldoc command.
+
+    perldoc ZHex
+
+
+You can also look for information at:
+
+=over 4
+
+=item * RT: CPAN&#39;s request tracker (report bugs here)
+
+L&lt;http://rt.cpan.org/NoAuth/Bugs.html?Dist=ZHex&gt;
+
+=item * AnnoCPAN: Annotated CPAN documentation
+
+L&lt;http://annocpan.org/dist/ZHex&gt;
+
+=item * CPAN Ratings
+
+L&lt;http://cpanratings.perl.org/d/ZHex&gt;
+
+=item * Search CPAN
+
+L&lt;http://search.cpan.org/dist/ZHex/&gt;
+
+=back
+
+
+=head1 ACKNOWLEDGEMENTS
+
+
+=head1 LICENSE AND COPYRIGHT
+
+Copyright 2014 Double Z.
+
+This program is free software; you can redistribute it and/or modify it
+under the terms of the the Artistic License (2.0). You may obtain a
+copy of the full license at:
+
+L&lt;http://www.perlfoundation.org/artistic_license_2_0&gt;
+
+Any use, modification, and distribution of the Standard or Modified
+Versions is governed by this Artistic License. By using, modifying or
+distributing the Package, you accept this license. Do not use, modify,
+or distribute the Package, if you do not accept this license.
+
+If your Modified Version has been derived from a Modified Version made
+by someone other than you, you are nevertheless required to ensure that
+your Modified Version complies with the requirements of this license.
+
+This license does not grant you the right to use any trademark, service
+mark, tradename, or logo of the Copyright Holder.
+
+This license includes the non-exclusive, worldwide, free-of-charge
+patent license to make, have made, use, offer to sell, sell, import and
+otherwise transfer the Package with respect to any patent claims
+licensable by the Copyright Holder that are necessarily infringed by the
+Package. If you institute patent litigation (including a cross-claim or
+counterclaim) against any party alleging that the Package constitutes
+direct or contributory patent infringement, then this Artistic License
+to you shall terminate on the date that such litigation is filed.
+
+Disclaimer of Warranty: THE PACKAGE IS PROVIDED BY THE COPYRIGHT HOLDER
+AND CONTRIBUTORS &quot;AS IS&#39; AND WITHOUT ANY EXPRESS OR IMPLIED WARRANTIES.
+THE IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR
+PURPOSE, OR NON-INFRINGEMENT ARE DISCLAIMED TO THE EXTENT PERMITTED BY
+YOUR LOCAL LAW. UNLESS REQUIRED BY LAW, NO COPYRIGHT HOLDER OR
+CONTRIBUTOR WILL BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, OR
+CONSEQUENTIAL DAMAGES ARISING IN ANY WAY OUT OF THE USE OF THE PACKAGE,
+EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+
+=cut
+</span><span class="com">
+1;
+
+</span></pre>
+</body>
+</html>
+

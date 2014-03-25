@@ -1,0 +1,524 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="UTF-8">
+	<title>ZHex - ZebraHex Editor v0.01: Project Source Code</title>
+	<link rel="stylesheet" type="text/css" href="desert.css"/>
+</head>
+<body>
+	<h2>ZHex - ZebraHex Editor v0.01</h2>
+	<p>Source code file: ../ZHex/File.pm</p>
+	<pre class="prettyprint"><span class="com">#!/usr/bin/perl
+</span><span class="pln">
+</span><span class="lit">package</span><span class="pln"> </span><span class="atn">ZHex::File</span><span class="pun">;</span><span class="pln">
+</span><span class="pln">
+</span><span class="kwd">use</span><span class="pln"> </span><span class="atv">5.006</span><span class="pun">;</span><span class="pln">
+</span><span class="kwd">use</span><span class="pln"> </span><span class="kwd">strict</span><span class="pun">;</span><span class="pln">
+</span><span class="kwd">use</span><span class="pln"> </span><span class="kwd">warnings</span><span class="pln"> </span><span class="str">FATAL</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;all&#39;</span><span class="pun">;</span><span class="pln">
+</span><span class="pln">
+</span><span class="kwd">use</span><span class="pln"> </span><span class="pln">ZHex::BoilerPlate</span><span class="pln"> </span><span class="str">qw(new obj_init $VERS)</span><span class="pun">;</span><span class="pln">
+</span><span class="pln">
+</span><span class="kwd">BEGIN</span><span class="pln"> </span><span class="pun">{</span><span class="pln"> </span><span class="kwd">require</span><span class="pln"> </span><span class="pln">Exporter</span><span class="pun">;</span><span class="pln">
+</span><span class="pln">	</span><span class="kwd">our</span><span class="pln"> </span><span class="typ">$VERSION</span><span class="pln">   </span><span class="pun">=</span><span class="pln"> </span><span class="typ">$VERS</span><span class="pun">;</span><span class="pln">
+</span><span class="pln">	</span><span class="kwd">our</span><span class="pln"> </span><span class="typ">@ISA</span><span class="pln">       </span><span class="pun">=</span><span class="pln"> </span><span class="str">qw(Exporter)</span><span class="pun">;</span><span class="pln">
+</span><span class="pln">	</span><span class="kwd">our</span><span class="pln"> </span><span class="typ">@EXPORT</span><span class="pln">    </span><span class="pun">=</span><span class="pln"> </span><span class="str">qw()</span><span class="pun">;</span><span class="pln">
+</span><span class="pln">	</span><span class="kwd">our</span><span class="pln"> </span><span class="typ">@EXPORT_OK</span><span class="pln"> </span><span class="pun">=</span><span class="pln"> </span><span class="str">qw()</span><span class="pun">;</span><span class="pln"> 
+</span><span class="pun">}</span><span class="pln">
+</span><span class="pln">
+</span><span class="com"># Functions: Start-Up/Initialization.
+</span><span class="com">#
+</span><span class="com">#   _____________	___________
+</span><span class="com">#   Function Name	Description
+</span><span class="com">#   _____________	___________
+</span><span class="com">#   init()		Global variable declarations.
+</span><span class="pln">
+</span><span class="lit">sub</span><span class="pln"> </span><span class="typ">init</span><span class="pln"> </span><span class="pun">{</span><span class="pln">
+</span><span class="pln">
+	</span><span class="kwd">my</span><span class="pln"> </span><span class="typ">$self</span><span class="pln"> </span><span class="pun">=</span><span class="pln"> </span><span class="kwd">shift</span><span class="pun">;</span><span class="pln">
+</span><span class="pln">
+</span><span class="com">	# File attributes returned by function stat().
+</span><span class="pln">
+	</span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;f_dev&#39;</span><span class="pun">}</span><span class="pln">     </span><span class="pun">=</span><span class="pln"> </span><span class="str">&#39;&#39;</span><span class="pun">;</span><span class="pln">   </span><span class="com"># Return value f/ stat() function (13 values returned)</span><span class="pln">
+</span><span class="pln">	</span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;f_ino&#39;</span><span class="pun">}</span><span class="pln">     </span><span class="pun">=</span><span class="pln"> </span><span class="str">&#39;&#39;</span><span class="pun">;</span><span class="pln">   </span><span class="com"># Return value f/ stat() function</span><span class="pln">
+</span><span class="pln">	</span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;f_mode&#39;</span><span class="pun">}</span><span class="pln">    </span><span class="pun">=</span><span class="pln"> </span><span class="str">&#39;&#39;</span><span class="pun">;</span><span class="pln">   </span><span class="com"># Return value f/ stat() function</span><span class="pln">
+</span><span class="pln">	</span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;f_nlink&#39;</span><span class="pun">}</span><span class="pln">   </span><span class="pun">=</span><span class="pln"> </span><span class="str">&#39;&#39;</span><span class="pun">;</span><span class="pln">   </span><span class="com"># Return value f/ stat() function</span><span class="pln">
+</span><span class="pln">	</span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;f_uid&#39;</span><span class="pun">}</span><span class="pln">     </span><span class="pun">=</span><span class="pln"> </span><span class="str">&#39;&#39;</span><span class="pun">;</span><span class="pln">   </span><span class="com"># Return value f/ stat() function</span><span class="pln">
+</span><span class="pln">	</span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;f_gid&#39;</span><span class="pun">}</span><span class="pln">     </span><span class="pun">=</span><span class="pln"> </span><span class="str">&#39;&#39;</span><span class="pun">;</span><span class="pln">   </span><span class="com"># Return value f/ stat() function</span><span class="pln">
+</span><span class="pln">	</span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;f_rdev&#39;</span><span class="pun">}</span><span class="pln">    </span><span class="pun">=</span><span class="pln"> </span><span class="str">&#39;&#39;</span><span class="pun">;</span><span class="pln">   </span><span class="com"># Return value f/ stat() function</span><span class="pln">
+</span><span class="pln">	</span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;f_size&#39;</span><span class="pun">}</span><span class="pln">    </span><span class="pun">=</span><span class="pln"> </span><span class="str">&#39;&#39;</span><span class="pun">;</span><span class="pln">   </span><span class="com"># Return value f/ stat() function</span><span class="pln">
+</span><span class="pln">	</span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;f_atime&#39;</span><span class="pun">}</span><span class="pln">   </span><span class="pun">=</span><span class="pln"> </span><span class="str">&#39;&#39;</span><span class="pun">;</span><span class="pln">   </span><span class="com"># Return value f/ stat() function (date/time: last accessed)</span><span class="pln">
+</span><span class="pln">	</span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;f_mtime&#39;</span><span class="pun">}</span><span class="pln">   </span><span class="pun">=</span><span class="pln"> </span><span class="str">&#39;&#39;</span><span class="pun">;</span><span class="pln">   </span><span class="com"># Return value f/ stat() function (date/time: last modified)</span><span class="pln">
+</span><span class="pln">	</span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;f_ctime&#39;</span><span class="pun">}</span><span class="pln">   </span><span class="pun">=</span><span class="pln"> </span><span class="str">&#39;&#39;</span><span class="pun">;</span><span class="pln">   </span><span class="com"># Return value f/ stat() function (date/time: creation)</span><span class="pln">
+</span><span class="pln">	</span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;f_blksize&#39;</span><span class="pun">}</span><span class="pln"> </span><span class="pun">=</span><span class="pln"> </span><span class="str">&#39;&#39;</span><span class="pun">;</span><span class="pln">   </span><span class="com"># Return value f/ stat() function</span><span class="pln">
+</span><span class="pln">	</span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;f_blocks&#39;</span><span class="pun">}</span><span class="pln">  </span><span class="pun">=</span><span class="pln"> </span><span class="str">&#39;&#39;</span><span class="pun">;</span><span class="pln">   </span><span class="com"># Return value f/ stat() function</span><span class="pln">
+</span><span class="pln">
+</span><span class="com">	# Extended file attributes (formatted for display).
+</span><span class="pln">
+	</span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;f_fmt_ctime&#39;</span><span class="pun">}</span><span class="pln"> </span><span class="pun">=</span><span class="pln"> </span><span class="str">&#39;&#39;</span><span class="pun">;</span><span class="pln">   </span><span class="com"># Formatted for display: date/time date/time: creation</span><span class="pln">
+</span><span class="pln">	</span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;f_fmt_atime&#39;</span><span class="pun">}</span><span class="pln"> </span><span class="pun">=</span><span class="pln"> </span><span class="str">&#39;&#39;</span><span class="pun">;</span><span class="pln">   </span><span class="com"># Formatted for display: date/time date/time: last accessed</span><span class="pln">
+</span><span class="pln">	</span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;f_fmt_mtime&#39;</span><span class="pun">}</span><span class="pln"> </span><span class="pun">=</span><span class="pln"> </span><span class="str">&#39;&#39;</span><span class="pun">;</span><span class="pln">   </span><span class="com"># Formatted for display: date/time date/time: last modified</span><span class="pln">
+</span><span class="pln">
+</span><span class="com">	# Variables defined/used by function ...
+</span><span class="pln">
+	</span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;fn&#39;</span><span class="pun">}</span><span class="pln"> </span><span class="pun">=</span><span class="pln"> </span><span class="str">&#39;&#39;</span><span class="pun">;</span><span class="pln">   </span><span class="com"># File name.</span><span class="pln">
+</span><span class="pln">	</span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;fc&#39;</span><span class="pun">}</span><span class="pln"> </span><span class="pun">=</span><span class="pln"> </span><span class="pun">[</span><span class="pun">]</span><span class="pun">;</span><span class="pln">   </span><span class="com"># File contents: reference to array of strings (binmode raw).</span><span class="pln">
+</span><span class="pln">
+	</span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;sz_read&#39;</span><span class="pun">}</span><span class="pln"> </span><span class="pun">=</span><span class="pln"> </span><span class="atv">1024</span><span class="pun">;</span><span class="pln">   </span><span class="com"># Size: number of bytes to read from file w/ each call to read().</span><span class="pln">
+</span><span class="pln">
+	</span><span class="kwd">return</span><span class="pln"> </span><span class="pun">(</span><span class="atv">1</span><span class="pun">)</span><span class="pun">;</span><span class="pln">
+</span><span class="pun">}</span><span class="pln">
+</span><span class="pln">
+</span><span class="com"># Functions: File IO.
+</span><span class="com">#
+</span><span class="com">#   Function Name	Description
+</span><span class="com">#   _____________	___________
+</span><span class="com">#   check_file()	Verify existence of file on filesystem.
+</span><span class="com">#   set_file()		Store filename in self.
+</span><span class="com">#   stat_file()		Wrapper for system stat() function.
+</span><span class="com">#   read_file()		Method for reading file, store in object (system memory).
+</span><span class="com">#   file_len()		Return number of bytes in file.
+</span><span class="com">#   file_bytes()	Return list of bytes from &#39;pos&#39; -&gt; &#39;ofs&#39;.
+</span><span class="com">#   insert_str()	Insert byte at &#39;pos&#39;.
+</span><span class="pln">
+</span><span class="lit">sub</span><span class="pln"> </span><span class="typ">check_file</span><span class="pln"> </span><span class="pun">{</span><span class="pln">
+</span><span class="pln">
+	</span><span class="kwd">my</span><span class="pln"> </span><span class="typ">$self</span><span class="pln"> </span><span class="pun">=</span><span class="pln"> </span><span class="kwd">shift</span><span class="pun">;</span><span class="pln">
+</span><span class="pln">	</span><span class="kwd">my</span><span class="pln"> </span><span class="typ">$arg</span><span class="pln">  </span><span class="pun">=</span><span class="pln"> </span><span class="kwd">shift</span><span class="pun">;</span><span class="pln">
+</span><span class="pln">
+	</span><span class="kwd">if</span><span class="pln"> </span><span class="pun">(</span><span class="pun">!</span><span class="pln"> </span><span class="kwd">defined</span><span class="pln"> </span><span class="typ">$arg</span><span class="pln"> </span><span class="pun">||</span><span class="pln"> 
+</span><span class="pln">	      </span><span class="pun">!</span><span class="pln"> </span><span class="pun">(</span><span class="kwd">ref</span><span class="pln"> </span><span class="pun">(</span><span class="typ">$arg</span><span class="pun">)</span><span class="pln"> </span><span class="pun">eq</span><span class="pln"> </span><span class="str">&#39;HASH&#39;</span><span class="pun">)</span><span class="pun">)</span><span class="pln"> 
+</span><span class="pln">		</span><span class="pun">{</span><span class="pln"> </span><span class="kwd">die</span><span class="pln"> </span><span class="str">&quot;Call to check_file() failed, argument must be hash reference&quot;</span><span class="pun">;</span><span class="pln"> </span><span class="pun">}</span><span class="pln">
+</span><span class="pln">
+	</span><span class="kwd">if</span><span class="pln"> </span><span class="pun">(</span><span class="pun">!</span><span class="pln"> </span><span class="kwd">exists</span><span class="pln">  </span><span class="typ">$arg</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;fn&#39;</span><span class="pun">}</span><span class="pln"> </span><span class="pun">||</span><span class="pln"> 
+</span><span class="pln">	    </span><span class="pun">!</span><span class="pln"> </span><span class="kwd">defined</span><span class="pln"> </span><span class="typ">$arg</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;fn&#39;</span><span class="pun">}</span><span class="pln"> </span><span class="pun">||</span><span class="pln"> 
+</span><span class="pln">	             </span><span class="pun">(</span><span class="typ">$arg</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;fn&#39;</span><span class="pun">}</span><span class="pln"> </span><span class="pun">eq</span><span class="pln"> </span><span class="str">&#39;&#39;</span><span class="pun">)</span><span class="pun">)</span><span class="pln"> 
+</span><span class="pln">		</span><span class="pun">{</span><span class="pln"> </span><span class="kwd">die</span><span class="pln"> </span><span class="str">&quot;Call to check_file() failed, value associated w/ key &#39;fn&#39; was undef/empty string&quot;</span><span class="pun">;</span><span class="pln"> </span><span class="pun">}</span><span class="pln">
+</span><span class="pln">
+</span><span class="com">	# Test filename argument: verify that file exists on filesystem.
+</span><span class="pln">
+	</span><span class="kwd">if</span><span class="pln"> </span><span class="pun">(</span><span class="pun">!</span><span class="pln"> </span><span class="pun">-e</span><span class="pln"> </span><span class="typ">$arg</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;fn&#39;</span><span class="pun">}</span><span class="pln"> </span><span class="pun">||</span><span class="pln"> 
+</span><span class="pln">	    </span><span class="pun">!</span><span class="pln"> </span><span class="pun">-f</span><span class="pln"> </span><span class="typ">$arg</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;fn&#39;</span><span class="pun">}</span><span class="pun">)</span><span class="pln"> </span><span class="pun">{</span><span class="pln">
+</span><span class="pln">
+		</span><span class="kwd">return</span><span class="pln"> </span><span class="pun">(</span><span class="kwd">undef</span><span class="pun">)</span><span class="pun">;</span><span class="pln">
+</span><span class="pln">	</span><span class="pun">}</span><span class="pln">
+</span><span class="pln">
+	</span><span class="kwd">return</span><span class="pln"> </span><span class="pun">(</span><span class="atv">1</span><span class="pun">)</span><span class="pun">;</span><span class="pln">
+</span><span class="pun">}</span><span class="pln">
+</span><span class="pln">
+</span><span class="lit">sub</span><span class="pln"> </span><span class="typ">set_file</span><span class="pln"> </span><span class="pun">{</span><span class="pln">
+</span><span class="pln">
+	</span><span class="kwd">my</span><span class="pln"> </span><span class="typ">$self</span><span class="pln"> </span><span class="pun">=</span><span class="pln"> </span><span class="kwd">shift</span><span class="pun">;</span><span class="pln">
+</span><span class="pln">	</span><span class="kwd">my</span><span class="pln"> </span><span class="typ">$arg</span><span class="pln">  </span><span class="pun">=</span><span class="pln"> </span><span class="kwd">shift</span><span class="pun">;</span><span class="pln">
+</span><span class="pln">
+	</span><span class="kwd">if</span><span class="pln"> </span><span class="pun">(</span><span class="pun">!</span><span class="pln"> </span><span class="kwd">defined</span><span class="pln"> </span><span class="typ">$arg</span><span class="pln"> </span><span class="pun">||</span><span class="pln"> 
+</span><span class="pln">	      </span><span class="pun">!</span><span class="pln"> </span><span class="pun">(</span><span class="kwd">ref</span><span class="pln"> </span><span class="pun">(</span><span class="typ">$arg</span><span class="pun">)</span><span class="pln"> </span><span class="pun">eq</span><span class="pln"> </span><span class="str">&#39;HASH&#39;</span><span class="pun">)</span><span class="pun">)</span><span class="pln"> 
+</span><span class="pln">		</span><span class="pun">{</span><span class="pln"> </span><span class="kwd">die</span><span class="pln"> </span><span class="str">&quot;Call to set_file() failed, argument must be hash reference&quot;</span><span class="pun">;</span><span class="pln"> </span><span class="pun">}</span><span class="pln">
+</span><span class="pln">
+	</span><span class="kwd">if</span><span class="pln"> </span><span class="pun">(</span><span class="pun">!</span><span class="pln"> </span><span class="kwd">exists</span><span class="pln">  </span><span class="typ">$arg</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;fn&#39;</span><span class="pun">}</span><span class="pln"> </span><span class="pun">||</span><span class="pln"> 
+</span><span class="pln">	    </span><span class="pun">!</span><span class="pln"> </span><span class="kwd">defined</span><span class="pln"> </span><span class="typ">$arg</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;fn&#39;</span><span class="pun">}</span><span class="pln"> </span><span class="pun">||</span><span class="pln"> 
+</span><span class="pln">	             </span><span class="pun">(</span><span class="typ">$arg</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;fn&#39;</span><span class="pun">}</span><span class="pln"> </span><span class="pun">eq</span><span class="pln"> </span><span class="str">&#39;&#39;</span><span class="pun">)</span><span class="pun">)</span><span class="pln"> 
+</span><span class="pln">		</span><span class="pun">{</span><span class="pln"> </span><span class="kwd">die</span><span class="pln"> </span><span class="str">&quot;Call to set_file() failed, value associated w/ key &#39;fn&#39; was undef/empty string&quot;</span><span class="pun">;</span><span class="pln"> </span><span class="pun">}</span><span class="pln">
+</span><span class="pln">
+</span><span class="com">	# Test filename argument: verify that file exists on filesystem.
+</span><span class="pln">
+	</span><span class="kwd">if</span><span class="pln"> </span><span class="pun">(</span><span class="pun">!</span><span class="pln"> </span><span class="pun">-e</span><span class="pln"> </span><span class="typ">$arg</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;fn&#39;</span><span class="pun">}</span><span class="pln"> </span><span class="pun">||</span><span class="pln"> 
+</span><span class="pln">	    </span><span class="pun">!</span><span class="pln"> </span><span class="pun">-f</span><span class="pln"> </span><span class="typ">$arg</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;fn&#39;</span><span class="pun">}</span><span class="pun">)</span><span class="pln"> </span><span class="pun">{</span><span class="pln">
+</span><span class="pln">
+		</span><span class="kwd">return</span><span class="pln"> </span><span class="pun">(</span><span class="kwd">undef</span><span class="pun">)</span><span class="pun">;</span><span class="pln">
+</span><span class="pln">	</span><span class="pun">}</span><span class="pln">
+</span><span class="pln">
+	</span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;fn&#39;</span><span class="pun">}</span><span class="pln"> </span><span class="pun">=</span><span class="pln"> </span><span class="typ">$arg</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;fn&#39;</span><span class="pun">}</span><span class="pun">;</span><span class="pln">
+</span><span class="pln">
+	</span><span class="kwd">return</span><span class="pln"> </span><span class="pun">(</span><span class="atv">1</span><span class="pun">)</span><span class="pun">;</span><span class="pln">
+</span><span class="pun">}</span><span class="pln">
+</span><span class="pln">
+</span><span class="lit">sub</span><span class="pln"> </span><span class="typ">stat_file</span><span class="pln"> </span><span class="pun">{</span><span class="pln">
+</span><span class="pln">
+	</span><span class="kwd">my</span><span class="pln"> </span><span class="typ">$self</span><span class="pln"> </span><span class="pun">=</span><span class="pln"> </span><span class="kwd">shift</span><span class="pun">;</span><span class="pln">
+</span><span class="pln">	</span><span class="kwd">my</span><span class="pln"> </span><span class="typ">$arg</span><span class="pln">  </span><span class="pun">=</span><span class="pln"> </span><span class="kwd">shift</span><span class="pun">;</span><span class="pln">
+</span><span class="pln">
+	</span><span class="kwd">if</span><span class="pln"> </span><span class="pun">(</span><span class="pun">!</span><span class="pln"> </span><span class="kwd">defined</span><span class="pln"> </span><span class="typ">$arg</span><span class="pln"> </span><span class="pun">||</span><span class="pln"> 
+</span><span class="pln">	      </span><span class="pun">!</span><span class="pln"> </span><span class="pun">(</span><span class="kwd">ref</span><span class="pln"> </span><span class="pun">(</span><span class="typ">$arg</span><span class="pun">)</span><span class="pln"> </span><span class="pun">eq</span><span class="pln"> </span><span class="str">&#39;HASH&#39;</span><span class="pun">)</span><span class="pun">)</span><span class="pln"> 
+</span><span class="pln">		</span><span class="pun">{</span><span class="pln"> </span><span class="kwd">die</span><span class="pln"> </span><span class="str">&quot;Call to stat_file() failed, argument must be hash reference&quot;</span><span class="pun">;</span><span class="pln"> </span><span class="pun">}</span><span class="pln">
+</span><span class="pln">
+	</span><span class="kwd">if</span><span class="pln"> </span><span class="pun">(</span><span class="pun">!</span><span class="pln"> </span><span class="kwd">exists</span><span class="pln">  </span><span class="typ">$arg</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;fn&#39;</span><span class="pun">}</span><span class="pln"> </span><span class="pun">||</span><span class="pln"> 
+</span><span class="pln">	    </span><span class="pun">!</span><span class="pln"> </span><span class="kwd">defined</span><span class="pln"> </span><span class="typ">$arg</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;fn&#39;</span><span class="pun">}</span><span class="pln"> </span><span class="pun">||</span><span class="pln"> 
+</span><span class="pln">	             </span><span class="pun">(</span><span class="typ">$arg</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;fn&#39;</span><span class="pun">}</span><span class="pln"> </span><span class="pun">eq</span><span class="pln"> </span><span class="str">&#39;&#39;</span><span class="pun">)</span><span class="pun">)</span><span class="pln"> 
+</span><span class="pln">		</span><span class="pun">{</span><span class="pln"> </span><span class="kwd">die</span><span class="pln"> </span><span class="str">&quot;Call to stat_file() failed, value associated w/ key &#39;fn&#39; was undef/empty string&quot;</span><span class="pun">;</span><span class="pln"> </span><span class="pun">}</span><span class="pln">
+</span><span class="pln">
+</span><span class="com">	# This function defines keys (in $self):
+</span><span class="com">	#
+</span><span class="com">	#   ___           ____      ___________ 
+</span><span class="com">	#   KEY           NAME      DESCRIPTION 
+</span><span class="com">	#   ___           ____      ___________ 
+</span><span class="com">	#   f_dev         dev       Device number of filesystem 
+</span><span class="com">	#   f_ino         ino       inode number 
+</span><span class="com">	#   f_mode        mode      File mode  (type and permissions) 
+</span><span class="com">	#   f_nlink       nlink     Number of (hard) links to the file 
+</span><span class="com">	#   f_uid         uid       Numeric user ID of file&#39;s owner 
+</span><span class="com">	#   f_gid         gid       Numeric group ID of file&#39;s owner 
+</span><span class="com">	#   f_rdev        rdev      The device identifier (special files only) 
+</span><span class="com">	#   f_size        size      Total size of file, in bytes 
+</span><span class="com">	#   f_atime       atime     Last access time in seconds since the epoch 
+</span><span class="com">	#   f_mtime       mtime     Last modify time in seconds since the epoch 
+</span><span class="com">	#   f_ctime       ctime     inode change time in seconds since the epoch (*) 
+</span><span class="com">	#   f_blksize     blksize   Preferred block size for file system I/O 
+</span><span class="com">	#   f_blocks      blocks    Actual number of blocks allocated 
+</span><span class="pln">
+</span><span class="com">	# Test filename argument: verify that file exists on filesystem.
+</span><span class="pln">
+	</span><span class="kwd">if</span><span class="pln"> </span><span class="pun">(</span><span class="pun">!</span><span class="pln"> </span><span class="pun">-e</span><span class="pln"> </span><span class="typ">$arg</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;fn&#39;</span><span class="pun">}</span><span class="pln"> </span><span class="pun">||</span><span class="pln"> 
+</span><span class="pln">	    </span><span class="pun">!</span><span class="pln"> </span><span class="pun">-f</span><span class="pln"> </span><span class="typ">$arg</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;fn&#39;</span><span class="pun">}</span><span class="pun">)</span><span class="pln"> </span><span class="pun">{</span><span class="pln">
+</span><span class="pln">
+		</span><span class="kwd">return</span><span class="pln"> </span><span class="pun">(</span><span class="kwd">undef</span><span class="pun">)</span><span class="pun">;</span><span class="pln">
+</span><span class="pln">	</span><span class="pun">}</span><span class="pln">
+</span><span class="pln">
+	</span><span class="kwd">my</span><span class="pln"> </span><span class="typ">%stat_key_pos</span><span class="pln"> </span><span class="pun">=</span><span class="pln"> 
+</span><span class="pln">	  </span><span class="pun">(</span><span class="str">&#39;f_dev&#39;</span><span class="pln">     </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;0&#39;</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	   </span><span class="str">&#39;f_ino&#39;</span><span class="pln">     </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;1&#39;</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	   </span><span class="str">&#39;f_mode&#39;</span><span class="pln">    </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;2&#39;</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	   </span><span class="str">&#39;f_nlink&#39;</span><span class="pln">   </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;3&#39;</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	   </span><span class="str">&#39;f_uid&#39;</span><span class="pln">     </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;4&#39;</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	   </span><span class="str">&#39;f_gid&#39;</span><span class="pln">     </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;5&#39;</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	   </span><span class="str">&#39;f_rdev&#39;</span><span class="pln">    </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;6&#39;</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	   </span><span class="str">&#39;f_size&#39;</span><span class="pln">    </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;7&#39;</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	   </span><span class="str">&#39;f_atime&#39;</span><span class="pln">   </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;8&#39;</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	   </span><span class="str">&#39;f_mtime&#39;</span><span class="pln">   </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;9&#39;</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	   </span><span class="str">&#39;f_ctime&#39;</span><span class="pln">   </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;10&#39;</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	   </span><span class="str">&#39;f_blksize&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;11&#39;</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">	   </span><span class="str">&#39;f_blocks&#39;</span><span class="pln">  </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;12&#39;</span><span class="pun">)</span><span class="pun">;</span><span class="pln">
+</span><span class="pln">
+</span><span class="com">	# Call stat() to retreive file attributes.
+</span><span class="pln">
+	</span><span class="kwd">my</span><span class="pln"> </span><span class="typ">@stat_rv</span><span class="pln"> </span><span class="pun">=</span><span class="pln"> </span><span class="kwd">stat</span><span class="pln"> </span><span class="pun">(</span><span class="typ">$arg</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;fn&#39;</span><span class="pun">}</span><span class="pun">)</span><span class="pun">;</span><span class="pln">
+</span><span class="pln">
+</span><span class="com">	# Store file attributes (within self).
+</span><span class="pln">
+	</span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;f_dev&#39;</span><span class="pun">}</span><span class="pln">     </span><span class="pun">=</span><span class="pln"> </span><span class="typ">$stat_rv</span><span class="pun">[</span><span class="pln"> </span><span class="typ">$stat_key_pos</span><span class="pun">{</span><span class="str">&#39;f_dev&#39;</span><span class="pun">}</span><span class="pln">     </span><span class="pun">]</span><span class="pun">;</span><span class="pln">
+</span><span class="pln">	</span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;f_ino&#39;</span><span class="pun">}</span><span class="pln">     </span><span class="pun">=</span><span class="pln"> </span><span class="typ">$stat_rv</span><span class="pun">[</span><span class="pln"> </span><span class="typ">$stat_key_pos</span><span class="pun">{</span><span class="str">&#39;f_ino&#39;</span><span class="pun">}</span><span class="pln">     </span><span class="pun">]</span><span class="pun">;</span><span class="pln">
+</span><span class="pln">	</span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;f_mode&#39;</span><span class="pun">}</span><span class="pln">    </span><span class="pun">=</span><span class="pln"> </span><span class="typ">$stat_rv</span><span class="pun">[</span><span class="pln"> </span><span class="typ">$stat_key_pos</span><span class="pun">{</span><span class="str">&#39;f_mode&#39;</span><span class="pun">}</span><span class="pln">    </span><span class="pun">]</span><span class="pun">;</span><span class="pln">
+</span><span class="pln">	</span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;f_nlink&#39;</span><span class="pun">}</span><span class="pln">   </span><span class="pun">=</span><span class="pln"> </span><span class="typ">$stat_rv</span><span class="pun">[</span><span class="pln"> </span><span class="typ">$stat_key_pos</span><span class="pun">{</span><span class="str">&#39;f_nlink&#39;</span><span class="pun">}</span><span class="pln">   </span><span class="pun">]</span><span class="pun">;</span><span class="pln">
+</span><span class="pln">	</span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;f_uid&#39;</span><span class="pun">}</span><span class="pln">     </span><span class="pun">=</span><span class="pln"> </span><span class="typ">$stat_rv</span><span class="pun">[</span><span class="pln"> </span><span class="typ">$stat_key_pos</span><span class="pun">{</span><span class="str">&#39;f_uid&#39;</span><span class="pun">}</span><span class="pln">     </span><span class="pun">]</span><span class="pun">;</span><span class="pln">
+</span><span class="pln">	</span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;f_gid&#39;</span><span class="pun">}</span><span class="pln">     </span><span class="pun">=</span><span class="pln"> </span><span class="typ">$stat_rv</span><span class="pun">[</span><span class="pln"> </span><span class="typ">$stat_key_pos</span><span class="pun">{</span><span class="str">&#39;f_gid&#39;</span><span class="pun">}</span><span class="pln">     </span><span class="pun">]</span><span class="pun">;</span><span class="pln">
+</span><span class="pln">	</span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;f_rdev&#39;</span><span class="pun">}</span><span class="pln">    </span><span class="pun">=</span><span class="pln"> </span><span class="typ">$stat_rv</span><span class="pun">[</span><span class="pln"> </span><span class="typ">$stat_key_pos</span><span class="pun">{</span><span class="str">&#39;f_rdev&#39;</span><span class="pun">}</span><span class="pln">    </span><span class="pun">]</span><span class="pun">;</span><span class="pln"> 
+</span><span class="pln">	</span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;f_size&#39;</span><span class="pun">}</span><span class="pln">    </span><span class="pun">=</span><span class="pln"> </span><span class="typ">$stat_rv</span><span class="pun">[</span><span class="pln"> </span><span class="typ">$stat_key_pos</span><span class="pun">{</span><span class="str">&#39;f_size&#39;</span><span class="pun">}</span><span class="pln">    </span><span class="pun">]</span><span class="pun">;</span><span class="pln">
+</span><span class="pln">	</span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;f_atime&#39;</span><span class="pun">}</span><span class="pln">   </span><span class="pun">=</span><span class="pln"> </span><span class="typ">$stat_rv</span><span class="pun">[</span><span class="pln"> </span><span class="typ">$stat_key_pos</span><span class="pun">{</span><span class="str">&#39;f_atime&#39;</span><span class="pun">}</span><span class="pln">   </span><span class="pun">]</span><span class="pun">;</span><span class="pln">
+</span><span class="pln">	</span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;f_mtime&#39;</span><span class="pun">}</span><span class="pln">   </span><span class="pun">=</span><span class="pln"> </span><span class="typ">$stat_rv</span><span class="pun">[</span><span class="pln"> </span><span class="typ">$stat_key_pos</span><span class="pun">{</span><span class="str">&#39;f_mtime&#39;</span><span class="pun">}</span><span class="pln">   </span><span class="pun">]</span><span class="pun">;</span><span class="pln">
+</span><span class="pln">	</span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;f_ctime&#39;</span><span class="pun">}</span><span class="pln">   </span><span class="pun">=</span><span class="pln"> </span><span class="typ">$stat_rv</span><span class="pun">[</span><span class="pln"> </span><span class="typ">$stat_key_pos</span><span class="pun">{</span><span class="str">&#39;f_ctime&#39;</span><span class="pun">}</span><span class="pln">   </span><span class="pun">]</span><span class="pun">;</span><span class="pln">
+</span><span class="pln">	</span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;f_blksize&#39;</span><span class="pun">}</span><span class="pln"> </span><span class="pun">=</span><span class="pln"> </span><span class="typ">$stat_rv</span><span class="pun">[</span><span class="pln"> </span><span class="typ">$stat_key_pos</span><span class="pun">{</span><span class="str">&#39;f_blksize&#39;</span><span class="pun">}</span><span class="pln"> </span><span class="pun">]</span><span class="pun">;</span><span class="pln">
+</span><span class="pln">	</span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;f_blocks&#39;</span><span class="pun">}</span><span class="pln">  </span><span class="pun">=</span><span class="pln"> </span><span class="typ">$stat_rv</span><span class="pun">[</span><span class="pln"> </span><span class="typ">$stat_key_pos</span><span class="pun">{</span><span class="str">&#39;f_blocks&#39;</span><span class="pun">}</span><span class="pln">  </span><span class="pun">]</span><span class="pun">;</span><span class="pln">
+</span><span class="pln">
+	</span><span class="kwd">return</span><span class="pln"> </span><span class="pun">(</span><span class="atv">1</span><span class="pun">)</span><span class="pun">;</span><span class="pln">
+</span><span class="pun">}</span><span class="pln">
+</span><span class="pln">
+</span><span class="lit">sub</span><span class="pln"> </span><span class="typ">read_file</span><span class="pln"> </span><span class="pun">{</span><span class="pln">
+</span><span class="pln">
+	</span><span class="kwd">my</span><span class="pln"> </span><span class="typ">$self</span><span class="pln"> </span><span class="pun">=</span><span class="pln"> </span><span class="kwd">shift</span><span class="pun">;</span><span class="pln">
+</span><span class="pln">	</span><span class="kwd">my</span><span class="pln"> </span><span class="typ">$arg</span><span class="pln">  </span><span class="pun">=</span><span class="pln"> </span><span class="kwd">shift</span><span class="pun">;</span><span class="pln">
+</span><span class="pln">
+	</span><span class="kwd">if</span><span class="pln"> </span><span class="pun">(</span><span class="pun">!</span><span class="pln"> </span><span class="kwd">defined</span><span class="pln"> </span><span class="typ">$arg</span><span class="pln"> </span><span class="pun">||</span><span class="pln"> 
+</span><span class="pln">	      </span><span class="pun">!</span><span class="pln"> </span><span class="pun">(</span><span class="kwd">ref</span><span class="pln"> </span><span class="pun">(</span><span class="typ">$arg</span><span class="pun">)</span><span class="pln"> </span><span class="pun">eq</span><span class="pln"> </span><span class="str">&#39;HASH&#39;</span><span class="pun">)</span><span class="pun">)</span><span class="pln"> 
+</span><span class="pln">		</span><span class="pun">{</span><span class="pln"> </span><span class="kwd">die</span><span class="pln"> </span><span class="str">&quot;Call to read_file() failed, argument must be hash reference&quot;</span><span class="pun">;</span><span class="pln"> </span><span class="pun">}</span><span class="pln">
+</span><span class="pln">
+	</span><span class="kwd">if</span><span class="pln"> </span><span class="pun">(</span><span class="pun">!</span><span class="pln"> </span><span class="kwd">exists</span><span class="pln">  </span><span class="typ">$arg</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;fn&#39;</span><span class="pun">}</span><span class="pln"> </span><span class="pun">||</span><span class="pln"> 
+</span><span class="pln">	    </span><span class="pun">!</span><span class="pln"> </span><span class="kwd">defined</span><span class="pln"> </span><span class="typ">$arg</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;fn&#39;</span><span class="pun">}</span><span class="pln"> </span><span class="pun">||</span><span class="pln"> 
+</span><span class="pln">	             </span><span class="pun">(</span><span class="typ">$arg</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;fn&#39;</span><span class="pun">}</span><span class="pln"> </span><span class="pun">eq</span><span class="pln"> </span><span class="str">&#39;&#39;</span><span class="pun">)</span><span class="pun">)</span><span class="pln"> 
+</span><span class="pln">		</span><span class="pun">{</span><span class="pln"> </span><span class="kwd">die</span><span class="pln"> </span><span class="str">&quot;Call to read_file() failed, value associated w/ key &#39;fn&#39; was undef/empty string&quot;</span><span class="pun">;</span><span class="pln"> </span><span class="pun">}</span><span class="pln">
+</span><span class="pln">
+</span><span class="com">	# Test filename argument: verify that file exists on filesystem.
+</span><span class="pln">
+	</span><span class="kwd">if</span><span class="pln"> </span><span class="pun">(</span><span class="pun">!</span><span class="pln"> </span><span class="pun">-e</span><span class="pln"> </span><span class="typ">$arg</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;fn&#39;</span><span class="pun">}</span><span class="pln"> </span><span class="pun">||</span><span class="pln"> 
+</span><span class="pln">	    </span><span class="pun">!</span><span class="pln"> </span><span class="pun">-f</span><span class="pln"> </span><span class="typ">$arg</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;fn&#39;</span><span class="pun">}</span><span class="pun">)</span><span class="pln"> </span><span class="pun">{</span><span class="pln">
+</span><span class="pln">
+		</span><span class="kwd">return</span><span class="pln"> </span><span class="pun">(</span><span class="kwd">undef</span><span class="pun">)</span><span class="pun">;</span><span class="pln">
+</span><span class="pln">	</span><span class="pun">}</span><span class="pln">
+</span><span class="pln">
+	</span><span class="kwd">my</span><span class="pln"> </span><span class="typ">$fh</span><span class="pun">;</span><span class="pln">   </span><span class="com"># Filehandle</span><span class="pln">
+</span><span class="pln">
+</span><span class="com">	             # _________________
+</span><span class="pln">	</span><span class="kwd">use</span><span class="pln"> </span><span class="kwd">bytes</span><span class="pun">;</span><span class="pln">   </span><span class="com"># Bytes pragma: ON.</span><span class="pln">
+</span><span class="pln">
+	</span><span class="kwd">my</span><span class="pln"> </span><span class="pun">(</span><span class="typ">$buf</span><span class="pun">)</span><span class="pun">;</span><span class="pln">   </span><span class="com"># &lt;--- Declare inside &quot;use bytes&quot; pragma.</span><span class="pln">
+</span><span class="pln">	</span><span class="kwd">my</span><span class="pln"> </span><span class="pun">(</span><span class="typ">@fc</span><span class="pun">)</span><span class="pun">;</span><span class="pln">              </span><span class="com"># &lt;--- Declare inside &quot;use bytes&quot; pragma.</span><span class="pln">
+</span><span class="pln">	</span><span class="kwd">if</span><span class="pln"> </span><span class="pun">(</span><span class="kwd">open</span><span class="pln"> </span><span class="pun">(</span><span class="typ">$fh</span><span class="pun">,</span><span class="pln"> </span><span class="str">&quot;&lt;:raw&quot;</span><span class="pun">,</span><span class="pln"> </span><span class="typ">$arg</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;fn&#39;</span><span class="pun">}</span><span class="pun">)</span><span class="pun">)</span><span class="pln"> 
+</span><span class="pln">	     </span><span class="pun">{</span><span class="pln"> </span><span class="kwd">undef</span><span class="pun">;</span><span class="pln"> </span><span class="pun">}</span><span class="pln">
+</span><span class="pln">	</span><span class="kwd">else</span><span class="pln"> </span><span class="pun">{</span><span class="pln"> </span><span class="kwd">warn</span><span class="pln"> </span><span class="pun">(</span><span class="str">&quot;Function open() returned w/ error. &quot;</span><span class="pun">,</span><span class="pln"> </span><span class="typ">$!</span><span class="pun">,</span><span class="pln"> </span><span class="typ">$^E</span><span class="pun">)</span><span class="pun">;</span><span class="pln"> </span><span class="pun">}</span><span class="pln">
+</span><span class="pln">
+	</span><span class="kwd">if</span><span class="pln"> </span><span class="pun">(</span><span class="kwd">binmode</span><span class="pln"> </span><span class="pun">(</span><span class="typ">$fh</span><span class="pun">,</span><span class="pln"> </span><span class="str">&quot;:raw&quot;</span><span class="pun">)</span><span class="pun">)</span><span class="pln"> 
+</span><span class="pln">	     </span><span class="pun">{</span><span class="pln"> </span><span class="kwd">undef</span><span class="pun">;</span><span class="pln"> </span><span class="pun">}</span><span class="pln">
+</span><span class="pln">	</span><span class="kwd">else</span><span class="pln"> </span><span class="pun">{</span><span class="pln"> </span><span class="kwd">warn</span><span class="pln"> </span><span class="pun">(</span><span class="str">&quot;Function binmode() returned w/ error. &quot;</span><span class="pun">,</span><span class="pln"> </span><span class="typ">$!</span><span class="pun">,</span><span class="pln"> </span><span class="typ">$^E</span><span class="pun">)</span><span class="pun">;</span><span class="pln"> </span><span class="pun">}</span><span class="pln">
+</span><span class="pln">
+	</span><span class="lit">no</span><span class="pln"> </span><span class="kwd">bytes</span><span class="pun">;</span><span class="pln">    </span><span class="com"># Bytes pragma: OFF.</span><span class="pln">
+</span><span class="com">	             # __________________
+</span><span class="pln">
+	</span><span class="kwd">while</span><span class="pln"> </span><span class="pun">(</span><span class="kwd">my</span><span class="pln"> </span><span class="typ">$rv</span><span class="pln"> </span><span class="pun">=</span><span class="pln"> </span><span class="kwd">read</span><span class="pln"> </span><span class="pun">(</span><span class="typ">$fh</span><span class="pun">,</span><span class="pln"> </span><span class="typ">$buf</span><span class="pun">,</span><span class="pln"> </span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;sz_read&#39;</span><span class="pun">}</span><span class="pun">,</span><span class="pln"> </span><span class="atv">0</span><span class="pun">)</span><span class="pun">)</span><span class="pln"> 
+</span><span class="pln">		</span><span class="pun">{</span><span class="pln"> </span><span class="kwd">push</span><span class="pln"> </span><span class="typ">@fc</span><span class="pun">,</span><span class="pln"> </span><span class="kwd">split</span><span class="pln"> </span><span class="str">&#39;&#39;</span><span class="pun">,</span><span class="pln"> </span><span class="typ">$buf</span><span class="pun">;</span><span class="pln"> </span><span class="pun">}</span><span class="pln">
+</span><span class="pln">
+	</span><span class="kwd">close</span><span class="pln"> </span><span class="typ">$fh</span><span class="pun">;</span><span class="pln">
+</span><span class="pln">
+	</span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;fc&#39;</span><span class="pun">}</span><span class="pln"> </span><span class="pun">=</span><span class="pln"> </span><span class="var">\</span><span class="typ">@fc</span><span class="pun">;</span><span class="pln">
+</span><span class="pln">
+	</span><span class="kwd">return</span><span class="pln"> </span><span class="pun">(</span><span class="atv">1</span><span class="pun">)</span><span class="pun">;</span><span class="pln">
+</span><span class="pun">}</span><span class="pln">
+</span><span class="pln">
+</span><span class="lit">sub</span><span class="pln"> </span><span class="typ">file_len</span><span class="pln"> </span><span class="pun">{</span><span class="pln">
+</span><span class="pln">
+	</span><span class="kwd">my</span><span class="pln"> </span><span class="typ">$self</span><span class="pln"> </span><span class="pun">=</span><span class="pln"> </span><span class="kwd">shift</span><span class="pun">;</span><span class="pln">
+</span><span class="pln">
+	</span><span class="kwd">if</span><span class="pln"> </span><span class="pun">(</span><span class="pun">!</span><span class="pln"> </span><span class="kwd">exists</span><span class="pln">  </span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;fc&#39;</span><span class="pun">}</span><span class="pln"> </span><span class="pun">||</span><span class="pln"> 
+</span><span class="pln">	    </span><span class="pun">!</span><span class="pln"> </span><span class="kwd">defined</span><span class="pln"> </span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;fc&#39;</span><span class="pun">}</span><span class="pln"> </span><span class="pun">||</span><span class="pln"> 
+</span><span class="pln">	    </span><span class="pun">!</span><span class="pln">  </span><span class="pun">(</span><span class="pun">(</span><span class="kwd">ref</span><span class="pln"> </span><span class="pun">(</span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;fc&#39;</span><span class="pun">}</span><span class="pun">)</span><span class="pun">)</span><span class="pln"> </span><span class="pun">eq</span><span class="pln"> </span><span class="str">&#39;ARRAY&#39;</span><span class="pun">)</span><span class="pln"> </span><span class="pun">||</span><span class="pln"> 
+</span><span class="pln">	  </span><span class="pun">(</span><span class="pun">(</span><span class="kwd">scalar</span><span class="pln"> </span><span class="pun">(</span><span class="var">@</span><span class="pun">{</span><span class="pln"> </span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;fc&#39;</span><span class="pun">}</span><span class="pln"> </span><span class="pun">}</span><span class="pun">)</span><span class="pun">)</span><span class="pln"> </span><span class="pun">&lt;</span><span class="pln"> </span><span class="atv">1</span><span class="pun">)</span><span class="pun">)</span><span class="pln"> </span><span class="pun">{</span><span class="pln">
+</span><span class="pln">
+		</span><span class="kwd">return</span><span class="pln"> </span><span class="pun">(</span><span class="kwd">undef</span><span class="pun">)</span><span class="pun">;</span><span class="pln">
+</span><span class="pln">	</span><span class="pun">}</span><span class="pln">
+</span><span class="pln">
+	</span><span class="kwd">return</span><span class="pln"> </span><span class="pun">(</span><span class="kwd">scalar</span><span class="pln"> </span><span class="pun">(</span><span class="var">@</span><span class="pun">{</span><span class="pln"> </span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;fc&#39;</span><span class="pun">}</span><span class="pln"> </span><span class="pun">}</span><span class="pun">)</span><span class="pun">)</span><span class="pun">;</span><span class="pln">
+</span><span class="pun">}</span><span class="pln">
+</span><span class="pln">
+</span><span class="lit">sub</span><span class="pln"> </span><span class="typ">file_bytes</span><span class="pln"> </span><span class="pun">{</span><span class="pln">
+</span><span class="pln">
+	</span><span class="kwd">my</span><span class="pln"> </span><span class="typ">$self</span><span class="pln"> </span><span class="pun">=</span><span class="pln"> </span><span class="kwd">shift</span><span class="pun">;</span><span class="pln">
+</span><span class="pln">	</span><span class="kwd">my</span><span class="pln"> </span><span class="typ">$arg</span><span class="pln">  </span><span class="pun">=</span><span class="pln"> </span><span class="kwd">shift</span><span class="pun">;</span><span class="pln">
+</span><span class="pln">
+	</span><span class="kwd">if</span><span class="pln"> </span><span class="pun">(</span><span class="pun">!</span><span class="pln"> </span><span class="kwd">defined</span><span class="pln"> </span><span class="typ">$arg</span><span class="pln"> </span><span class="pun">||</span><span class="pln"> 
+</span><span class="pln">	      </span><span class="pun">!</span><span class="pln"> </span><span class="pun">(</span><span class="kwd">ref</span><span class="pln"> </span><span class="pun">(</span><span class="typ">$arg</span><span class="pun">)</span><span class="pln"> </span><span class="pun">eq</span><span class="pln"> </span><span class="str">&#39;HASH&#39;</span><span class="pun">)</span><span class="pun">)</span><span class="pln"> 
+</span><span class="pln">		</span><span class="pun">{</span><span class="pln"> </span><span class="kwd">die</span><span class="pln"> </span><span class="str">&quot;Call to file_bytes() failed, argument must be hash reference&quot;</span><span class="pun">;</span><span class="pln"> </span><span class="pun">}</span><span class="pln">
+</span><span class="pln">
+	</span><span class="kwd">if</span><span class="pln"> </span><span class="pun">(</span><span class="pun">!</span><span class="pln"> </span><span class="kwd">exists</span><span class="pln">  </span><span class="typ">$arg</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;ofs&#39;</span><span class="pun">}</span><span class="pln"> </span><span class="pun">||</span><span class="pln"> 
+</span><span class="pln">	    </span><span class="pun">!</span><span class="pln"> </span><span class="kwd">defined</span><span class="pln"> </span><span class="typ">$arg</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;ofs&#39;</span><span class="pun">}</span><span class="pln"> </span><span class="pun">||</span><span class="pln"> 
+</span><span class="pln">	             </span><span class="pun">(</span><span class="typ">$arg</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;ofs&#39;</span><span class="pun">}</span><span class="pln"> </span><span class="pun">eq</span><span class="pln"> </span><span class="str">&#39;&#39;</span><span class="pun">)</span><span class="pun">)</span><span class="pln"> 
+</span><span class="pln">		</span><span class="pun">{</span><span class="pln"> </span><span class="kwd">die</span><span class="pln"> </span><span class="str">&quot;Call to file_bytes() failed, value associated w/ key &#39;ofs&#39; was undef/empty string&quot;</span><span class="pun">;</span><span class="pln"> </span><span class="pun">}</span><span class="pln">
+</span><span class="pln">
+	</span><span class="kwd">if</span><span class="pln"> </span><span class="pun">(</span><span class="pun">!</span><span class="pln"> </span><span class="kwd">exists</span><span class="pln">  </span><span class="typ">$arg</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;len&#39;</span><span class="pun">}</span><span class="pln"> </span><span class="pun">||</span><span class="pln"> 
+</span><span class="pln">	    </span><span class="pun">!</span><span class="pln"> </span><span class="kwd">defined</span><span class="pln"> </span><span class="typ">$arg</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;len&#39;</span><span class="pun">}</span><span class="pln"> </span><span class="pun">||</span><span class="pln"> 
+</span><span class="pln">	             </span><span class="pun">(</span><span class="typ">$arg</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;len&#39;</span><span class="pun">}</span><span class="pln"> </span><span class="pun">eq</span><span class="pln"> </span><span class="str">&#39;&#39;</span><span class="pun">)</span><span class="pun">)</span><span class="pln"> 
+</span><span class="pln">		</span><span class="pun">{</span><span class="pln"> </span><span class="kwd">die</span><span class="pln"> </span><span class="str">&quot;Call to file_bytes() failed, value associated w/ key &#39;len&#39; was undef/empty string&quot;</span><span class="pun">;</span><span class="pln"> </span><span class="pun">}</span><span class="pln">
+</span><span class="pln">
+	</span><span class="kwd">my</span><span class="pln"> </span><span class="typ">$fc_len</span><span class="pln"> </span><span class="pun">=</span><span class="pln"> </span><span class="kwd">scalar</span><span class="pln"> </span><span class="pun">(</span><span class="var">@</span><span class="pun">{</span><span class="pln"> </span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;fc&#39;</span><span class="pun">}</span><span class="pln"> </span><span class="pun">}</span><span class="pun">)</span><span class="pun">;</span><span class="pln">
+</span><span class="pln">
+	</span><span class="kwd">if</span><span class="pln"> </span><span class="pun">(</span><span class="pun">!</span><span class="pln"> </span><span class="kwd">exists</span><span class="pln">  </span><span class="typ">$arg</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;ofs&#39;</span><span class="pun">}</span><span class="pln"> </span><span class="pun">||</span><span class="pln"> 
+</span><span class="pln">	    </span><span class="pun">!</span><span class="pln"> </span><span class="kwd">defined</span><span class="pln"> </span><span class="typ">$arg</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;ofs&#39;</span><span class="pun">}</span><span class="pln"> </span><span class="pun">||</span><span class="pln"> 
+</span><span class="pln">	           </span><span class="pun">!</span><span class="pln"> </span><span class="pun">(</span><span class="typ">$arg</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;ofs&#39;</span><span class="pun">}</span><span class="pln"> </span><span class="pun">=~</span><span class="pln"> </span><span class="str">/^\d+?$/</span><span class="pun">)</span><span class="pln"> </span><span class="pun">||</span><span class="pln"> 
+</span><span class="pln">	             </span><span class="pun">(</span><span class="typ">$arg</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;ofs&#39;</span><span class="pun">}</span><span class="pln"> </span><span class="pun">&gt;</span><span class="pln"> </span><span class="typ">$fc_len</span><span class="pun">)</span><span class="pln"> </span><span class="pun">||</span><span class="pln"> 
+</span><span class="pln">	    </span><span class="pun">!</span><span class="pln"> </span><span class="kwd">exists</span><span class="pln">  </span><span class="typ">$arg</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;len&#39;</span><span class="pun">}</span><span class="pln"> </span><span class="pun">||</span><span class="pln"> 
+</span><span class="pln">	    </span><span class="pun">!</span><span class="pln"> </span><span class="kwd">defined</span><span class="pln"> </span><span class="typ">$arg</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;len&#39;</span><span class="pun">}</span><span class="pln"> </span><span class="pun">||</span><span class="pln"> 
+</span><span class="pln">	           </span><span class="pun">!</span><span class="pln"> </span><span class="pun">(</span><span class="typ">$arg</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;len&#39;</span><span class="pun">}</span><span class="pln"> </span><span class="pun">=~</span><span class="pln"> </span><span class="str">/^\d+?$/</span><span class="pun">)</span><span class="pln"> </span><span class="pun">||</span><span class="pln"> 
+</span><span class="pln">	            </span><span class="pun">(</span><span class="pun">(</span><span class="typ">$arg</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;ofs&#39;</span><span class="pun">}</span><span class="pln"> </span><span class="pun">+</span><span class="pln"> </span><span class="typ">$arg</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;len&#39;</span><span class="pun">}</span><span class="pun">)</span><span class="pln"> </span><span class="pun">&gt;</span><span class="pln"> </span><span class="typ">$fc_len</span><span class="pun">)</span><span class="pun">)</span><span class="pln"> </span><span class="pun">{</span><span class="pln">
+</span><span class="pln">
+		</span><span class="kwd">return</span><span class="pln"> </span><span class="pun">(</span><span class="kwd">undef</span><span class="pun">)</span><span class="pun">;</span><span class="pln">
+</span><span class="pln">	</span><span class="pun">}</span><span class="pln">
+</span><span class="pln">
+	</span><span class="kwd">return</span><span class="pln"> </span><span class="pun">(</span><span class="var">\</span><span class="var">@</span><span class="pun">{</span><span class="pln"> </span><span class="pun">[</span><span class="pln"> </span><span class="var">@</span><span class="pun">{</span><span class="pln"> </span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;fc&#39;</span><span class="pun">}</span><span class="pln"> </span><span class="pun">}</span><span class="pun">[</span><span class="typ">$arg</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;ofs&#39;</span><span class="pun">}</span><span class="pln"> </span><span class="pun">..</span><span class="pln"> </span><span class="pun">(</span><span class="pun">(</span><span class="typ">$arg</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;ofs&#39;</span><span class="pun">}</span><span class="pln"> </span><span class="pun">+</span><span class="pln"> </span><span class="typ">$arg</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;len&#39;</span><span class="pun">}</span><span class="pun">)</span><span class="pln"> </span><span class="pun">-</span><span class="pln"> </span><span class="atv">1</span><span class="pun">)</span><span class="pun">]</span><span class="pln"> </span><span class="pun">]</span><span class="pln"> </span><span class="pun">}</span><span class="pun">)</span><span class="pun">;</span><span class="pln">
+</span><span class="pun">}</span><span class="pln">
+</span><span class="pln">
+</span><span class="lit">sub</span><span class="pln"> </span><span class="typ">insert_str</span><span class="pln"> </span><span class="pun">{</span><span class="pln">
+</span><span class="pln">
+	</span><span class="kwd">my</span><span class="pln"> </span><span class="typ">$self</span><span class="pln"> </span><span class="pun">=</span><span class="pln"> </span><span class="kwd">shift</span><span class="pun">;</span><span class="pln">
+</span><span class="pln">	</span><span class="kwd">my</span><span class="pln"> </span><span class="typ">$arg</span><span class="pln">  </span><span class="pun">=</span><span class="pln"> </span><span class="kwd">shift</span><span class="pun">;</span><span class="pln">
+</span><span class="pln">
+	</span><span class="kwd">if</span><span class="pln"> </span><span class="pun">(</span><span class="pun">!</span><span class="pln"> </span><span class="kwd">defined</span><span class="pln"> </span><span class="typ">$arg</span><span class="pln"> </span><span class="pun">||</span><span class="pln"> 
+</span><span class="pln">	      </span><span class="pun">!</span><span class="pln"> </span><span class="pun">(</span><span class="kwd">ref</span><span class="pln"> </span><span class="pun">(</span><span class="typ">$arg</span><span class="pun">)</span><span class="pln"> </span><span class="pun">eq</span><span class="pln"> </span><span class="str">&#39;HASH&#39;</span><span class="pun">)</span><span class="pun">)</span><span class="pln"> 
+</span><span class="pln">		</span><span class="pun">{</span><span class="pln"> </span><span class="kwd">die</span><span class="pln"> </span><span class="str">&quot;Call to insert_str() failed, argument must be hash reference&quot;</span><span class="pun">;</span><span class="pln"> </span><span class="pun">}</span><span class="pln">
+</span><span class="pln">
+	</span><span class="kwd">if</span><span class="pln"> </span><span class="pun">(</span><span class="pun">!</span><span class="pln"> </span><span class="kwd">exists</span><span class="pln">  </span><span class="typ">$arg</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;pos&#39;</span><span class="pun">}</span><span class="pln"> </span><span class="pun">||</span><span class="pln"> 
+</span><span class="pln">	    </span><span class="pun">!</span><span class="pln"> </span><span class="kwd">defined</span><span class="pln"> </span><span class="typ">$arg</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;pos&#39;</span><span class="pun">}</span><span class="pln"> </span><span class="pun">||</span><span class="pln"> 
+</span><span class="pln">	             </span><span class="pun">(</span><span class="typ">$arg</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;pos&#39;</span><span class="pun">}</span><span class="pln"> </span><span class="pun">eq</span><span class="pln"> </span><span class="str">&#39;&#39;</span><span class="pun">)</span><span class="pln"> </span><span class="pun">||</span><span class="pln"> 
+</span><span class="pln">	           </span><span class="pun">!</span><span class="pln"> </span><span class="pun">(</span><span class="typ">$arg</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;pos&#39;</span><span class="pun">}</span><span class="pln"> </span><span class="pun">=~</span><span class="pln"> </span><span class="str">/^\d+?$/</span><span class="pun">)</span><span class="pun">)</span><span class="pln"> 
+</span><span class="pln">		</span><span class="pun">{</span><span class="pln"> </span><span class="kwd">die</span><span class="pln"> </span><span class="str">&quot;Call to insert_str() failed, value associated w/ key &#39;pos&#39; must be one or more digits&quot;</span><span class="pun">;</span><span class="pln"> </span><span class="pun">}</span><span class="pln">
+</span><span class="pln">
+	</span><span class="kwd">my</span><span class="pln"> </span><span class="typ">$fc_len</span><span class="pln"> </span><span class="pun">=</span><span class="pln"> </span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="typ">file_len</span><span class="pun">(</span><span class="pun">)</span><span class="pun">;</span><span class="pln">
+</span><span class="pln">
+	</span><span class="kwd">if</span><span class="pln"> </span><span class="pun">(</span><span class="pun">!</span><span class="pln"> </span><span class="kwd">defined</span><span class="pln"> </span><span class="typ">$fc_len</span><span class="pln"> </span><span class="pun">||</span><span class="pln"> 
+</span><span class="pln">	           </span><span class="pun">!</span><span class="pln"> </span><span class="pun">(</span><span class="typ">$fc_len</span><span class="pln"> </span><span class="pun">=~</span><span class="pln"> </span><span class="str">/^\d+?$/</span><span class="pun">)</span><span class="pun">)</span><span class="pln"> </span><span class="pun">{</span><span class="pln">
+</span><span class="pln">
+		</span><span class="kwd">return</span><span class="pln"> </span><span class="pun">(</span><span class="kwd">undef</span><span class="pun">)</span><span class="pun">;</span><span class="pln">
+</span><span class="pln">	</span><span class="pun">}</span><span class="pln">
+</span><span class="pln">
+	</span><span class="kwd">if</span><span class="pln"> </span><span class="pun">(</span><span class="typ">$arg</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;pos&#39;</span><span class="pun">}</span><span class="pln"> </span><span class="pun">&gt;</span><span class="pln"> </span><span class="typ">$fc_len</span><span class="pun">)</span><span class="pln"> 
+</span><span class="pln">		</span><span class="pun">{</span><span class="pln"> </span><span class="kwd">die</span><span class="pln"> </span><span class="str">&quot;Call to insert_str() failed, value associated w/ key &#39;pos&#39; is greater than file length&quot;</span><span class="pun">;</span><span class="pln"> </span><span class="pun">}</span><span class="pln">
+</span><span class="pln">
+	</span><span class="kwd">if</span><span class="pln"> </span><span class="pun">(</span><span class="pun">!</span><span class="pln"> </span><span class="kwd">exists</span><span class="pln">  </span><span class="typ">$arg</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;str&#39;</span><span class="pun">}</span><span class="pln"> </span><span class="pun">||</span><span class="pln"> 
+</span><span class="pln">	    </span><span class="pun">!</span><span class="pln"> </span><span class="kwd">defined</span><span class="pln"> </span><span class="typ">$arg</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;str&#39;</span><span class="pun">}</span><span class="pln"> </span><span class="pun">||</span><span class="pln"> 
+</span><span class="pln">	             </span><span class="pun">(</span><span class="typ">$arg</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;str&#39;</span><span class="pun">}</span><span class="pln"> </span><span class="pun">eq</span><span class="pln"> </span><span class="str">&#39;&#39;</span><span class="pun">)</span><span class="pun">)</span><span class="pln"> 
+</span><span class="pln">		</span><span class="pun">{</span><span class="pln"> </span><span class="kwd">die</span><span class="pln"> </span><span class="str">&quot;Call to insert_str() failed, value associated w/ key &#39;str&#39; was undef/empty string&quot;</span><span class="pun">;</span><span class="pln"> </span><span class="pun">}</span><span class="pln">
+</span><span class="pln">
+	</span><span class="kwd">my</span><span class="pln"> </span><span class="typ">@fc_tmp</span><span class="pun">;</span><span class="pln">
+</span><span class="pln">	</span><span class="kwd">push</span><span class="pln"> </span><span class="typ">@fc_tmp</span><span class="pun">,</span><span class="pln"> </span><span class="var">@</span><span class="pun">{</span><span class="pln"> </span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;fc&#39;</span><span class="pun">}</span><span class="pln"> </span><span class="pun">}</span><span class="pun">[</span><span class="atv">0</span><span class="pln"> </span><span class="pun">..</span><span class="pln"> </span><span class="pun">(</span><span class="typ">$arg</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;pos&#39;</span><span class="pun">}</span><span class="pln"> </span><span class="pun">-</span><span class="pln"> </span><span class="atv">1</span><span class="pun">)</span><span class="pun">]</span><span class="pun">;</span><span class="pln">
+</span><span class="pln">	</span><span class="kwd">push</span><span class="pln"> </span><span class="typ">@fc_tmp</span><span class="pun">,</span><span class="pln"> </span><span class="typ">$arg</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;str&#39;</span><span class="pun">}</span><span class="pun">;</span><span class="pln">
+</span><span class="pln">	</span><span class="kwd">push</span><span class="pln"> </span><span class="typ">@fc_tmp</span><span class="pun">,</span><span class="pln"> </span><span class="var">@</span><span class="pun">{</span><span class="pln"> </span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;fc&#39;</span><span class="pun">}</span><span class="pln"> </span><span class="pun">}</span><span class="pun">[</span><span class="typ">$arg</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;pos&#39;</span><span class="pun">}</span><span class="pln"> </span><span class="pun">..</span><span class="pln"> </span><span class="pun">(</span><span class="typ">$fc_len</span><span class="pln"> </span><span class="pun">-</span><span class="pln"> </span><span class="atv">1</span><span class="pun">)</span><span class="pun">]</span><span class="pun">;</span><span class="pln">
+</span><span class="pln">
+	</span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;fc&#39;</span><span class="pun">}</span><span class="pln"> </span><span class="pun">=</span><span class="pln"> </span><span class="var">\</span><span class="typ">@fc_tmp</span><span class="pun">;</span><span class="pln">
+</span><span class="pln">
+	</span><span class="kwd">return</span><span class="pln"> </span><span class="pun">(</span><span class="atv">1</span><span class="pun">)</span><span class="pun">;</span><span class="pln">
+</span><span class="pun">}</span><span class="pln">
+</span><span class="pln">
+</span><span class="pln">
+</span><span class="kwd">END</span><span class="pln"> </span><span class="pun">{</span><span class="pln"> </span><span class="kwd">undef</span><span class="pun">;</span><span class="pln"> </span><span class="pun">}</span><span class="pln">
+</span><span class="atv">1</span><span class="pun">;</span><span class="pln">
+</span><span class="pln">
+</span><span class="pln">
+</span><span class="kwd">__END__</span><span class="pln">
+</span><span class="com">
+
+</span><span class="com">=head1 NAME
+
+ZHex::File (ZHex/File.pm) - File Module, ZebraHex Editor.
+
+=head1 VERSION
+
+Version 0.01
+
+=cut
+</span><span class="com">
+our $VERSION = &#39;0.01&#39;;
+
+
+</span><span class="com">=head1 SYNOPSIS
+
+The ZHex::File module provides functions for checking, opening, reading, 
+and writing files which are being edited within the hex editor.
+
+Usage:
+
+    use ZHex;
+
+    my $editorObj = ZHex-&gt;new();
+    ...
+
+=head1 EXPORT
+
+No functions are exported.
+
+=head1 SUBROUTINES/METHODS
+
+
+=head2 check_file
+Method check_file()...
+= cut
+
+=head2 file_bytes
+Method file_bytes()...
+= cut
+
+=head2 file_len
+Method file_len()...
+= cut
+
+=head2 init
+Method init()...
+= cut
+
+=head2 insert_str
+Method insert_str()...
+= cut
+
+=head2 read_file
+Method read_file()...
+= cut
+
+=head2 set_file
+Method set_file()...
+= cut
+
+=head2 stat_file
+Method stat_file()...
+= cut
+
+
+=head1 AUTHOR
+
+Double Z, C&lt;&lt; &lt;zacharyz at gmail.com&gt; &gt;&gt;
+
+=head1 BUGS
+
+Please report any bugs or feature requests to C&lt;bug-ZHex at rt.cpan.org&gt;, or through
+the web interface at L&lt;http://rt.cpan.org/NoAuth/ReportBug.html?Queue=ZHex&gt;.  I will be notified, and then you&#39;ll
+automatically be notified of progress on your bug as I make changes.
+
+
+
+
+=head1 SUPPORT
+
+You can find documentation for this module with the perldoc command.
+
+    perldoc ZHex
+
+
+You can also look for information at:
+
+=over 4
+
+=item * RT: CPAN&#39;s request tracker (report bugs here)
+
+L&lt;http://rt.cpan.org/NoAuth/Bugs.html?Dist=ZHex&gt;
+
+=item * AnnoCPAN: Annotated CPAN documentation
+
+L&lt;http://annocpan.org/dist/ZHex&gt;
+
+=item * CPAN Ratings
+
+L&lt;http://cpanratings.perl.org/d/ZHex&gt;
+
+=item * Search CPAN
+
+L&lt;http://search.cpan.org/dist/ZHex/&gt;
+
+=back
+
+
+=head1 ACKNOWLEDGEMENTS
+
+
+=head1 LICENSE AND COPYRIGHT
+
+Copyright 2014 Double Z.
+
+This program is free software; you can redistribute it and/or modify it
+under the terms of the the Artistic License (2.0). You may obtain a
+copy of the full license at:
+
+L&lt;http://www.perlfoundation.org/artistic_license_2_0&gt;
+
+Any use, modification, and distribution of the Standard or Modified
+Versions is governed by this Artistic License. By using, modifying or
+distributing the Package, you accept this license. Do not use, modify,
+or distribute the Package, if you do not accept this license.
+
+If your Modified Version has been derived from a Modified Version made
+by someone other than you, you are nevertheless required to ensure that
+your Modified Version complies with the requirements of this license.
+
+This license does not grant you the right to use any trademark, service
+mark, tradename, or logo of the Copyright Holder.
+
+This license includes the non-exclusive, worldwide, free-of-charge
+patent license to make, have made, use, offer to sell, sell, import and
+otherwise transfer the Package with respect to any patent claims
+licensable by the Copyright Holder that are necessarily infringed by the
+Package. If you institute patent litigation (including a cross-claim or
+counterclaim) against any party alleging that the Package constitutes
+direct or contributory patent infringement, then this Artistic License
+to you shall terminate on the date that such litigation is filed.
+
+Disclaimer of Warranty: THE PACKAGE IS PROVIDED BY THE COPYRIGHT HOLDER
+AND CONTRIBUTORS &quot;AS IS&#39; AND WITHOUT ANY EXPRESS OR IMPLIED WARRANTIES.
+THE IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR
+PURPOSE, OR NON-INFRINGEMENT ARE DISCLAIMED TO THE EXTENT PERMITTED BY
+YOUR LOCAL LAW. UNLESS REQUIRED BY LAW, NO COPYRIGHT HOLDER OR
+CONTRIBUTOR WILL BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, OR
+CONSEQUENTIAL DAMAGES ARISING IN ANY WAY OUT OF THE USE OF THE PACKAGE,
+EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+
+=cut
+</span><span class="com">
+1;
+
+</span></pre>
+</body>
+</html>
+
