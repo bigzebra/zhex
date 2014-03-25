@@ -18,7 +18,6 @@ use Test::More tests => 4;
 #   obj_init()		IMPORTED FROM ZHex::BoilerPlate.pm.
 # Member functions:
 #   event_loop()
-#   event_map()
 #   init()
 #   read_evt()
 #   register_callback()
@@ -30,7 +29,6 @@ use_ok ('ZHex::EventLoop')
 
 my @objEventLoopSubs = 
   ('event_loop', 
-   'event_map', 
    'init', 
    'new', 
    'obj_init', 

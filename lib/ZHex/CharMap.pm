@@ -461,7 +461,6 @@ __END__
 
 ZHex::CharMap (ZHex/CharMap.pm) - CharMap Module, ZebraHex Editor.
 
-
 =head1 VERSION
 
 Version 0.01
@@ -470,23 +469,23 @@ Version 0.01
 
 our $VERSION = '0.01';
 
-
 =head1 SYNOPSIS
 
-The ZHex::CharMap module maps characters ('z' for example) to their 
-ordinal values and unicode names. The following code is an example of 
-the data structure defined by the chr_map() function:
+The ZHex::CharMap module returns a data structure mapping unicode character 
+descriptions (a description of the letter 'z' for example) to their ordinal 
+values and unicode names. The following code is an example of the data stucture 
+defined by the chr_map() function:
 
-	  'LATIN SMALL LETTER Z' => 
-	    { 'byte' => '122', 
-	      'hex'  => '7a'}, 
+    'LATIN SMALL LETTER Z' => 
+      {'byte' => '122', 
+       'hex'  => '7a'}, 
 
 Usage:
 
-    use ZHex;
-
-    my $editorObj = ZHex->new();
-    ...
+    use ZHex::BoilerPlate qw(new obj_init $VERS);
+    my $objCharMap = $self->{'obj'}->{'charmap'};
+    my $chr_map = $objCharMap->chr_map();
+    $objCharMap->chr_map ({'chr_map' => $chr_map});
 
 =head1 EXPORT
 
@@ -494,19 +493,17 @@ No functions are exported.
 
 =head1 SUBROUTINES/METHODS
 
-
-=head2 chr_map
-Method chr_map()...
+=head2 init
+Method init()...
 = cut
 
 =head2 chr_map_set
 Method chr_map_set()...
 = cut
 
-=head2 init
-Method init()...
+=head2 chr_map
+Method chr_map()...
 = cut
-
 
 =head1 AUTHOR
 
@@ -514,19 +511,16 @@ Double Z, C<< <zacharyz at gmail.com> >>
 
 =head1 BUGS
 
-Please report any bugs or feature requests to C<bug-ZHex at rt.cpan.org>, or through
-the web interface at L<http://rt.cpan.org/NoAuth/ReportBug.html?Queue=ZHex>.  I will be notified, and then you'll
-automatically be notified of progress on your bug as I make changes.
-
-
-
+Please report any bugs or feature requests to C<bug-ZHex at rt.cpan.org>, or 
+via the web interface: L<http://rt.cpan.org/NoAuth/ReportBug.html?Queue=ZHex>.  
+I will be notified, and then you'll automatically be notified of progress on 
+your bug as I make changes.
 
 =head1 SUPPORT
 
 You can find documentation for this module with the perldoc command.
 
     perldoc ZHex
-
 
 You can also look for information at:
 
@@ -550,9 +544,7 @@ L<http://search.cpan.org/dist/ZHex/>
 
 =back
 
-
 =head1 ACKNOWLEDGEMENTS
-
 
 =head1 LICENSE AND COPYRIGHT
 
@@ -593,7 +585,6 @@ YOUR LOCAL LAW. UNLESS REQUIRED BY LAW, NO COPYRIGHT HOLDER OR
 CONTRIBUTOR WILL BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, OR
 CONSEQUENTIAL DAMAGES ARISING IN ANY WAY OUT OF THE USE OF THE PACKAGE,
 EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
 
 =cut
 

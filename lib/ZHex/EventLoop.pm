@@ -913,7 +913,6 @@ Version 0.01
 
 our $VERSION = '0.01';
 
-
 =head1 SYNOPSIS
 
 The ZHex::EventLoop module provides functions for event handling, 
@@ -925,17 +924,15 @@ the hex editor is currently operating within.
 
 Usage:
 
-    use ZHex;
-
-    my $objEventLoop = ZHex->new();
-    ...
+    use ZHex::BoilerPlate qw(new obj_init $VERS);
+    my $objEventLoop = $self->{'obj'}->{'eventloop'};
+    $objEventLoop->adjust_display();
 
 =head1 EXPORT
 
 No functions are exported.
 
 =head1 SUBROUTINES/METHODS
-
 
 =head2 event_loop
 Method event_loop()...
@@ -957,6 +954,9 @@ Method read_evt()...
 Method register_callback()...
 = cut
 
+=head2 adjust_display
+Method adjust_display()...
+= cut
 
 =head1 AUTHOR
 
@@ -964,19 +964,16 @@ Double Z, C<< <zacharyz at gmail.com> >>
 
 =head1 BUGS
 
-Please report any bugs or feature requests to C<bug-ZHex at rt.cpan.org>, or through
-the web interface at L<http://rt.cpan.org/NoAuth/ReportBug.html?Queue=ZHex>.  I will be notified, and then you'll
-automatically be notified of progress on your bug as I make changes.
-
-
-
+Please report any bugs or feature requests to C<bug-ZHex at rt.cpan.org>, or 
+via the web interface: L<http://rt.cpan.org/NoAuth/ReportBug.html?Queue=ZHex>.  
+I will be notified, and then you'll automatically be notified of progress on 
+your bug as I make changes.
 
 =head1 SUPPORT
 
 You can find documentation for this module with the perldoc command.
 
     perldoc ZHex
-
 
 You can also look for information at:
 
@@ -1000,9 +997,7 @@ L<http://search.cpan.org/dist/ZHex/>
 
 =back
 
-
 =head1 ACKNOWLEDGEMENTS
-
 
 =head1 LICENSE AND COPYRIGHT
 
@@ -1043,7 +1038,6 @@ YOUR LOCAL LAW. UNLESS REQUIRED BY LAW, NO COPYRIGHT HOLDER OR
 CONTRIBUTOR WILL BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, OR
 CONSEQUENTIAL DAMAGES ARISING IN ANY WAY OUT OF THE USE OF THE PACKAGE,
 EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
 
 =cut
 

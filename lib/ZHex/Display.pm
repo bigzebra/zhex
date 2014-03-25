@@ -1003,33 +1003,29 @@ Version 0.01
 
 our $VERSION = '0.01';
 
-
 =head1 SYNOPSIS
 
-The ZHex::Display module contains routines which generate, update, and 
-refresh the display (via the console).
+The ZHex::Display module defines functions which generate, update, and 
+refresh the console display.
 
-Specifically, the ZHex::Display module provides methods which allow for:
+Specifically, the ZHex::Display module functions provide for:
 
-    Addition and removal of specific display elements, 
-    Resizing the display, 
-    Increasing or decreasing the number of rows displayed, 
-    Enabling or disabling the display of debugging information,
-    and the like (NOTE: Edit list to cover all functions).
+    Addition/removal of individual display elements.
+    Resizing the display.
+    Increasing/decreasing the number of rows displayed in the editor.
+    Enabling/disabling the display of debugging information.
 
 Usage:
 
-    use ZHex;
-
-    my $editorObj = ZHex->new();
-    ...
+    use ZHex::BoilerPlate qw(new obj_init $VERS);
+    my $objDisplay = $self->{'obj'}->{'display'};
+    $objDisplay->padding_set ('dsp_ypad' => 2, 'dsp_xpad' => 2);
 
 =head1 EXPORT
 
 No functions are exported.
 
 =head1 SUBROUTINES/METHODS
-
 
 =head2 active_c_elements
 Method active_c_elements()...
@@ -1095,26 +1091,22 @@ Method init()...
 Method padding_set()...
 = cut
 
-
 =head1 AUTHOR
 
 Double Z, C<< <zacharyz at gmail.com> >>
 
 =head1 BUGS
 
-Please report any bugs or feature requests to C<bug-ZHex at rt.cpan.org>, or through
-the web interface at L<http://rt.cpan.org/NoAuth/ReportBug.html?Queue=ZHex>.  I will be notified, and then you'll
-automatically be notified of progress on your bug as I make changes.
-
-
-
+Please report any bugs or feature requests to C<bug-ZHex at rt.cpan.org>, or 
+via the web interface: L<http://rt.cpan.org/NoAuth/ReportBug.html?Queue=ZHex>.  
+I will be notified, and then you'll automatically be notified of progress on 
+your bug as I make changes.
 
 =head1 SUPPORT
 
 You can find documentation for this module with the perldoc command.
 
     perldoc ZHex
-
 
 You can also look for information at:
 
@@ -1138,9 +1130,7 @@ L<http://search.cpan.org/dist/ZHex/>
 
 =back
 
-
 =head1 ACKNOWLEDGEMENTS
-
 
 =head1 LICENSE AND COPYRIGHT
 
@@ -1181,7 +1171,6 @@ YOUR LOCAL LAW. UNLESS REQUIRED BY LAW, NO COPYRIGHT HOLDER OR
 CONTRIBUTOR WILL BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, OR
 CONSEQUENTIAL DAMAGES ARISING IN ANY WAY OUT OF THE USE OF THE PACKAGE,
 EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
 
 =cut
 

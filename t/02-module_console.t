@@ -24,7 +24,6 @@ use Test::More tests => 4;
 #   lmouse()
 #   mouse_over()
 #   rmouse()
-#   rv_handler()
 #   w32cons_clear()
 #   w32cons_close()
 #   w32cons_cursor_bleft_dsp()
@@ -57,7 +56,6 @@ my @objConsoleSubs =
    'new', 
    'obj_init', 
    'rmouse', 
-   'rv_handler', 
    'w32cons_clear', 
    'w32cons_close', 
    'w32cons_cursor_bleft_dsp', 

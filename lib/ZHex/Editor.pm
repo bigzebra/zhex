@@ -881,26 +881,23 @@ Version 0.01
 
 our $VERSION = '0.01';
 
-
 =head1 SYNOPSIS
 
-The ZHex::Editor module contains functions specific to the hex editor 
-display (generating the display, scrolling, highlighting various areas
-of the display with color, and so forth).
+The ZHex::Editor module defines functions specific to the hex editor 
+display (generating the display, scrolling, and highlighting specific areas 
+within the display (with color).
 
 Usage:
 
-    use ZHex;
-
-    my $editorObj = ZHex->new();
-    ...
+    use ZHex::BoilerPlate qw(new obj_init $VERS);
+    my $objEditor = $self->{'obj'}->{'editor'};
+    $objEditor->scroll_up_1x_line();
 
 =head1 EXPORT
 
 No functions are exported.
 
 =head1 SUBROUTINES/METHODS
-
 
 =head2 gen_char
 Method gen_char()...
@@ -912,6 +909,10 @@ Method gen_hdr()...
 
 =head2 gen_hex
 Method gen_hex()...
+= cut
+
+=head2 gen_hex_cols
+Method gen_hex_cols()...
 = cut
 
 =head2 gen_lnum
@@ -966,26 +967,22 @@ Method set_sz_line()...
 Method set_sz_word()...
 = cut
 
-
 =head1 AUTHOR
 
 Double Z, C<< <zacharyz at gmail.com> >>
 
 =head1 BUGS
 
-Please report any bugs or feature requests to C<bug-ZHex at rt.cpan.org>, or through
-the web interface at L<http://rt.cpan.org/NoAuth/ReportBug.html?Queue=ZHex>.  I will be notified, and then you'll
-automatically be notified of progress on your bug as I make changes.
-
-
-
+Please report any bugs or feature requests to C<bug-ZHex at rt.cpan.org>, or 
+via the web interface: L<http://rt.cpan.org/NoAuth/ReportBug.html?Queue=ZHex>.  
+I will be notified, and then you'll automatically be notified of progress on 
+your bug as I make changes.
 
 =head1 SUPPORT
 
 You can find documentation for this module with the perldoc command.
 
     perldoc ZHex
-
 
 You can also look for information at:
 
@@ -1009,9 +1006,7 @@ L<http://search.cpan.org/dist/ZHex/>
 
 =back
 
-
 =head1 ACKNOWLEDGEMENTS
-
 
 =head1 LICENSE AND COPYRIGHT
 
@@ -1052,7 +1047,6 @@ YOUR LOCAL LAW. UNLESS REQUIRED BY LAW, NO COPYRIGHT HOLDER OR
 CONTRIBUTOR WILL BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, OR
 CONSEQUENTIAL DAMAGES ARISING IN ANY WAY OUT OF THE USE OF THE PACKAGE,
 EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
 
 =cut
 
