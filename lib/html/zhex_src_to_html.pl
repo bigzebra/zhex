@@ -1,8 +1,8 @@
 #!/usr/bin/perl
 
 # ______________________________________________________________________
-# prettify_zhex_src.pl   Generate "pretty" HTML markup from Perl 
-#                        source code (w/ PPI::Prettify).
+# markup_zhex_src.pl             Generate "pretty" HTML markup from Perl 
+#                                source code (w/ PPI::Prettify).
 # ______________________________________________________________________
 
 
@@ -15,7 +15,7 @@ use File::Slurp;
 my @fn = 
   qw(../zhexsh.pl 
      ../ZHex.pm 
-     ../ZHex/BoilerPlate.pm 
+     ../ZHex/Common.pm 
      ../ZHex/CharMap.pm 
      ../ZHex/Console.pm 
      ../ZHex/Cursor.pm 
@@ -37,25 +37,25 @@ GENERATE_HTML_DOCUMENTS: {
 
 	print "Generating html documents (w/ PPI::Prettify):\n";
 
-	foreach my $fn_src (@fn) {
+	foreach my $src_fn (@fn) {
 
-		if (-f $fn_src) {
+		if (-f $src_fn) {
 
-			my $src_code_raw = read_file ($fn_src);
+			my $src = read_file ($src_fn);
+			my $html_fn = &src_fn_to_html_fn ($src_fn);
 
-			my $fn_html = &src_fn_to_html_fn ($fn_src);
+			my $src_fn_markup = "ZHex Editor source code filename: " . $fn_src;
+			my $src_markup = prettify ({ 'code' => $src_code_raw });
 
-			my $src_code_pretty = prettify ({ 'code' => $src_code_raw });
+			my $html_fc = $template;
+			$html_fc =~ s/<FILENAME GOES HERE>/$src_fn_markup/;
+			$html_fc =~ s/<SOURCE CODE GOES HERE>/$src_markup/;
 
-			my $html_code = $template;
-			$html_code =~ s/<FILENAME GOES HERE>/Source code file: $fn_src/;
-			$html_code =~ s/<SOURCE CODE GOES HERE>/$src_code_pretty/;
-
-			print "  Writing new HTML document to disk (" . $fn_src . " -> " . $fn_html . ").\n";
+			print "  Writing new HTML document to disk (" . $src_fn . " -> " . $html_fn . ").\n";
 
 			my $fh;
-			open ($fh, ">" . $fn_html);
-			print $fh $html_code;
+			open ($fh, ">" . $html_fn);
+			print $fh $html_fc;
 			close $fh;
 		}
 	}
@@ -112,7 +112,7 @@ __DATA__
 <body>
 	<h2>ZHex - ZebraHex Editor v0.01</h2>
 	<p><FILENAME GOES HERE></p>
-	<SOURCE CODE GOES HERE>
+	<div><SOURCE CODE GOES HERE></div>
 </body>
 </html>
 

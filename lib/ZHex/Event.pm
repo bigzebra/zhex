@@ -80,7 +80,7 @@ sub register_event_callbacks {
 	# DEFAULT INSERT_MODE       [i] Key (Low Case)  |105 |  - |  - |  - | Insert (Begin Edit At Cursor)              insert_mode()
 	# DEFAULT INSERT_MODE       [INSERT] Key        |  0 | 45 | 82 |288 | Insert                                     insert_mode() 
 	# DEFAULT INSERT_MODE       [INSERT] Key        |  0 | 45 | 82 |256 | Insert                                     insert_mode() 
-# >>>	# DEFAULT WRITE_DISK        [w] Key (Low Case)  |119 |  - |  - |  - | Write  (Write Changes to Disk)             *** NOT IMPLEMENTED *** 
+	# DEFAULT WRITE_DISK        [w] Key (Low Case)  |119 |  - |  - |  - | Write  (Write Changes to Disk)             ZHex::File->write_file()
 	# DEFAULT SEARCH_MODE       [s] Key (Low Case)  |115 |  - |  - |  - | Search (Enter String  to Search For)       search_mode()
 # >>>	# DEFAULT JUMP_TO_LINE      [L] Key (Upp Case)  |... |  - |  - |  - | Line Number (Jump To)                      *** NOT IMPLEMENTED *** 
 # >>>	# DEFAULT COPY_REGION       [CTRL][C]           |  ? |  ? |  ? |  ? | Copy Highlighted/Selected Region           *** NOT IMPLEMENTED *** 
