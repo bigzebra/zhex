@@ -1,8 +1,8 @@
 #!/usr/bin/perl
 
 # ______________________________________________________________________
-# markup_zhex_src.pl             Generate "pretty" HTML markup from Perl 
-#                                source code (w/ PPI::Prettify).
+# markup_zhex_src.pl                      Generate HTML markup from Perl 
+#                                        source code (w/ PPI::Prettify).
 # ______________________________________________________________________
 
 
@@ -13,7 +13,7 @@ use PPI::Prettify;
 use File::Slurp;
 
 my @fn = 
-  qw(../zhexsh.pl 
+  qw(../zhex.pl 
      ../ZHex.pm 
      ../ZHex/Common.pm 
      ../ZHex/CharMap.pm 
@@ -43,15 +43,14 @@ GENERATE_HTML_DOCUMENTS: {
 
 			my $src = read_file ($src_fn);
 			my $html_fn = &src_fn_to_html_fn ($src_fn);
-
-			my $src_fn_markup = "ZHex Editor source code filename: " . $fn_src;
-			my $src_markup = prettify ({ 'code' => $src_code_raw });
+			my $src_fn_markup = "ZHex Editor source code filename: " . $src_fn;
+			my $src_markup = prettify ({ 'code' => $src });
 
 			my $html_fc = $template;
 			$html_fc =~ s/<FILENAME GOES HERE>/$src_fn_markup/;
 			$html_fc =~ s/<SOURCE CODE GOES HERE>/$src_markup/;
 
-			print "  Writing new HTML document to disk (" . $src_fn . " -> " . $html_fn . ").\n";
+			print sprintf ("  Writing new HTML document to disk %-22.22s -> %-22.22s\n", $src_fn, $html_fn);
 
 			my $fh;
 			open ($fh, ">" . $html_fn);
@@ -66,24 +65,27 @@ GENERATE_INDEX_PAGE: {
 
 	print "Generating index page:\n";
 
-	my $links;
-	foreach my $fn_src (@fn) {
+	my $html_index;
+	foreach my $src_fn (@fn) {
 
-		my $fn_html = &src_fn_to_html_fn ($fn_src);
-		print "  Linking HTML document to index page (" . $fn_src . " -> " . $fn_html . ").\n";
-		$links .= "<p><a href=\"" . $fn_html . "\">" . $fn_src . "</a></p>\n";
+		my $html_fn = &src_fn_to_html_fn ($src_fn);
+		print sprintf ("  Adding link to markup file %-22.22s for source code file %-22.22s to index page.\n", $html_fn, $src_fn);
+		$html_index .= "<p><a href=\"" . $html_fn . "\">" . $src_fn . "</a></p>\n";
 	}
 
-	my $fn_index = "index.html";
-	my $index_html_code = $template;
-	$index_html_code =~ s/<FILENAME GOES HERE>/Index page: $fn_index/;
-	$index_html_code =~ s/<SOURCE CODE GOES HERE>/$links/;
+	my $html_fn = "index.html";
+	my $src_fn_markup = "ZHex source code index filename: " . $html_fn;
+	my $src_markup = $html_index;
 
-	print "  Writing new HTML file (index page: '" . $fn_index . "') to disk.\n";
+	my $html_fc = $template;
+	$html_fc =~ s/<FILENAME GOES HERE>/$src_fn_markup/;
+	$html_fc =~ s/<SOURCE CODE GOES HERE>/$src_markup/;
+
+	print sprintf ("  Writing new HTML file %s to disk.\n", $html_fn);
 
 	my $fh;
-	open ($fh, (">" . $fn_index));
-	print $fh $index_html_code;
+	open ($fh, (">" . $html_fn));
+	print $fh $html_fc;
 	close $fh;
 }
 
@@ -94,7 +96,7 @@ sub src_fn_to_html_fn {
 	my $fn_src = shift;
 
 	my $fn_html = $fn_src;
-	$fn_html =~ s/^.*[\\\/](\w+?).p[lm]$/src-$1.html/i;
+	$fn_html =~ s/^.*[\\\/](\w+?).(p[lm])$/src-$1_$2.html/i;
 
 	return ($fn_html);
 }

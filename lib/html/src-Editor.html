@@ -8,8 +8,8 @@
 </head>
 <body>
 	<h2>ZHex - ZebraHex Editor v0.01</h2>
-	<p>Source code file: ../ZHex/Editor.pm</p>
-	<pre class="prettyprint"><span class="com">#!/usr/bin/perl
+	<p>ZHex Editor source code filename: ../ZHex/Editor.pm</p>
+	<div><pre class="prettyprint"><span class="com">#!/usr/bin/perl
 </span><span class="pln">
 </span><span class="lit">package</span><span class="pln"> </span><span class="atn">ZHex::Editor</span><span class="pun">;</span><span class="pln">
 </span><span class="pln">
@@ -892,26 +892,23 @@ Version 0.01
 </span><span class="com">
 our $VERSION = &#39;0.01&#39;;
 
-
 </span><span class="com">=head1 SYNOPSIS
 
-The ZHex::Editor module contains functions specific to the hex editor 
-display (generating the display, scrolling, highlighting various areas
-of the display with color, and so forth).
+The ZHex::Editor module defines functions specific to the hex editor 
+display (generating the display, scrolling, and highlighting specific areas 
+within the display (with color).
 
 Usage:
 
-    use ZHex;
-
-    my $editorObj = ZHex-&gt;new();
-    ...
+    use ZHex::BoilerPlate qw(new obj_init $VERS);
+    my $objEditor = $self-&gt;{&#39;obj&#39;}-&gt;{&#39;editor&#39;};
+    $objEditor-&gt;scroll_up_1x_line();
 
 =head1 EXPORT
 
 No functions are exported.
 
 =head1 SUBROUTINES/METHODS
-
 
 =head2 gen_char
 Method gen_char()...
@@ -923,6 +920,10 @@ Method gen_hdr()...
 
 =head2 gen_hex
 Method gen_hex()...
+= cut
+
+=head2 gen_hex_cols
+Method gen_hex_cols()...
 = cut
 
 =head2 gen_lnum
@@ -977,26 +978,22 @@ Method set_sz_line()...
 Method set_sz_word()...
 = cut
 
-
 =head1 AUTHOR
 
 Double Z, C&lt;&lt; &lt;zacharyz at gmail.com&gt; &gt;&gt;
 
 =head1 BUGS
 
-Please report any bugs or feature requests to C&lt;bug-ZHex at rt.cpan.org&gt;, or through
-the web interface at L&lt;http://rt.cpan.org/NoAuth/ReportBug.html?Queue=ZHex&gt;.  I will be notified, and then you&#39;ll
-automatically be notified of progress on your bug as I make changes.
-
-
-
+Please report any bugs or feature requests to C&lt;bug-ZHex at rt.cpan.org&gt;, or 
+via the web interface: L&lt;http://rt.cpan.org/NoAuth/ReportBug.html?Queue=ZHex&gt;.  
+I will be notified, and then you&#39;ll automatically be notified of progress on 
+your bug as I make changes.
 
 =head1 SUPPORT
 
 You can find documentation for this module with the perldoc command.
 
     perldoc ZHex
-
 
 You can also look for information at:
 
@@ -1020,9 +1017,7 @@ L&lt;http://search.cpan.org/dist/ZHex/&gt;
 
 =back
 
-
 =head1 ACKNOWLEDGEMENTS
-
 
 =head1 LICENSE AND COPYRIGHT
 
@@ -1064,12 +1059,11 @@ CONTRIBUTOR WILL BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, OR
 CONSEQUENTIAL DAMAGES ARISING IN ANY WAY OUT OF THE USE OF THE PACKAGE,
 EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-
 =cut
 </span><span class="com">
 1;
 
-</span></pre>
+</span></pre></div>
 </body>
 </html>
 

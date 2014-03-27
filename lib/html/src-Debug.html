@@ -8,8 +8,8 @@
 </head>
 <body>
 	<h2>ZHex - ZebraHex Editor v0.01</h2>
-	<p>Source code file: ../ZHex/Debug.pm</p>
-	<pre class="prettyprint"><span class="com">#!/usr/bin/perl
+	<p>ZHex Editor source code filename: ../ZHex/Debug.pm</p>
+	<div><pre class="prettyprint"><span class="com">#!/usr/bin/perl
 </span><span class="pln">
 </span><span class="lit">package</span><span class="pln"> </span><span class="atn">ZHex::Debug</span><span class="pun">;</span><span class="pln">
 </span><span class="pln">
@@ -530,26 +530,23 @@ Version 0.01
 </span><span class="com">
 our $VERSION = &#39;0.01&#39;;
 
-
 </span><span class="com">=head1 SYNOPSIS
 
-The ZHex::Debug module provides functions which generate debugging 
-information display elements which appear within the hex editor display 
-for debugging purposes (during development).
+The ZHex::Debug module defines functions which provide debugging 
+information as display elements (for use within the hex editor display) 
+Used for development/debugging purposes.
 
 Usage:
 
-    use ZHex;
-
-    my $editorObj = ZHex-&gt;new();
-    ...
+    use ZHex::BoilerPlate qw(new obj_init $VERS);
+    my $objDebug = $self-&gt;{&#39;obj&#39;}-&gt;{&#39;debug&#39;};
+    $objDebug-&gt;errmsg (&quot;This error message to be displayed inside editor.&quot;);
 
 =head1 EXPORT
 
 No functions are exported.
 
 =head1 SUBROUTINES/METHODS
-
 
 =head2 dbg_box
 Method dbg_box()...
@@ -595,26 +592,22 @@ Method errmsg_handler()...
 Method errmsg_queue()...
 = cut
 
-
 =head1 AUTHOR
 
 Double Z, C&lt;&lt; &lt;zacharyz at gmail.com&gt; &gt;&gt;
 
 =head1 BUGS
 
-Please report any bugs or feature requests to C&lt;bug-ZHex at rt.cpan.org&gt;, or through
-the web interface at L&lt;http://rt.cpan.org/NoAuth/ReportBug.html?Queue=ZHex&gt;.  I will be notified, and then you&#39;ll
-automatically be notified of progress on your bug as I make changes.
-
-
-
+Please report any bugs or feature requests to C&lt;bug-ZHex at rt.cpan.org&gt;, or 
+via the web interface: L&lt;http://rt.cpan.org/NoAuth/ReportBug.html?Queue=ZHex&gt;.  
+I will be notified, and then you&#39;ll automatically be notified of progress on 
+your bug as I make changes.
 
 =head1 SUPPORT
 
 You can find documentation for this module with the perldoc command.
 
     perldoc ZHex
-
 
 You can also look for information at:
 
@@ -638,9 +631,7 @@ L&lt;http://search.cpan.org/dist/ZHex/&gt;
 
 =back
 
-
 =head1 ACKNOWLEDGEMENTS
-
 
 =head1 LICENSE AND COPYRIGHT
 
@@ -682,12 +673,11 @@ CONTRIBUTOR WILL BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, OR
 CONSEQUENTIAL DAMAGES ARISING IN ANY WAY OUT OF THE USE OF THE PACKAGE,
 EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-
 =cut
 </span><span class="com">
 1;
 
-</span></pre>
+</span></pre></div>
 </body>
 </html>
 

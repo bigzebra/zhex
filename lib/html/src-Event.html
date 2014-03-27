@@ -8,8 +8,8 @@
 </head>
 <body>
 	<h2>ZHex - ZebraHex Editor v0.01</h2>
-	<p>Source code file: ../ZHex/Event.pm</p>
-	<pre class="prettyprint"><span class="com">#!/usr/bin/perl
+	<p>ZHex Editor source code filename: ../ZHex/Event.pm</p>
+	<div><pre class="prettyprint"><span class="com">#!/usr/bin/perl
 </span><span class="pln">
 </span><span class="lit">package</span><span class="pln"> </span><span class="atn">ZHex::Event</span><span class="pun">;</span><span class="pln">
 </span><span class="pln">
@@ -91,7 +91,7 @@
 </span><span class="com">	# DEFAULT INSERT_MODE       [i] Key (Low Case)  |105 |  - |  - |  - | Insert (Begin Edit At Cursor)              insert_mode()
 </span><span class="com">	# DEFAULT INSERT_MODE       [INSERT] Key        |  0 | 45 | 82 |288 | Insert                                     insert_mode() 
 </span><span class="com">	# DEFAULT INSERT_MODE       [INSERT] Key        |  0 | 45 | 82 |256 | Insert                                     insert_mode() 
-</span><span class="com"># &gt;&gt;&gt;	# DEFAULT WRITE_DISK        [w] Key (Low Case)  |119 |  - |  - |  - | Write  (Write Changes to Disk)             *** NOT IMPLEMENTED *** 
+</span><span class="com">	# DEFAULT WRITE_DISK        [w] Key (Low Case)  |119 |  - |  - |  - | Write  (Write Changes to Disk)             ZHex::File-&gt;write_file()
 </span><span class="com">	# DEFAULT SEARCH_MODE       [s] Key (Low Case)  |115 |  - |  - |  - | Search (Enter String  to Search For)       search_mode()
 </span><span class="com"># &gt;&gt;&gt;	# DEFAULT JUMP_TO_LINE      [L] Key (Upp Case)  |... |  - |  - |  - | Line Number (Jump To)                      *** NOT IMPLEMENTED *** 
 </span><span class="com"># &gt;&gt;&gt;	# DEFAULT COPY_REGION       [CTRL][C]           |  ? |  ? |  ? |  ? | Copy Highlighted/Selected Region           *** NOT IMPLEMENTED *** 
@@ -136,7 +136,7 @@
 </span><span class="pln">	  </span><span class="pun">[</span><span class="pln"> </span><span class="str">&#39;DEFAULT&#39;</span><span class="pun">,</span><span class="pln"> </span><span class="str">&#39;CONSCURS_INVIS&#39;</span><span class="pun">,</span><span class="pln">    </span><span class="lit">sub</span><span class="pln"> </span><span class="pun">{</span><span class="pln"> </span><span class="typ">$objConsole</span><span class="pun">-&gt;</span><span class="typ">w32cons_cursor_invisible</span><span class="pun">(</span><span class="pun">)</span><span class="pun">;</span><span class="pln"> </span><span class="pun">}</span><span class="pln"> </span><span class="pun">]</span><span class="pun">,</span><span class="pln">
 </span><span class="pln">	  </span><span class="pun">[</span><span class="pln"> </span><span class="str">&#39;DEFAULT&#39;</span><span class="pun">,</span><span class="pln"> </span><span class="str">&#39;CONSCURS_VIS&#39;</span><span class="pun">,</span><span class="pln">      </span><span class="lit">sub</span><span class="pln"> </span><span class="pun">{</span><span class="pln"> </span><span class="typ">$objConsole</span><span class="pun">-&gt;</span><span class="typ">w32cons_cursor_visible</span><span class="pun">(</span><span class="pun">)</span><span class="pun">;</span><span class="pln"> </span><span class="pun">}</span><span class="pln"> </span><span class="pun">]</span><span class="pun">,</span><span class="pln">
 </span><span class="pln">	  </span><span class="pun">[</span><span class="pln"> </span><span class="str">&#39;DEFAULT&#39;</span><span class="pun">,</span><span class="pln"> </span><span class="str">&#39;INSERT_MODE&#39;</span><span class="pun">,</span><span class="pln">       </span><span class="lit">sub</span><span class="pln"> </span><span class="pun">{</span><span class="pln"> </span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="typ">insert_mode</span><span class="pun">(</span><span class="pun">)</span><span class="pun">;</span><span class="pln"> </span><span class="pun">}</span><span class="pln"> </span><span class="pun">]</span><span class="pun">,</span><span class="pln">
-</span><span class="pln">	  </span><span class="pun">[</span><span class="pln"> </span><span class="str">&#39;DEFAULT&#39;</span><span class="pun">,</span><span class="pln"> </span><span class="str">&#39;WRITE_DISK&#39;</span><span class="pun">,</span><span class="pln">        </span><span class="lit">sub</span><span class="pln"> </span><span class="pun">{</span><span class="pln"> </span><span class="kwd">return</span><span class="pln"> </span><span class="pun">(</span><span class="atv">0</span><span class="pun">)</span><span class="pun">;</span><span class="pln"> </span><span class="pun">}</span><span class="pln"> </span><span class="pun">]</span><span class="pun">,</span><span class="pln">
+</span><span class="pln">	  </span><span class="pun">[</span><span class="pln"> </span><span class="str">&#39;DEFAULT&#39;</span><span class="pun">,</span><span class="pln"> </span><span class="str">&#39;WRITE_DISK&#39;</span><span class="pun">,</span><span class="pln">        </span><span class="lit">sub</span><span class="pln"> </span><span class="pun">{</span><span class="pln"> </span><span class="typ">$objFile</span><span class="pun">-&gt;</span><span class="typ">write_file</span><span class="pln"> </span><span class="pun">(</span><span class="pun">{</span><span class="str">&#39;fn&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="typ">$objFile</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;fn&#39;</span><span class="pun">}</span><span class="pun">}</span><span class="pun">)</span><span class="pun">;</span><span class="pln"> </span><span class="pun">}</span><span class="pln"> </span><span class="pun">]</span><span class="pun">,</span><span class="pln">
 </span><span class="pln">	  </span><span class="pun">[</span><span class="pln"> </span><span class="str">&#39;DEFAULT&#39;</span><span class="pun">,</span><span class="pln"> </span><span class="str">&#39;SEARCH_MODE&#39;</span><span class="pun">,</span><span class="pln">       </span><span class="lit">sub</span><span class="pln"> </span><span class="pun">{</span><span class="pln"> </span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="typ">search_mode</span><span class="pun">(</span><span class="pun">)</span><span class="pun">;</span><span class="pln"> </span><span class="pun">}</span><span class="pln"> </span><span class="pun">]</span><span class="pun">,</span><span class="pln">
 </span><span class="pln">	  </span><span class="pun">[</span><span class="pln"> </span><span class="str">&#39;DEFAULT&#39;</span><span class="pun">,</span><span class="pln"> </span><span class="str">&#39;JUMP_TO_LINE&#39;</span><span class="pun">,</span><span class="pln">      </span><span class="lit">sub</span><span class="pln"> </span><span class="pun">{</span><span class="pln"> </span><span class="kwd">return</span><span class="pln"> </span><span class="pun">(</span><span class="atv">0</span><span class="pun">)</span><span class="pun">;</span><span class="pln"> </span><span class="pun">}</span><span class="pln"> </span><span class="pun">]</span><span class="pun">,</span><span class="pln">
 </span><span class="pln">	  </span><span class="pun">[</span><span class="pln"> </span><span class="str">&#39;DEFAULT&#39;</span><span class="pun">,</span><span class="pln"> </span><span class="str">&#39;COPY_REGION&#39;</span><span class="pun">,</span><span class="pln">       </span><span class="lit">sub</span><span class="pln"> </span><span class="pun">{</span><span class="pln"> </span><span class="kwd">return</span><span class="pln"> </span><span class="pun">(</span><span class="atv">0</span><span class="pun">)</span><span class="pun">;</span><span class="pln"> </span><span class="pun">}</span><span class="pln"> </span><span class="pun">]</span><span class="pun">,</span><span class="pln">
@@ -1049,10 +1049,7 @@ the console).
 
 Usage:
 
-    use ZHex;
-
-    my $editorObj = ZHex-&gt;new();
-    ...
+f
 
 =head1 EXPORT
 
@@ -1162,9 +1159,10 @@ Double Z, C&lt;&lt; &lt;zacharyz at gmail.com&gt; &gt;&gt;
 
 =head1 BUGS
 
-Please report any bugs or feature requests to C&lt;bug-ZHex at rt.cpan.org&gt;, or through
-the web interface at L&lt;http://rt.cpan.org/NoAuth/ReportBug.html?Queue=ZHex&gt;.  I will be notified, and then you&#39;ll
-automatically be notified of progress on your bug as I make changes.
+Please report any bugs or feature requests to C&lt;bug-ZHex at rt.cpan.org&gt;, or 
+via the web interface: L&lt;http://rt.cpan.org/NoAuth/ReportBug.html?Queue=ZHex&gt;.  
+I will be notified, and then you&#39;ll automatically be notified of progress on 
+your bug as I make changes.
 
 =head1 SUPPORT
 
@@ -1240,7 +1238,7 @@ EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 </span><span class="com">
 1;
 
-</span></pre>
+</span></pre></div>
 </body>
 </html>
 

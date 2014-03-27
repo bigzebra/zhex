@@ -8,8 +8,8 @@
 </head>
 <body>
 	<h2>ZHex - ZebraHex Editor v0.01</h2>
-	<p>Source code file: ../ZHex/File.pm</p>
-	<pre class="prettyprint"><span class="com">#!/usr/bin/perl
+	<p>ZHex Editor source code filename: ../ZHex/File.pm</p>
+	<div><pre class="prettyprint"><span class="com">#!/usr/bin/perl
 </span><span class="pln">
 </span><span class="lit">package</span><span class="pln"> </span><span class="atn">ZHex::File</span><span class="pun">;</span><span class="pln">
 </span><span class="pln">
@@ -18,6 +18,9 @@
 </span><span class="kwd">use</span><span class="pln"> </span><span class="kwd">warnings</span><span class="pln"> </span><span class="str">FATAL</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;all&#39;</span><span class="pun">;</span><span class="pln">
 </span><span class="pln">
 </span><span class="kwd">use</span><span class="pln"> </span><span class="pln">ZHex::BoilerPlate</span><span class="pln"> </span><span class="str">qw(new obj_init $VERS)</span><span class="pun">;</span><span class="pln">
+</span><span class="pln">
+</span><span class="kwd">use</span><span class="pln"> </span><span class="pln">IO::Handle</span><span class="pun">;</span><span class="pln">
+</span><span class="kwd">use</span><span class="pln"> </span><span class="pln">Fcntl</span><span class="pln"> </span><span class="str">qw(:DEFAULT :Fcompat)</span><span class="pun">;</span><span class="pln">
 </span><span class="pln">
 </span><span class="kwd">BEGIN</span><span class="pln"> </span><span class="pun">{</span><span class="pln"> </span><span class="kwd">require</span><span class="pln"> </span><span class="pln">Exporter</span><span class="pun">;</span><span class="pln">
 </span><span class="pln">	</span><span class="kwd">our</span><span class="pln"> </span><span class="typ">$VERSION</span><span class="pln">   </span><span class="pun">=</span><span class="pln"> </span><span class="typ">$VERS</span><span class="pun">;</span><span class="pln">
@@ -80,6 +83,7 @@
 </span><span class="com">#   file_len()		Return number of bytes in file.
 </span><span class="com">#   file_bytes()	Return list of bytes from &#39;pos&#39; -&gt; &#39;ofs&#39;.
 </span><span class="com">#   insert_str()	Insert byte at &#39;pos&#39;.
+</span><span class="com">#   write_file()	Write file to disk.
 </span><span class="pln">
 </span><span class="lit">sub</span><span class="pln"> </span><span class="typ">check_file</span><span class="pln"> </span><span class="pun">{</span><span class="pln">
 </span><span class="pln">
@@ -344,12 +348,86 @@
 </span><span class="pln">	             </span><span class="pun">(</span><span class="typ">$arg</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;str&#39;</span><span class="pun">}</span><span class="pln"> </span><span class="pun">eq</span><span class="pln"> </span><span class="str">&#39;&#39;</span><span class="pun">)</span><span class="pun">)</span><span class="pln"> 
 </span><span class="pln">		</span><span class="pun">{</span><span class="pln"> </span><span class="kwd">die</span><span class="pln"> </span><span class="str">&quot;Call to insert_str() failed, value associated w/ key &#39;str&#39; was undef/empty string&quot;</span><span class="pun">;</span><span class="pln"> </span><span class="pun">}</span><span class="pln">
 </span><span class="pln">
+</span><span class="com">	# From: http://www.perlmonks.org/?displaytype=print;node_id=836926;replies=1
+</span><span class="com">	#   print &quot;Array isn&#39;t empty. Array Values:@array\n&quot; if($array[0]);
+</span><span class="com">	#   print &quot;Array isn&#39;t empty. Array Values:@array\n&quot; if($#array &gt;= 0);
+</span><span class="com">	#   print &quot;Array isn&#39;t empty. Array Values:@array\n&quot; if(@array);
+</span><span class="pln">
 	</span><span class="kwd">my</span><span class="pln"> </span><span class="typ">@fc_tmp</span><span class="pun">;</span><span class="pln">
 </span><span class="pln">	</span><span class="kwd">push</span><span class="pln"> </span><span class="typ">@fc_tmp</span><span class="pun">,</span><span class="pln"> </span><span class="var">@</span><span class="pun">{</span><span class="pln"> </span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;fc&#39;</span><span class="pun">}</span><span class="pln"> </span><span class="pun">}</span><span class="pun">[</span><span class="atv">0</span><span class="pln"> </span><span class="pun">..</span><span class="pln"> </span><span class="pun">(</span><span class="typ">$arg</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;pos&#39;</span><span class="pun">}</span><span class="pln"> </span><span class="pun">-</span><span class="pln"> </span><span class="atv">1</span><span class="pun">)</span><span class="pun">]</span><span class="pun">;</span><span class="pln">
-</span><span class="pln">	</span><span class="kwd">push</span><span class="pln"> </span><span class="typ">@fc_tmp</span><span class="pun">,</span><span class="pln"> </span><span class="typ">$arg</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;str&#39;</span><span class="pun">}</span><span class="pun">;</span><span class="pln">
-</span><span class="pln">	</span><span class="kwd">push</span><span class="pln"> </span><span class="typ">@fc_tmp</span><span class="pun">,</span><span class="pln"> </span><span class="var">@</span><span class="pun">{</span><span class="pln"> </span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;fc&#39;</span><span class="pun">}</span><span class="pln"> </span><span class="pun">}</span><span class="pun">[</span><span class="typ">$arg</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;pos&#39;</span><span class="pun">}</span><span class="pln"> </span><span class="pun">..</span><span class="pln"> </span><span class="pun">(</span><span class="typ">$fc_len</span><span class="pln"> </span><span class="pun">-</span><span class="pln"> </span><span class="atv">1</span><span class="pun">)</span><span class="pun">]</span><span class="pun">;</span><span class="pln">
+</span><span class="pln">
+	</span><span class="kwd">my</span><span class="pln"> </span><span class="typ">$unpack_str</span><span class="pln"> </span><span class="pun">=</span><span class="pln"> </span><span class="pun">(</span><span class="str">&#39;a &#39;</span><span class="pln"> </span><span class="pun">x</span><span class="pln"> </span><span class="kwd">length</span><span class="pln"> </span><span class="pun">(</span><span class="typ">$arg</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;str&#39;</span><span class="pun">}</span><span class="pun">)</span><span class="pun">)</span><span class="pun">;</span><span class="pln">
+</span><span class="pln">
+	</span><span class="kwd">my</span><span class="pln"> </span><span class="typ">@str_bytes</span><span class="pln"> </span><span class="pun">=</span><span class="pln"> 
+</span><span class="pln">	  </span><span class="kwd">unpack</span><span class="pln"> </span><span class="pun">(</span><span class="typ">$unpack_str</span><span class="pun">,</span><span class="pln"> </span><span class="typ">$arg</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;str&#39;</span><span class="pun">}</span><span class="pun">)</span><span class="pun">;</span><span class="pln">
+</span><span class="pln">
+</span><span class="com">	# $self-&gt;{&#39;obj&#39;}-&gt;{&#39;debug&#39;}-&gt;errmsg (&quot;str_bytes array contains &#39;&quot; . scalar (@str_bytes) . &quot;&#39; elements.&quot;);
+</span><span class="com">	# print &quot;str_bytes array contains &#39;&quot; . scalar (@str_bytes) . &quot;&#39; elements.\n&quot;;
+</span><span class="pln">
+	</span><span class="kwd">if</span><span class="pln"> </span><span class="pun">(</span><span class="var">$#str_bytes</span><span class="pln"> </span><span class="pun">&gt;=</span><span class="pln"> </span><span class="atv">0</span><span class="pln"> </span><span class="pun">&amp;&amp;</span><span class="pln"> 
+</span><span class="pln">	    </span><span class="kwd">scalar</span><span class="pln"> </span><span class="pun">(</span><span class="typ">@str_bytes</span><span class="pun">)</span><span class="pln"> </span><span class="pun">&gt;</span><span class="pln"> </span><span class="atv">0</span><span class="pun">)</span><span class="pln"> </span><span class="pun">{</span><span class="pln">
+</span><span class="pln">
+		</span><span class="kwd">foreach</span><span class="pln"> </span><span class="kwd">my</span><span class="pln"> </span><span class="typ">$str_byte</span><span class="pln"> </span><span class="pun">(</span><span class="typ">@str_bytes</span><span class="pun">)</span><span class="pln"> </span><span class="pun">{</span><span class="pln">
+</span><span class="pln">
+			</span><span class="kwd">push</span><span class="pln"> </span><span class="typ">@fc_tmp</span><span class="pun">,</span><span class="pln"> </span><span class="typ">$str_byte</span><span class="pun">;</span><span class="pln">
+</span><span class="pln">		</span><span class="pun">}</span><span class="pln">
+</span><span class="pln">	</span><span class="pun">}</span><span class="pln">
+</span><span class="pln">
+	</span><span class="kwd">push</span><span class="pln"> </span><span class="typ">@fc_tmp</span><span class="pun">,</span><span class="pln"> </span><span class="var">@</span><span class="pun">{</span><span class="pln"> </span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;fc&#39;</span><span class="pun">}</span><span class="pln"> </span><span class="pun">}</span><span class="pun">[</span><span class="typ">$arg</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;pos&#39;</span><span class="pun">}</span><span class="pln"> </span><span class="pun">..</span><span class="pln"> </span><span class="pun">(</span><span class="typ">$fc_len</span><span class="pln"> </span><span class="pun">-</span><span class="pln"> </span><span class="atv">1</span><span class="pun">)</span><span class="pun">]</span><span class="pun">;</span><span class="pln">
 </span><span class="pln">
 	</span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;fc&#39;</span><span class="pun">}</span><span class="pln"> </span><span class="pun">=</span><span class="pln"> </span><span class="var">\</span><span class="typ">@fc_tmp</span><span class="pun">;</span><span class="pln">
+</span><span class="pln">
+	</span><span class="kwd">return</span><span class="pln"> </span><span class="pun">(</span><span class="atv">1</span><span class="pun">)</span><span class="pun">;</span><span class="pln">
+</span><span class="pun">}</span><span class="pln">
+</span><span class="pln">
+</span><span class="lit">sub</span><span class="pln"> </span><span class="typ">write_file</span><span class="pln"> </span><span class="pun">{</span><span class="pln">
+</span><span class="pln">
+	</span><span class="kwd">my</span><span class="pln"> </span><span class="typ">$self</span><span class="pln"> </span><span class="pun">=</span><span class="pln"> </span><span class="kwd">shift</span><span class="pun">;</span><span class="pln">
+</span><span class="pln">	</span><span class="kwd">my</span><span class="pln"> </span><span class="typ">$arg</span><span class="pln">  </span><span class="pun">=</span><span class="pln"> </span><span class="kwd">shift</span><span class="pun">;</span><span class="pln">
+</span><span class="pln">
+	</span><span class="kwd">if</span><span class="pln"> </span><span class="pun">(</span><span class="pun">!</span><span class="pln"> </span><span class="kwd">defined</span><span class="pln"> </span><span class="typ">$arg</span><span class="pln"> </span><span class="pun">||</span><span class="pln"> 
+</span><span class="pln">	      </span><span class="pun">!</span><span class="pln"> </span><span class="pun">(</span><span class="kwd">ref</span><span class="pln"> </span><span class="pun">(</span><span class="typ">$arg</span><span class="pun">)</span><span class="pln"> </span><span class="pun">eq</span><span class="pln"> </span><span class="str">&#39;HASH&#39;</span><span class="pun">)</span><span class="pun">)</span><span class="pln"> 
+</span><span class="pln">		</span><span class="pun">{</span><span class="pln"> </span><span class="kwd">die</span><span class="pln"> </span><span class="str">&quot;Call to read_file() failed, argument must be hash reference&quot;</span><span class="pun">;</span><span class="pln"> </span><span class="pun">}</span><span class="pln">
+</span><span class="pln">
+	</span><span class="kwd">if</span><span class="pln"> </span><span class="pun">(</span><span class="pun">!</span><span class="pln"> </span><span class="kwd">exists</span><span class="pln">  </span><span class="typ">$arg</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;fn&#39;</span><span class="pun">}</span><span class="pln"> </span><span class="pun">||</span><span class="pln"> 
+</span><span class="pln">	    </span><span class="pun">!</span><span class="pln"> </span><span class="kwd">defined</span><span class="pln"> </span><span class="typ">$arg</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;fn&#39;</span><span class="pun">}</span><span class="pln"> </span><span class="pun">||</span><span class="pln"> 
+</span><span class="pln">	             </span><span class="pun">(</span><span class="typ">$arg</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;fn&#39;</span><span class="pun">}</span><span class="pln"> </span><span class="pun">eq</span><span class="pln"> </span><span class="str">&#39;&#39;</span><span class="pun">)</span><span class="pun">)</span><span class="pln"> 
+</span><span class="pln">		</span><span class="pun">{</span><span class="pln"> </span><span class="kwd">die</span><span class="pln"> </span><span class="str">&quot;Call to read_file() failed, value associated w/ key &#39;fn&#39; was undef/empty string&quot;</span><span class="pun">;</span><span class="pln"> </span><span class="pun">}</span><span class="pln">
+</span><span class="pln">
+</span><span class="com">	# Test filename argument: verify that file exists on filesystem.
+</span><span class="pln">
+	</span><span class="kwd">if</span><span class="pln"> </span><span class="pun">(</span><span class="pun">!</span><span class="pln"> </span><span class="pun">-e</span><span class="pln"> </span><span class="typ">$arg</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;fn&#39;</span><span class="pun">}</span><span class="pln"> </span><span class="pun">||</span><span class="pln"> 
+</span><span class="pln">	    </span><span class="pun">!</span><span class="pln"> </span><span class="pun">-f</span><span class="pln"> </span><span class="typ">$arg</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;fn&#39;</span><span class="pun">}</span><span class="pun">)</span><span class="pln"> </span><span class="pun">{</span><span class="pln">
+</span><span class="pln">
+		</span><span class="kwd">return</span><span class="pln"> </span><span class="pun">(</span><span class="kwd">undef</span><span class="pun">)</span><span class="pun">;</span><span class="pln">
+</span><span class="pln">	</span><span class="pun">}</span><span class="pln">
+</span><span class="pln">
+</span><span class="com">	# $oldfh = select (HANDLE); 
+</span><span class="com">	# $| = 1; 
+</span><span class="com">	# select ($oldfh);
+</span><span class="pln">
+</span><span class="com">	             # _________________
+</span><span class="pln">	</span><span class="kwd">use</span><span class="pln"> </span><span class="kwd">bytes</span><span class="pun">;</span><span class="pln">   </span><span class="com"># Bytes pragma: ON.</span><span class="pln">
+</span><span class="pln">
+	</span><span class="kwd">my</span><span class="pln"> </span><span class="pun">(</span><span class="typ">$buf</span><span class="pun">)</span><span class="pun">;</span><span class="pln">   </span><span class="com"># &lt;--- Declare inside &quot;use bytes&quot; pragma.</span><span class="pln">
+</span><span class="pln">	</span><span class="kwd">my</span><span class="pln"> </span><span class="pun">(</span><span class="typ">@fc</span><span class="pun">)</span><span class="pun">;</span><span class="pln">    </span><span class="com"># &lt;--- Declare inside &quot;use bytes&quot; pragma.</span><span class="pln">
+</span><span class="pln">
+        </span><span class="kwd">my</span><span class="pln"> </span><span class="typ">$fh</span><span class="pln"> </span><span class="pun">=</span><span class="pln"> </span><span class="pln">IO::File</span><span class="pun">-&gt;</span><span class="typ">new</span><span class="pln"> </span><span class="pun">(</span><span class="typ">$arg</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;fn&#39;</span><span class="pun">}</span><span class="pun">,</span><span class="pln"> </span><span class="pln">O_WRONLY</span><span class="pun">|</span><span class="pln">O_CREAT</span><span class="pun">)</span><span class="pun">;</span><span class="pln">
+</span><span class="pln">        </span><span class="kwd">if</span><span class="pln"> </span><span class="pun">(</span><span class="kwd">defined</span><span class="pln"> </span><span class="typ">$fh</span><span class="pun">)</span><span class="pln"> 
+</span><span class="pln">	     </span><span class="pun">{</span><span class="pln"> </span><span class="kwd">undef</span><span class="pun">;</span><span class="pln"> </span><span class="pun">}</span><span class="pln">
+</span><span class="pln">        </span><span class="kwd">else</span><span class="pln"> </span><span class="pun">{</span><span class="pln"> </span><span class="kwd">die</span><span class="pln"> </span><span class="pun">(</span><span class="str">&quot;Function IO::File-&gt;new() returned w/ error (called w/ path=&quot;</span><span class="pln"> </span><span class="pun">.</span><span class="pln"> </span><span class="typ">$arg</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;fn&#39;</span><span class="pun">}</span><span class="pln"> </span><span class="pun">.</span><span class="pln"> </span><span class="str">&quot;: &quot;</span><span class="pun">.</span><span class="pln"> </span><span class="typ">$!</span><span class="pln"> </span><span class="pun">.</span><span class="pln"> </span><span class="typ">$^E</span><span class="pun">)</span><span class="pun">;</span><span class="pln"> </span><span class="pun">}</span><span class="pln">
+</span><span class="pln">
+	</span><span class="kwd">if</span><span class="pln"> </span><span class="pun">(</span><span class="kwd">binmode</span><span class="pln"> </span><span class="pun">(</span><span class="typ">$fh</span><span class="pun">,</span><span class="pln"> </span><span class="str">&quot;:raw&quot;</span><span class="pun">)</span><span class="pun">)</span><span class="pln"> 
+</span><span class="pln">	     </span><span class="pun">{</span><span class="pln"> </span><span class="kwd">undef</span><span class="pun">;</span><span class="pln"> </span><span class="pun">}</span><span class="pln">
+</span><span class="pln">	</span><span class="kwd">else</span><span class="pln"> </span><span class="pun">{</span><span class="pln"> </span><span class="kwd">warn</span><span class="pln"> </span><span class="pun">(</span><span class="str">&quot;Function binmode() returned w/ error. &quot;</span><span class="pun">,</span><span class="pln"> </span><span class="typ">$!</span><span class="pun">,</span><span class="pln"> </span><span class="typ">$^E</span><span class="pun">)</span><span class="pun">;</span><span class="pln"> </span><span class="pun">}</span><span class="pln">
+</span><span class="pln">
+	</span><span class="lit">no</span><span class="pln"> </span><span class="kwd">bytes</span><span class="pun">;</span><span class="pln">    </span><span class="com"># Bytes pragma: OFF.</span><span class="pln">
+</span><span class="com">	             # __________________
+</span><span class="pln">
+	</span><span class="kwd">my</span><span class="pln"> </span><span class="typ">$pack_str</span><span class="pln"> </span><span class="pun">=</span><span class="pln"> </span><span class="str">&#39;a&#39;</span><span class="pln"> </span><span class="pun">.</span><span class="pln"> </span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="typ">file_len</span><span class="pun">(</span><span class="pun">)</span><span class="pun">;</span><span class="pln">
+</span><span class="pln">	</span><span class="kwd">print</span><span class="pln"> </span><span class="typ">$fh</span><span class="pln"> </span><span class="kwd">pack</span><span class="pln"> </span><span class="pun">(</span><span class="typ">$pack_str</span><span class="pun">,</span><span class="pln"> </span><span class="pun">(</span><span class="kwd">join</span><span class="pln"> </span><span class="pun">(</span><span class="str">&#39;&#39;</span><span class="pun">,</span><span class="pln"> </span><span class="var">@</span><span class="pun">{</span><span class="pln"> </span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;fc&#39;</span><span class="pun">}</span><span class="pln"> </span><span class="pun">}</span><span class="pun">)</span><span class="pun">)</span><span class="pun">)</span><span class="pun">;</span><span class="pln">
+</span><span class="pln">	
+	</span><span class="kwd">close</span><span class="pln"> </span><span class="typ">$fh</span><span class="pun">;</span><span class="pln">
 </span><span class="pln">
 	</span><span class="kwd">return</span><span class="pln"> </span><span class="pun">(</span><span class="atv">1</span><span class="pun">)</span><span class="pun">;</span><span class="pln">
 </span><span class="pun">}</span><span class="pln">
@@ -374,25 +452,22 @@ Version 0.01
 </span><span class="com">
 our $VERSION = &#39;0.01&#39;;
 
-
 </span><span class="com">=head1 SYNOPSIS
 
-The ZHex::File module provides functions for checking, opening, reading, 
-and writing files which are being edited within the hex editor.
+The ZHex::File module defines functions which provide checking, opening, 
+reading, and writing files which are being edited (within the hex editor).
 
 Usage:
 
-    use ZHex;
-
-    my $editorObj = ZHex-&gt;new();
-    ...
+    use ZHex::BoilerPlate qw(new obj_init $VERS);
+    my $objFile = $self-&gt;{&#39;obj&#39;}-&gt;{&#39;file&#39;};
+    $objFile-&gt;stat_file({&#39;fn&#39; =&gt; $abspath_w_filename});
 
 =head1 EXPORT
 
 No functions are exported.
 
 =head1 SUBROUTINES/METHODS
-
 
 =head2 check_file
 Method check_file()...
@@ -426,26 +501,22 @@ Method set_file()...
 Method stat_file()...
 = cut
 
-
 =head1 AUTHOR
 
 Double Z, C&lt;&lt; &lt;zacharyz at gmail.com&gt; &gt;&gt;
 
 =head1 BUGS
 
-Please report any bugs or feature requests to C&lt;bug-ZHex at rt.cpan.org&gt;, or through
-the web interface at L&lt;http://rt.cpan.org/NoAuth/ReportBug.html?Queue=ZHex&gt;.  I will be notified, and then you&#39;ll
-automatically be notified of progress on your bug as I make changes.
-
-
-
+Please report any bugs or feature requests to C&lt;bug-ZHex at rt.cpan.org&gt;, or 
+via the web interface: L&lt;http://rt.cpan.org/NoAuth/ReportBug.html?Queue=ZHex&gt;.  
+I will be notified, and then you&#39;ll automatically be notified of progress on 
+your bug as I make changes.
 
 =head1 SUPPORT
 
 You can find documentation for this module with the perldoc command.
 
     perldoc ZHex
-
 
 You can also look for information at:
 
@@ -469,9 +540,7 @@ L&lt;http://search.cpan.org/dist/ZHex/&gt;
 
 =back
 
-
 =head1 ACKNOWLEDGEMENTS
-
 
 =head1 LICENSE AND COPYRIGHT
 
@@ -513,12 +582,11 @@ CONTRIBUTOR WILL BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, OR
 CONSEQUENTIAL DAMAGES ARISING IN ANY WAY OUT OF THE USE OF THE PACKAGE,
 EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-
 =cut
 </span><span class="com">
 1;
 
-</span></pre>
+</span></pre></div>
 </body>
 </html>
 

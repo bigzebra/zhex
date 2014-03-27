@@ -8,8 +8,8 @@
 </head>
 <body>
 	<h2>ZHex - ZebraHex Editor v0.01</h2>
-	<p>Source code file: ../ZHex/CharMap.pm</p>
-	<pre class="prettyprint"><span class="com">#!/usr/bin/perl
+	<p>ZHex Editor source code filename: ../ZHex/CharMap.pm</p>
+	<div><pre class="prettyprint"><span class="com">#!/usr/bin/perl
 </span><span class="pln">
 </span><span class="lit">package</span><span class="pln"> </span><span class="atn">ZHex::CharMap</span><span class="pun">;</span><span class="pln">
 </span><span class="pln">
@@ -472,7 +472,6 @@
 
 ZHex::CharMap (ZHex/CharMap.pm) - CharMap Module, ZebraHex Editor.
 
-
 =head1 VERSION
 
 Version 0.01
@@ -481,23 +480,23 @@ Version 0.01
 </span><span class="com">
 our $VERSION = &#39;0.01&#39;;
 
-
 </span><span class="com">=head1 SYNOPSIS
 
-The ZHex::CharMap module maps characters (&#39;z&#39; for example) to their 
-ordinal values and unicode names. The following code is an example of 
-the data structure defined by the chr_map() function:
+The ZHex::CharMap module returns a data structure mapping unicode character 
+descriptions (a description of the letter &#39;z&#39; for example) to their ordinal 
+values and unicode names. The following code is an example of the data stucture 
+defined by the chr_map() function:
 
-	  &#39;LATIN SMALL LETTER Z&#39; =&gt; 
-	    { &#39;byte&#39; =&gt; &#39;122&#39;, 
-	      &#39;hex&#39;  =&gt; &#39;7a&#39;}, 
+    &#39;LATIN SMALL LETTER Z&#39; =&gt; 
+      {&#39;byte&#39; =&gt; &#39;122&#39;, 
+       &#39;hex&#39;  =&gt; &#39;7a&#39;}, 
 
 Usage:
 
-    use ZHex;
-
-    my $editorObj = ZHex-&gt;new();
-    ...
+    use ZHex::BoilerPlate qw(new obj_init $VERS);
+    my $objCharMap = $self-&gt;{&#39;obj&#39;}-&gt;{&#39;charmap&#39;};
+    my $chr_map = $objCharMap-&gt;chr_map();
+    $objCharMap-&gt;chr_map ({&#39;chr_map&#39; =&gt; $chr_map});
 
 =head1 EXPORT
 
@@ -505,19 +504,17 @@ No functions are exported.
 
 =head1 SUBROUTINES/METHODS
 
-
-=head2 chr_map
-Method chr_map()...
+=head2 init
+Method init()...
 = cut
 
 =head2 chr_map_set
 Method chr_map_set()...
 = cut
 
-=head2 init
-Method init()...
+=head2 chr_map
+Method chr_map()...
 = cut
-
 
 =head1 AUTHOR
 
@@ -525,19 +522,16 @@ Double Z, C&lt;&lt; &lt;zacharyz at gmail.com&gt; &gt;&gt;
 
 =head1 BUGS
 
-Please report any bugs or feature requests to C&lt;bug-ZHex at rt.cpan.org&gt;, or through
-the web interface at L&lt;http://rt.cpan.org/NoAuth/ReportBug.html?Queue=ZHex&gt;.  I will be notified, and then you&#39;ll
-automatically be notified of progress on your bug as I make changes.
-
-
-
+Please report any bugs or feature requests to C&lt;bug-ZHex at rt.cpan.org&gt;, or 
+via the web interface: L&lt;http://rt.cpan.org/NoAuth/ReportBug.html?Queue=ZHex&gt;.  
+I will be notified, and then you&#39;ll automatically be notified of progress on 
+your bug as I make changes.
 
 =head1 SUPPORT
 
 You can find documentation for this module with the perldoc command.
 
     perldoc ZHex
-
 
 You can also look for information at:
 
@@ -561,9 +555,7 @@ L&lt;http://search.cpan.org/dist/ZHex/&gt;
 
 =back
 
-
 =head1 ACKNOWLEDGEMENTS
-
 
 =head1 LICENSE AND COPYRIGHT
 
@@ -605,12 +597,11 @@ CONTRIBUTOR WILL BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, OR
 CONSEQUENTIAL DAMAGES ARISING IN ANY WAY OUT OF THE USE OF THE PACKAGE,
 EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-
 =cut
 </span><span class="com">
 1;
 
-</span></pre>
+</span></pre></div>
 </body>
 </html>
 

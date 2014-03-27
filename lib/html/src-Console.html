@@ -8,8 +8,8 @@
 </head>
 <body>
 	<h2>ZHex - ZebraHex Editor v0.01</h2>
-	<p>Source code file: ../ZHex/Console.pm</p>
-	<pre class="prettyprint"><span class="com">#!/usr/bin/perl
+	<p>ZHex Editor source code filename: ../ZHex/Console.pm</p>
+	<div><pre class="prettyprint"><span class="com">#!/usr/bin/perl
 </span><span class="pln">
 </span><span class="lit">package</span><span class="pln"> </span><span class="atn">ZHex::Console</span><span class="pun">;</span><span class="pln">
 </span><span class="pln">
@@ -1181,26 +1181,23 @@ Version 0.01
 </span><span class="com">
 our $VERSION = &#39;0.01&#39;;
 
-
 </span><span class="com">=head1 SYNOPSIS
 
-The ZHex::Console module is more-or-less a wrapper around the functions 
-provided by Win32::Console. It serves to make the use of Win32::Console 
-easier for the author of ZebraHex.
+The ZHex::Console module is a wrapper around the functions provided by 
+Win32::Console. It serves to make the use of Win32::Console easier for the 
+author.
 
 Usage:
 
-    use ZHex;
-
-    my $editorObj = ZHex-&gt;new();
-    ...
+    use ZHex::BoilerPlate qw(new obj_init $VERS);
+    my $objConsole = $self-&gt;{&#39;obj&#39;}-&gt;{&#39;console&#39;};
+    $objConsole-&gt;w32cons_cursor_invisible();
 
 =head1 EXPORT
 
 No functions are exported.
 
 =head1 SUBROUTINES/METHODS
-
 
 =head2 colorize_combine_attrs
 Method colorize_combine_attrs()...
@@ -1228,10 +1225,6 @@ Method mouse_over()...
 
 =head2 rmouse
 Method rmouse()...
-= cut
-
-=head2 rv_handler
-Method rv_handler()...
 = cut
 
 =head2 w32cons_clear
@@ -1270,6 +1263,10 @@ Method w32cons_fg_white_bg_black()...
 Method w32cons_init()...
 = cut
 
+=head2 w32cons_mode_get
+Method w32cons_mode_get()...
+= cut
+
 =head2 w32cons_mode_set
 Method w32cons_mode_set()...
 = cut
@@ -1298,26 +1295,22 @@ Method w32cons_title_set()...
 Method w32cons_write()...
 = cut
 
-
 =head1 AUTHOR
 
 Double Z, C&lt;&lt; &lt;zacharyz at gmail.com&gt; &gt;&gt;
 
 =head1 BUGS
 
-Please report any bugs or feature requests to C&lt;bug-ZHex at rt.cpan.org&gt;, or through
-the web interface at L&lt;http://rt.cpan.org/NoAuth/ReportBug.html?Queue=ZHex&gt;.  I will be notified, and then you&#39;ll
-automatically be notified of progress on your bug as I make changes.
-
-
-
+Please report any bugs or feature requests to C&lt;bug-ZHex at rt.cpan.org&gt;, or 
+via the web interface: L&lt;http://rt.cpan.org/NoAuth/ReportBug.html?Queue=ZHex&gt;.  
+I will be notified, and then you&#39;ll automatically be notified of progress on 
+your bug as I make changes.
 
 =head1 SUPPORT
 
 You can find documentation for this module with the perldoc command.
 
     perldoc ZHex
-
 
 You can also look for information at:
 
@@ -1341,9 +1334,7 @@ L&lt;http://search.cpan.org/dist/ZHex/&gt;
 
 =back
 
-
 =head1 ACKNOWLEDGEMENTS
-
 
 =head1 LICENSE AND COPYRIGHT
 
@@ -1385,12 +1376,11 @@ CONTRIBUTOR WILL BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, OR
 CONSEQUENTIAL DAMAGES ARISING IN ANY WAY OUT OF THE USE OF THE PACKAGE,
 EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-
 =cut
 </span><span class="com">
 1;
 
-</span></pre>
+</span></pre></div>
 </body>
 </html>
 
