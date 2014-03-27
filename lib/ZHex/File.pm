@@ -8,7 +8,7 @@ use warnings FATAL => 'all';
 
 use ZHex::Common qw(new obj_init $VERS);
 
-use IO::Handle;
+use IO::File;
 use Fcntl qw(:DEFAULT :Fcompat);
 
 BEGIN { require Exporter;

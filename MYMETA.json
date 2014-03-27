@@ -33,6 +33,7 @@
       "runtime" : {
          "requires" : {
             "Getopt::Long" : "0",
+            "IO::File" : "0",
             "Time::HiRes" : "0",
             "Win32::Console" : "0",
             "perl" : "5.006"

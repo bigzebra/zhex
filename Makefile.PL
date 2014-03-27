@@ -20,6 +20,7 @@ WriteMakefile(
     },
     PREREQ_PM => {
         'Win32::Console' => 0,
+        'IO::File'       => 0,
         'Getopt::Long'   => 0,
         'Time::HiRes'    => 0
     },

@@ -20,7 +20,7 @@
 #     MIN_PERL_VERSION => q[5.006]
 #     NAME => q[ZHex]
 #     PL_FILES => {  }
-#     PREREQ_PM => { Win32::Console=>q[0], Time::HiRes=>q[0], Test::More=>q[0], Getopt::Long=>q[0] }
+#     PREREQ_PM => { Getopt::Long=>q[0], Test::More=>q[0], IO::File=>q[0], Win32::Console=>q[0], Time::HiRes=>q[0] }
 #     TEST_REQUIRES => {  }
 #     VERSION_FROM => q[lib/ZHex.pm]
 #     clean => { FILES=>q[ZHex-* t/test.txt] }
@@ -170,8 +170,8 @@ O_FILES  =
 H_FILES  = 
 MAN1PODS = 
 MAN3PODS = lib/ZHex.pm \
-	lib/ZHex/BoilerPlate.pm \
 	lib/ZHex/CharMap.pm \
+	lib/ZHex/Common.pm \
 	lib/ZHex/Console.pm \
 	lib/ZHex/Cursor.pm \
 	lib/ZHex/Debug.pm \
@@ -202,8 +202,8 @@ PERL_ARCHIVE_AFTER =
 
 
 TO_INST_PM = lib/ZHex.pm \
-	lib/ZHex/BoilerPlate.pm \
 	lib/ZHex/CharMap.pm \
+	lib/ZHex/Common.pm \
 	lib/ZHex/Console.pm \
 	lib/ZHex/Cursor.pm \
 	lib/ZHex/Debug.pm \
@@ -212,32 +212,32 @@ TO_INST_PM = lib/ZHex.pm \
 	lib/ZHex/Event.pm \
 	lib/ZHex/EventLoop.pm \
 	lib/ZHex/File.pm \
-	lib/prettify/desert.css \
-	lib/prettify/index.html \
-	lib/prettify/prettify_zhex_src.pl \
-	lib/prettify/src-BoilerPlate.html \
-	lib/prettify/src-CharMap.html \
-	lib/prettify/src-Console.html \
-	lib/prettify/src-Cursor.html \
-	lib/prettify/src-Debug.html \
-	lib/prettify/src-Display.html \
-	lib/prettify/src-Editor.html \
-	lib/prettify/src-Event.html \
-	lib/prettify/src-EventLoop.html \
-	lib/prettify/src-File.html \
-	lib/prettify/src-ZHex.html \
-	lib/prettify/src-zhexsh.html \
-	lib/prettify/sunburst.css \
+	lib/html/desert.css \
+	lib/html/index.html \
+	lib/html/src-CharMap_pm.html \
+	lib/html/src-Common_pm.html \
+	lib/html/src-Console_pm.html \
+	lib/html/src-Cursor_pm.html \
+	lib/html/src-Debug_pm.html \
+	lib/html/src-Display_pm.html \
+	lib/html/src-Editor_pm.html \
+	lib/html/src-EventLoop_pm.html \
+	lib/html/src-Event_pm.html \
+	lib/html/src-File_pm.html \
+	lib/html/src-ZHex_pm.html \
+	lib/html/src-zhex_pl.html \
+	lib/html/sunburst.css \
+	lib/html/zhex_src_to_html.pl \
 	lib/t.txt \
-	lib/zhexsh.pl \
+	lib/zhex.pl \
 	make_manifest.pl
 
 PM_TO_BLIB = lib/ZHex.pm \
 	blib\lib\ZHex.pm \
-	lib/ZHex/BoilerPlate.pm \
-	blib\lib\ZHex\BoilerPlate.pm \
 	lib/ZHex/CharMap.pm \
 	blib\lib\ZHex\CharMap.pm \
+	lib/ZHex/Common.pm \
+	blib\lib\ZHex\Common.pm \
 	lib/ZHex/Console.pm \
 	blib\lib\ZHex\Console.pm \
 	lib/ZHex/Cursor.pm \
@@ -254,42 +254,42 @@ PM_TO_BLIB = lib/ZHex.pm \
 	blib\lib\ZHex\EventLoop.pm \
 	lib/ZHex/File.pm \
 	blib\lib\ZHex\File.pm \
-	lib/prettify/desert.css \
-	blib\lib\prettify\desert.css \
-	lib/prettify/index.html \
-	blib\lib\prettify\index.html \
-	lib/prettify/prettify_zhex_src.pl \
-	blib\lib\prettify\prettify_zhex_src.pl \
-	lib/prettify/src-BoilerPlate.html \
-	blib\lib\prettify\src-BoilerPlate.html \
-	lib/prettify/src-CharMap.html \
-	blib\lib\prettify\src-CharMap.html \
-	lib/prettify/src-Console.html \
-	blib\lib\prettify\src-Console.html \
-	lib/prettify/src-Cursor.html \
-	blib\lib\prettify\src-Cursor.html \
-	lib/prettify/src-Debug.html \
-	blib\lib\prettify\src-Debug.html \
-	lib/prettify/src-Display.html \
-	blib\lib\prettify\src-Display.html \
-	lib/prettify/src-Editor.html \
-	blib\lib\prettify\src-Editor.html \
-	lib/prettify/src-Event.html \
-	blib\lib\prettify\src-Event.html \
-	lib/prettify/src-EventLoop.html \
-	blib\lib\prettify\src-EventLoop.html \
-	lib/prettify/src-File.html \
-	blib\lib\prettify\src-File.html \
-	lib/prettify/src-ZHex.html \
-	blib\lib\prettify\src-ZHex.html \
-	lib/prettify/src-zhexsh.html \
-	blib\lib\prettify\src-zhexsh.html \
-	lib/prettify/sunburst.css \
-	blib\lib\prettify\sunburst.css \
+	lib/html/desert.css \
+	blib\lib\html\desert.css \
+	lib/html/index.html \
+	blib\lib\html\index.html \
+	lib/html/src-CharMap_pm.html \
+	blib\lib\html\src-CharMap_pm.html \
+	lib/html/src-Common_pm.html \
+	blib\lib\html\src-Common_pm.html \
+	lib/html/src-Console_pm.html \
+	blib\lib\html\src-Console_pm.html \
+	lib/html/src-Cursor_pm.html \
+	blib\lib\html\src-Cursor_pm.html \
+	lib/html/src-Debug_pm.html \
+	blib\lib\html\src-Debug_pm.html \
+	lib/html/src-Display_pm.html \
+	blib\lib\html\src-Display_pm.html \
+	lib/html/src-Editor_pm.html \
+	blib\lib\html\src-Editor_pm.html \
+	lib/html/src-EventLoop_pm.html \
+	blib\lib\html\src-EventLoop_pm.html \
+	lib/html/src-Event_pm.html \
+	blib\lib\html\src-Event_pm.html \
+	lib/html/src-File_pm.html \
+	blib\lib\html\src-File_pm.html \
+	lib/html/src-ZHex_pm.html \
+	blib\lib\html\src-ZHex_pm.html \
+	lib/html/src-zhex_pl.html \
+	blib\lib\html\src-zhex_pl.html \
+	lib/html/sunburst.css \
+	blib\lib\html\sunburst.css \
+	lib/html/zhex_src_to_html.pl \
+	blib\lib\html\zhex_src_to_html.pl \
 	lib/t.txt \
 	blib\lib\t.txt \
-	lib/zhexsh.pl \
-	blib\lib\zhexsh.pl \
+	lib/zhex.pl \
+	blib\lib\zhex.pl \
 	make_manifest.pl \
 	$(INST_LIB)\make_manifest.pl
 
@@ -514,8 +514,8 @@ POD2MAN = $(POD2MAN_EXE)
 
 manifypods : pure_all  \
 	lib/ZHex.pm \
-	lib/ZHex/BoilerPlate.pm \
 	lib/ZHex/CharMap.pm \
+	lib/ZHex/Common.pm \
 	lib/ZHex/Console.pm \
 	lib/ZHex/Cursor.pm \
 	lib/ZHex/Debug.pm \
@@ -526,8 +526,8 @@ manifypods : pure_all  \
 	lib/ZHex/File.pm
 	$(NOECHO) $(POD2MAN) --section=3 --perm_rw=$(PERM_RW) \
 	  lib/ZHex.pm $(INST_MAN3DIR)\ZHex.$(MAN3EXT) \
-	  lib/ZHex/BoilerPlate.pm $(INST_MAN3DIR)\ZHex.BoilerPlate.$(MAN3EXT) \
 	  lib/ZHex/CharMap.pm $(INST_MAN3DIR)\ZHex.CharMap.$(MAN3EXT) \
+	  lib/ZHex/Common.pm $(INST_MAN3DIR)\ZHex.Common.$(MAN3EXT) \
 	  lib/ZHex/Console.pm $(INST_MAN3DIR)\ZHex.Console.$(MAN3EXT) \
 	  lib/ZHex/Cursor.pm $(INST_MAN3DIR)\ZHex.Cursor.$(MAN3EXT) \
 	  lib/ZHex/Debug.pm $(INST_MAN3DIR)\ZHex.Debug.$(MAN3EXT) \
@@ -624,6 +624,7 @@ metafile : create_distdir
 	$(NOECHO) $(ECHO) "    - inc" >> META_new.yml
 	$(NOECHO) $(ECHO) requires: >> META_new.yml
 	$(NOECHO) $(ECHO) "  Getopt::Long: '0'" >> META_new.yml
+	$(NOECHO) $(ECHO) "  IO::File: '0'" >> META_new.yml
 	$(NOECHO) $(ECHO) "  Time::HiRes: '0'" >> META_new.yml
 	$(NOECHO) $(ECHO) "  Win32::Console: '0'" >> META_new.yml
 	$(NOECHO) $(ECHO) "  perl: '5.006'" >> META_new.yml
@@ -665,6 +666,7 @@ metafile : create_distdir
 	$(NOECHO) $(ECHO) "      \"runtime\" : {{" >> META_new.json
 	$(NOECHO) $(ECHO) "         \"requires\" : {{" >> META_new.json
 	$(NOECHO) $(ECHO) "            \"Getopt::Long\" : \"0\"," >> META_new.json
+	$(NOECHO) $(ECHO) "            \"IO::File\" : \"0\"," >> META_new.json
 	$(NOECHO) $(ECHO) "            \"Time::HiRes\" : \"0\"," >> META_new.json
 	$(NOECHO) $(ECHO) "            \"Win32::Console\" : \"0\"," >> META_new.json
 	$(NOECHO) $(ECHO) "            \"perl\" : \"5.006\"" >> META_new.json
@@ -979,6 +981,7 @@ ppd :
 	$(NOECHO) $(ECHO) "    <IMPLEMENTATION>" >> $(DISTNAME).ppd
 	$(NOECHO) $(ECHO) "        <PERLCORE VERSION=\"5,006,0,0\" />" >> $(DISTNAME).ppd
 	$(NOECHO) $(ECHO) "        <REQUIRE NAME=\"Getopt::Long\" />" >> $(DISTNAME).ppd
+	$(NOECHO) $(ECHO) "        <REQUIRE NAME=\"IO::File\" />" >> $(DISTNAME).ppd
 	$(NOECHO) $(ECHO) "        <REQUIRE NAME=\"Time::HiRes\" />" >> $(DISTNAME).ppd
 	$(NOECHO) $(ECHO) "        <REQUIRE NAME=\"Win32::Console\" />" >> $(DISTNAME).ppd
 	$(NOECHO) $(ECHO) "        <ARCHITECTURE NAME=\"MSWin32-x86-multi-thread-64int-5.18\" />" >> $(DISTNAME).ppd
@@ -992,8 +995,8 @@ ppd :
 pm_to_blib : $(FIRST_MAKEFILE) $(TO_INST_PM)
 	$(NOECHO) $(ABSPERLRUN) -MExtUtils::Install -e "pm_to_blib({{@ARGV}}, '$(INST_LIB)\auto', q[$(PM_FILTER)], '$(PERM_DIR)')" -- \
 	  lib/ZHex.pm blib\lib\ZHex.pm \
-	  lib/ZHex/BoilerPlate.pm blib\lib\ZHex\BoilerPlate.pm \
 	  lib/ZHex/CharMap.pm blib\lib\ZHex\CharMap.pm \
+	  lib/ZHex/Common.pm blib\lib\ZHex\Common.pm \
 	  lib/ZHex/Console.pm blib\lib\ZHex\Console.pm \
 	  lib/ZHex/Cursor.pm blib\lib\ZHex\Cursor.pm \
 	  lib/ZHex/Debug.pm blib\lib\ZHex\Debug.pm \
@@ -1002,25 +1005,25 @@ pm_to_blib : $(FIRST_MAKEFILE) $(TO_INST_PM)
 	  lib/ZHex/Event.pm blib\lib\ZHex\Event.pm \
 	  lib/ZHex/EventLoop.pm blib\lib\ZHex\EventLoop.pm \
 	  lib/ZHex/File.pm blib\lib\ZHex\File.pm \
-	  lib/prettify/desert.css blib\lib\prettify\desert.css \
-	  lib/prettify/index.html blib\lib\prettify\index.html \
-	  lib/prettify/prettify_zhex_src.pl blib\lib\prettify\prettify_zhex_src.pl \
-	  lib/prettify/src-BoilerPlate.html blib\lib\prettify\src-BoilerPlate.html \
-	  lib/prettify/src-CharMap.html blib\lib\prettify\src-CharMap.html \
-	  lib/prettify/src-Console.html blib\lib\prettify\src-Console.html \
-	  lib/prettify/src-Cursor.html blib\lib\prettify\src-Cursor.html \
-	  lib/prettify/src-Debug.html blib\lib\prettify\src-Debug.html \
-	  lib/prettify/src-Display.html blib\lib\prettify\src-Display.html \
-	  lib/prettify/src-Editor.html blib\lib\prettify\src-Editor.html \
-	  lib/prettify/src-Event.html blib\lib\prettify\src-Event.html 
+	  lib/html/desert.css blib\lib\html\desert.css \
+	  lib/html/index.html blib\lib\html\index.html \
+	  lib/html/src-CharMap_pm.html blib\lib\html\src-CharMap_pm.html \
+	  lib/html/src-Common_pm.html blib\lib\html\src-Common_pm.html \
+	  lib/html/src-Console_pm.html blib\lib\html\src-Console_pm.html \
+	  lib/html/src-Cursor_pm.html blib\lib\html\src-Cursor_pm.html \
+	  lib/html/src-Debug_pm.html blib\lib\html\src-Debug_pm.html \
+	  lib/html/src-Display_pm.html blib\lib\html\src-Display_pm.html \
+	  lib/html/src-Editor_pm.html blib\lib\html\src-Editor_pm.html \
+	  lib/html/src-EventLoop_pm.html blib\lib\html\src-EventLoop_pm.html \
+	  lib/html/src-Event_pm.html blib\lib\html\src-Event_pm.html \
+	  lib/html/src-File_pm.html blib\lib\html\src-File_pm.html \
+	  lib/html/src-ZHex_pm.html blib\lib\html\src-ZHex_pm.html 
 	$(NOECHO) $(ABSPERLRUN) -MExtUtils::Install -e "pm_to_blib({{@ARGV}}, '$(INST_LIB)\auto', q[$(PM_FILTER)], '$(PERM_DIR)')" -- \
-	  lib/prettify/src-EventLoop.html blib\lib\prettify\src-EventLoop.html \
-	  lib/prettify/src-File.html blib\lib\prettify\src-File.html \
-	  lib/prettify/src-ZHex.html blib\lib\prettify\src-ZHex.html \
-	  lib/prettify/src-zhexsh.html blib\lib\prettify\src-zhexsh.html \
-	  lib/prettify/sunburst.css blib\lib\prettify\sunburst.css \
+	  lib/html/src-zhex_pl.html blib\lib\html\src-zhex_pl.html \
+	  lib/html/sunburst.css blib\lib\html\sunburst.css \
+	  lib/html/zhex_src_to_html.pl blib\lib\html\zhex_src_to_html.pl \
 	  lib/t.txt blib\lib\t.txt \
-	  lib/zhexsh.pl blib\lib\zhexsh.pl \
+	  lib/zhex.pl blib\lib\zhex.pl \
 	  make_manifest.pl $(INST_LIB)\make_manifest.pl 
 	$(NOECHO) $(TOUCH) pm_to_blib
 
