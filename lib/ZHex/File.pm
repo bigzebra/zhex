@@ -490,6 +490,10 @@ Method set_file()...
 Method stat_file()...
 = cut
 
+=head2 write_file
+Method write_file()...
+= cut
+
 =head1 AUTHOR
 
 Double Z, C<< <zacharyz at gmail.com> >>
