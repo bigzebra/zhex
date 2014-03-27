@@ -125,7 +125,7 @@ sub register_event_callbacks {
 	  [ 'DEFAULT', 'CONSCURS_INVIS',    sub { $objConsole->w32cons_cursor_invisible(); } ],
 	  [ 'DEFAULT', 'CONSCURS_VIS',      sub { $objConsole->w32cons_cursor_visible(); } ],
 	  [ 'DEFAULT', 'INSERT_MODE',       sub { $self->insert_mode(); } ],
-	  [ 'DEFAULT', 'WRITE_DISK',        sub { return (0); } ],
+	  [ 'DEFAULT', 'WRITE_DISK',        sub { $objFile->write_file ({'fn' => $objFile->{'fn'}}); } ],
 	  [ 'DEFAULT', 'SEARCH_MODE',       sub { $self->search_mode(); } ],
 	  [ 'DEFAULT', 'JUMP_TO_LINE',      sub { return (0); } ],
 	  [ 'DEFAULT', 'COPY_REGION',       sub { return (0); } ],

@@ -8,6 +8,9 @@ use warnings FATAL => 'all';
 
 use ZHex::BoilerPlate qw(new obj_init $VERS);
 
+use IO::Handle;
+use Fcntl qw(:DEFAULT :Fcompat);
+
 BEGIN { require Exporter;
 	our $VERSION   = $VERS;
 	our @ISA       = qw(Exporter);
@@ -69,6 +72,7 @@ sub init {
 #   file_len()		Return number of bytes in file.
 #   file_bytes()	Return list of bytes from 'pos' -> 'ofs'.
 #   insert_str()	Insert byte at 'pos'.
+#   write_file()	Write file to disk.
 
 sub check_file {
 
@@ -333,12 +337,86 @@ sub insert_str {
 	             ($arg->{'str'} eq '')) 
 		{ die "Call to insert_str() failed, value associated w/ key 'str' was undef/empty string"; }
 
+	# From: http://www.perlmonks.org/?displaytype=print;node_id=836926;replies=1
+	#   print "Array isn't empty. Array Values:@array\n" if($array[0]);
+	#   print "Array isn't empty. Array Values:@array\n" if($#array >= 0);
+	#   print "Array isn't empty. Array Values:@array\n" if(@array);
+
 	my @fc_tmp;
 	push @fc_tmp, @{ $self->{'fc'} }[0 .. ($arg->{'pos'} - 1)];
-	push @fc_tmp, $arg->{'str'};
+
+	my $unpack_str = ('a ' x length ($arg->{'str'}));
+
+	my @str_bytes = 
+	  unpack ($unpack_str, $arg->{'str'});
+
+	# $self->{'obj'}->{'debug'}->errmsg ("str_bytes array contains '" . scalar (@str_bytes) . "' elements.");
+	# print "str_bytes array contains '" . scalar (@str_bytes) . "' elements.\n";
+
+	if ($#str_bytes >= 0 && 
+	    scalar (@str_bytes) > 0) {
+
+		foreach my $str_byte (@str_bytes) {
+
+			push @fc_tmp, $str_byte;
+		}
+	}
+
 	push @fc_tmp, @{ $self->{'fc'} }[$arg->{'pos'} .. ($fc_len - 1)];
 
 	$self->{'fc'} = \@fc_tmp;
+
+	return (1);
+}
+
+sub write_file {
+
+	my $self = shift;
+	my $arg  = shift;
+
+	if (! defined $arg || 
+	      ! (ref ($arg) eq 'HASH')) 
+		{ die "Call to read_file() failed, argument must be hash reference"; }
+
+	if (! exists  $arg->{'fn'} || 
+	    ! defined $arg->{'fn'} || 
+	             ($arg->{'fn'} eq '')) 
+		{ die "Call to read_file() failed, value associated w/ key 'fn' was undef/empty string"; }
+
+	# Test filename argument: verify that file exists on filesystem.
+
+	if (! -e $arg->{'fn'} || 
+	    ! -f $arg->{'fn'}) {
+
+		return (undef);
+	}
+
+	# $oldfh = select (HANDLE); 
+	# $| = 1; 
+	# select ($oldfh);
+
+	             # _________________
+	use bytes;   # Bytes pragma: ON.
+
+	my ($buf);   # <--- Declare inside "use bytes" pragma.
+	my (@fc);    # <--- Declare inside "use bytes" pragma.
+
+        my $fh = IO::File->new ($arg->{'fn'}, O_WRONLY|O_CREAT);
+        if (defined $fh) 
+	     { undef; }
+        else { die ("Function IO::File->new() returned w/ error (called w/ path=" . $arg->{'fn'} . ": ". $! . $^E); }
+
+	if (binmode ($fh, ":raw")) 
+	     { undef; }
+	else { warn ("Function binmode() returned w/ error. ", $!, $^E); }
+
+	no bytes;    # Bytes pragma: OFF.
+	             # __________________
+
+	my $pack_str = 'a' . $self->file_len();
+	print $fh pack ($pack_str, (join ('', @{ $self->{'fc'} })));
+	
+	close $fh;
 
 	return (1);
 }

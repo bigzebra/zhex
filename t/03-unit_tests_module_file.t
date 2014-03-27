@@ -6,7 +6,7 @@ use warnings;
 use strict;
 
 use IO::File;
-use Test::More tests => 47;
+use Test::More tests => 65;
 
 BEGIN {
 
@@ -33,26 +33,6 @@ BEGIN {
 	$fc_wr = ($fc_str x 10);
 }
 
-# ______________________________________________________________________
-# ZHex\File.pm
-#
-# Functions exported: 
-#   <NONE>
-# Functions imported:
-#   new()		IMPORTED FROM ZHex::BoilerPlate.pm.
-#   obj_init()		IMPORTED FROM ZHex::BoilerPlate.pm.
-# Member functions:
-#   check_file()
-#   file_bytes()
-#   file_len()
-#   init()
-#   insert_str()
-#   read_file()
-#   set_file()
-#   stat_file()
-# Values exported: 
-#   <NONE>
-
 my @objFileSubs = 
   ('check_file', 
    'file_bytes', 
@@ -70,13 +50,10 @@ my $objFile = ZHex::File->new();
 isa_ok ($objFile, 'ZHex::File', 'File');
 can_ok ($objFile, @objFileSubs);
 
-
-# ______________________________________________________________________
 # Clean up test files left behind from previous testing.
 
 subtest ('Clean up temporary test files' => 
   sub { &clean_up_test_file (FN_TESTFILE); } );
-
 
 # ______________________________________________________________________
 # Test operation/correct function of subroutine(s).
@@ -127,7 +104,6 @@ CALL_FILE_BYTES_W_NONEXISTING: {
 	my $rv = $objFile->file_bytes ({'ofs' => 0, 'len' => 20});
 	is ($rv, undef, "Call file_bytes() w/ non-existing file read by read_file().");
 }
-
 
 # ______________________________________________________________________
 # Create temporary file filled w/ test data (used to test subroutines).
@@ -180,19 +156,9 @@ READ_TEST_FILE: {
 
 is ($fc_rd, $fc_wr, "Verified test file '" . FN_TESTFILE . "' contains correct test data.");
 
-
 # ______________________________________________________________________
 # Test operation/correct function of subroutine(s).
 #   Test subroutines when called w/ existing file.
-
-#   ZHex::File.pm member functions:
-#     check_file()
-#     set_file()
-#     stat_file()
-#     read_file()
-#     file_len()
-#     file_bytes()
-
 #
 #   Member Function	Test Description		Expected return value			Additional testable results
 #   _______________	________________		_____________________			___________________________
@@ -203,7 +169,6 @@ is ($fc_rd, $fc_wr, "Verified test file '" . FN_TESTFILE . "' contains correct t
 #   read_file()		Test w/ non-existing file.	Returns '1' w/ success.			Bytes read from file stored in 'fc' key.
 #   set_file()		Test w/ non-existing file.	Returns '1' w/ good 'fn' arguemnt.	Sets value of 'fn' key to 'fn' arguement.
 #   stat_file()		Test w/ non-existing file.	Returns '1' w/ good 'fn' arguemnt.	Sets value of various keys to values returned by stat().
-
 
 CALL_CHECK_FILE_W_EXISTING: {
 
@@ -300,6 +265,7 @@ CALL_READ_FILE_W_EXISTING: {
 			my $rv = $objFile->file_bytes ({'ofs' => 0, 'len' => 20});
 			my $rv2 = \@{ [ split ('', (substr ($fc_wr, 0, 20))) ] };
 			isa_ok ($rv, 'ARRAY', "file_bytes() return value is array ref.");
+			isa_ok ($rv2, 'ARRAY', "mock file_bytes() rv is array ref.");
 			is_deeply (\@{ $rv }, 
 			           \@{ $rv2 }, 
 			  "Call file_bytes() w/ existing file read by read_file(), request 20 bytes from head.");
@@ -310,6 +276,7 @@ CALL_READ_FILE_W_EXISTING: {
 			my $rv = $objFile->file_bytes ({'ofs' => 20, 'len' => 40});
 			my $rv2 = \@{ [ split ('', (substr $fc_wr, 20, 40)) ] };
 			isa_ok ($rv, 'ARRAY', "file_bytes() return value is array ref.");
+			isa_ok ($rv2, 'ARRAY', "mock file_bytes() rv is array ref.");
 			is_deeply (\@{ $rv }, 
 			           \@{ $rv2 }, 
 			"Call file_bytes() w/ existing file read by read_file(), request 20 bytes from middle.");
@@ -320,6 +287,7 @@ CALL_READ_FILE_W_EXISTING: {
 			my $rv = $objFile->file_bytes ({'ofs' => (length ($fc_wr) - 20), 'len' => 20});
 			my $rv2 = \@{ [ split ('', (substr $fc_wr, ((length ($fc_wr)) - 20), 20)) ] };
 			isa_ok ($rv, 'ARRAY', "file_bytes() return value is array ref.");
+			isa_ok ($rv2, 'ARRAY', "mock file_bytes() rv is array ref.");
 			is_deeply (\@{ $rv }, 
 			           \@{ $rv2 }, 
 			  "Call file_bytes() w/ existing file read by read_file(), request 20 bytes from tail.");
@@ -328,8 +296,9 @@ CALL_READ_FILE_W_EXISTING: {
 		CALL_FILE_BYTES_W_EXISTING_FOR_WHOLE_W_ARGS: {
 
 			my $rv = $objFile->file_bytes ({'ofs' => 0, 'len' => (length ($fc_wr))});
-			my $rv2 = \@{ [ split ('', ($fc_wr)) ] };
+			my $rv2 = \@{ [ split ('', $fc_wr) ] };
 			isa_ok ($rv, 'ARRAY', "file_bytes() return value is array ref.");
+			isa_ok ($rv2, 'ARRAY', "mock file_bytes() rv is array ref.");
 			is_deeply (\@{ $rv }, 
 			           \@{ $rv2 }, 
 			  "Call file_bytes() w/ existing file read by read_file(), request whole file (w/ args).");
@@ -337,79 +306,120 @@ CALL_READ_FILE_W_EXISTING: {
 	}
 }
 
+my $ins_str = "XxXxXx0192837465!!!?";   # 20 character string to insert (arguement to insert_str()).
+
 CALL_INSERT_FILE: {
 
-	my $ofs = 0;                        # Offset where string will be inserted (argument to insert_str()).
-	my $str = "XxXxXx0192837465!!!?";   # 20 character string to insert (arguement to insert_str()).
+	CALL_FILE_BYTES_FOR_FILE_BEFORE_INSERT: {
+
+		my $rv = $objFile->file_bytes ({'ofs' => 0, 'len' => ($objFile->file_len())});
+		my $rv2 = \@{ [ split ('', $fc_wr) ] };
+		isa_ok ($rv, 'ARRAY', "file_bytes() return value is array ref.");
+		isa_ok ($rv2, 'ARRAY', "mock file_bytes() rv is array ref.");
+		is_deeply (\@{ $rv }, 
+			   \@{ $rv2 }, 
+		  "Call file_bytes() before call to insert_str().");
+	}
+
+	CALL_FILE_LEN_BEFORE_INSERT: {
+
+		my $rv = $objFile->file_len();
+		my $rv2 = (length ($fc_wr));
+		is ($rv, $rv2, "Call file_len() before call to insert_str().");
+	}
+
+	my $ofs = 0;   # Offset where string will be inserted (argument to insert_str()).
 
 	CALL_INSERT_STR_OFS_ZERO: {
 
-		my $rv = $objFile->insert_str ({'pos' => $ofs, 'str' => $str});
-		is ($rv, 1, "Call insert_str() w/ '" . length ($str) . "' byte string inserted at offset '" . $ofs . "'.");
+		my $rv = $objFile->insert_str ({'pos' => $ofs, 'str' => $ins_str});
+		is ($rv, 1, "Call insert_str() w/ '" . length ($ins_str) . "' byte string inserted at offset '" . $ofs . "'.");
 	}
 
-	CALL_FILE_LEN: {
+	CALL_FILE_LEN_AFTER_INSERT_STR_OFS_ZERO: {
 
 		my $rv = $objFile->file_len();
-		my $rv2 = (length ($fc_wr) + 1);
-		# my $rv2 = (length ($fc_wr) + length ($str));
+		my $rv2 = (length ($fc_wr) + length ($ins_str));
 		is ($rv, $rv2, "Call file_len() after call to insert_str().");
 	}
 
-	my $why = "Because I said so";
-	my $how_many = 1;
-	my $have_some_feature = 0;
+	CALL_FILE_BYTES_AFTER_INSERT_STR_OFS_ZERO: {
 
-	SKIP: {
-	  skip $why, $how_many unless $have_some_feature;
-
-		CALL_FILE_BYTES_FOR_WHOLE_FILE: {
-
-			my $rv = $objFile->file_bytes ({'ofs' => 0, 'len' => ($objFile->file_len())});
-			my $rv2 = \@{ [ split ('', ($str . $fc_wr)) ] };
-			is ($rv, $rv2, "Call file_bytes() after call to insert_str().");
-		}
+		my $rv = $objFile->file_bytes ({'ofs' => 0, 'len' => ($objFile->file_len())});
+		my $rv2 = \@{ [ split ('', ($ins_str . $fc_wr)) ] };
+		isa_ok ($rv, 'ARRAY', "file_bytes() return value is array ref.");
+		isa_ok ($rv2, 'ARRAY', "mock file_bytes() rv is array ref.");
+		is_deeply (\@{ $rv }, 
+		           \@{ $rv2 }, 
+		  "Call file_bytes() [after call to insert_str() w/ file offset 0].");
 	}
 
 	CALL_INSERT_STR_OFS_FLEN: {
 
 		my $flen = $objFile->file_len();
-		my $rv = $objFile->insert_str ({'pos' => $objFile->file_len(), 'str' => $str});
-		is ($rv, 1, "Call insert_str() w/ '" . length ($str) . "' byte string inserted at offset '" . $flen . "'.");
+		my $rv = $objFile->insert_str ({'pos' => $objFile->file_len(), 'str' => $ins_str});
+		is ($rv, 1, "Call insert_str() w/ '" . length ($ins_str) . "' byte string inserted at offset '" . $flen . "'.");
 	}
 
-	SKIP: {
-	  skip $why, $how_many unless $have_some_feature;
-		CALL_FILE_LEN: {
+	CALL_FILE_LEN_AFTER_INSERT_STR_OFS_FLEN: {
 
-			my $rv = $objFile->file_len();
-			my $rv2 = (length ($fc_wr) + (length ($str) * 2));
-			is ($rv, $rv2, "Call file_len() after 2nd call to insert_str().");
-		}
+		my $rv = $objFile->file_len();
+		my $rv2 = (length ($fc_wr) + ((length ($ins_str)) * 2));
+		is ($rv, $rv2, "Call file_len() after 2nd call to insert_str().");
 	}
 
-	SKIP: {
-	  skip $why, $how_many unless $have_some_feature;
+	CALL_FILE_BYTES_AFTER_INSERT_STR_OFS_FLEN: {
 
-		CALL_FILE_BYTES_FOR_WHOLE_FILE: {
-
-			my $rv = $objFile->file_bytes ({'ofs' => 0, 'len' => ($objFile->file_len())});
-			is ($rv, ($str . $fc_wr . $str), "Call file_bytes() after 2nd call to insert_str().");
-		}
+		my $rv = $objFile->file_bytes ({'ofs' => 0, 'len' => ($objFile->file_len())});
+		my $rv2 = \@{ [ split ('', ($ins_str . $fc_wr . $ins_str)) ] };
+		isa_ok ($rv, 'ARRAY', "file_bytes() return value is array ref.");
+		isa_ok ($rv2, 'ARRAY', "mock file_bytes() rv is array ref.");
+		is_deeply (\@{ $rv }, 
+		           \@{ $rv2 }, 
+		  "Call file_bytes() [after call to insert_str() w/ file offset flen].");
 	}
 }
 
+CALL_WRITE_FILE: {
 
+	CALL_WRITE_FILE: {
 
+		my $rv = $objFile->write_file ({'fn' => $objFile->{'fn'}});
+		is ($rv, 1, "Call write_file() w/ filename '" . $objFile->{'fn'} . "'.");
+	}
+}
+
+CALL_READ_FILE_AFTER_WRITE: {
+
+	my $rv = $objFile->read_file ({'fn' => FN_TESTFILE});
+	is ($rv, 1, "Call read_file() after write.");
+
+	if ($rv == 1) {
+
+		CALL_FILE_LEN_AFTER_WRITE: {
+
+			my $rv = $objFile->file_len();
+			is ($rv, length ($ins_str . $fc_wr . $ins_str), "Call file_len() after write.");
+		}
+
+		CALL_FILE_BYTES_AFTER_WRITE: {
+
+			my $rv = $objFile->file_bytes ({'ofs' => 0, 'len' => $objFile->file_len()});
+			my $rv2 = \@{ [ split ('', ($ins_str . $fc_wr . $ins_str)) ] };
+			isa_ok ($rv, 'ARRAY', "file_bytes() return value is array ref.");
+			isa_ok ($rv2, 'ARRAY', "mock file_bytes() rv is array ref.");
+			is_deeply (\@{ $rv }, 
+			           \@{ $rv2 }, 
+			  "Call file_bytes() after write.");
+		}
+	}
+}
 
 # ______________________________________________________________________
 # Clean up test files left behind from previous testing.
 
 subtest ('Clean up temporary test files' => 
   sub { &clean_up_test_file (FN_TESTFILE); } );
-
-
-
 
 # ______________________________________________________________________
 # SUBROUTINES DEFINED BELOW

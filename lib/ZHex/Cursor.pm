@@ -96,20 +96,20 @@ sub dsp_coord {
 	my $objDisplay = $self->{'obj'}->{'display'};
 	my $objEditor  = $self->{'obj'}->{'editor'};
 
-	$objDebug->errmsg ("a) dsp_coord: curs_pos='" . $arg->{'curs_pos'} . "'.");
+	# $objDebug->errmsg ("a) dsp_coord: curs_pos='" . $arg->{'curs_pos'} . "'.");
 
 	if ($arg->{'curs_pos'} < $arg->{'dsp_pos'}) {
 		
 		die "#1 Call to dsp_coord() failed: curs_pos='" . $arg->{'curs_pos'} . "'";
 	}
 
-	$objDebug->errmsg ("b) dsp_coord: curs_pos='" . $arg->{'curs_pos'} . "'.");
+	# $objDebug->errmsg ("b) dsp_coord: curs_pos='" . $arg->{'curs_pos'} . "'.");
 
 	if ($arg->{'curs_pos'} > ($arg->{'dsp_pos'} + ($objEditor->{'sz_line'} * $objEditor->{'sz_column'}))) {
 
-		$objDebug->errmsg ("c) dsp_coord: curs_pos='" . $arg->{'curs_pos'} . "'.");
-		$objDebug->errmsg ("c) dsp_coord: curs_pos='" . $arg->{'curs_pos'} . "'.");
-		$objDebug->errmsg ("c) dsp_coord: curs_pos='" . $arg->{'curs_pos'} . "'.");
+		# $objDebug->errmsg ("c) dsp_coord: curs_pos='" . $arg->{'curs_pos'} . "'.");
+		# $objDebug->errmsg ("c) dsp_coord: curs_pos='" . $arg->{'curs_pos'} . "'.");
+		# $objDebug->errmsg ("c) dsp_coord: curs_pos='" . $arg->{'curs_pos'} . "'.");
 		die "#2 Call to dsp_coord() failed: curs_pos='" . $arg->{'curs_pos'} . "'";
 	}
 
@@ -199,7 +199,7 @@ sub curs_display {
 	# Calculate the new X,Y coordinates of cursor position within 
 	# the editor display.
 
-	$objDebug->errmsg ("curs_display: curs_pos='" . $self->{'curs_pos'} . "'.");
+	# $objDebug->errmsg ("curs_display: curs_pos='" . $self->{'curs_pos'} . "'.");
 
 	my $new_coords = 
 	  $self->calc_coord_array 
@@ -258,7 +258,7 @@ sub curs_display {
 			}
 			else {
 
-				$objDebug->errmsg ("xc='" . $xc . "', yc='" . $yc . "'.");
+				# $objDebug->errmsg ("xc='" . $xc . "', yc='" . $yc . "'.");
 			}
 
 			$objConsole->colorize_reverse 
@@ -320,7 +320,7 @@ sub calc_coord_array {
 	my $objDebug  = $self->{'obj'}->{'debug'};
 	my $objEditor = $self->{'obj'}->{'editor'};
 
-	$objDebug->errmsg ("calc_coord_array: curs_pos='" . $arg->{'curs_pos'} . "'.");
+	# $objDebug->errmsg ("calc_coord_array: curs_pos='" . $arg->{'curs_pos'} . "'.");
 
 	# Calculate the new X,Y coordinates of cursor position within the editor display.
 

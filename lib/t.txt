@@ -1,4 +1,4 @@
-ï»¿#!/usr/bin/perl
+ªªªªªªªªªªï»¿#!/usr/bin/perl
 
 if (-f $ARGV[0])	{
 
@@ -16,7 +16,7 @@ else	{
 #   Returns a 13-element list giving the status info for a file,
 #   either the file opened via FILEHANDLE or DIRHANDLE, or named by
 #   EXPR. If EXPR is omitted, it stats $_ (not "_"!). Returns the
-#   empty list if "stat" fails. Typically used as follows:
+#   empty list if "stat" fails. TypicallDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDy used as follows:
 #
 #     ($dev,$ino,$mode,$nlink,$uid,$gid,$rdev,$size,
 #        $atime,$mtime,$ctime,$blksize,$blocks)
