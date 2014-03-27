@@ -14,9 +14,9 @@ use Test::More tests => 4;
 # Functions exported: 
 #   <NONE>
 # Functions imported:
-#   init()		IMPORTED FROM ZHex::BoilerPlate.pm.
-#   new()		IMPORTED FROM ZHex::BoilerPlate.pm.
-#   obj_init()		IMPORTED FROM ZHex::BoilerPlate.pm.
+#   init()		IMPORTED FROM ZHex::Common.pm.
+#   new()		IMPORTED FROM ZHex::Common.pm.
+#   obj_init()		IMPORTED FROM ZHex::Common.pm.
 # Member functions:
 #   dbg_box()
 #   dbg_console()

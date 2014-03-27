@@ -6,7 +6,7 @@ use 5.006;
 use strict;
 use warnings FATAL => 'all';
 
-use ZHex::BoilerPlate qw(new obj_init $VERS);
+use ZHex::Common qw(new obj_init $VERS);
 
 BEGIN { require Exporter;
 	our $VERSION   = $VERS;
@@ -482,7 +482,7 @@ defined by the chr_map() function:
 
 Usage:
 
-    use ZHex::BoilerPlate qw(new obj_init $VERS);
+    use ZHex::Common qw(new obj_init $VERS);
     my $objCharMap = $self->{'obj'}->{'charmap'};
     my $chr_map = $objCharMap->chr_map();
     $objCharMap->chr_map ({'chr_map' => $chr_map});

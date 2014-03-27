@@ -14,8 +14,8 @@ use Test::More tests => 4;
 # Functions exported: 
 #   <NONE>
 # Functions imported:
-#   new()		IMPORTED FROM ZHex::BoilerPlate.pm.
-#   obj_init()		IMPORTED FROM ZHex::BoilerPlate.pm.
+#   new()		IMPORTED FROM ZHex::Common.pm.
+#   obj_init()		IMPORTED FROM ZHex::Common.pm.
 # Member functions:
 #   event_loop()
 #   init()

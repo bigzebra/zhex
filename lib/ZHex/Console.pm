@@ -6,7 +6,7 @@ use 5.006;
 use strict;
 use warnings FATAL => 'all';
 
-use ZHex::BoilerPlate qw(new obj_init $VERS);
+use ZHex::Common qw(new obj_init $VERS);
 
 BEGIN { require Exporter;
 	our $VERSION   = $VERS;
@@ -1178,7 +1178,7 @@ author.
 
 Usage:
 
-    use ZHex::BoilerPlate qw(new obj_init $VERS);
+    use ZHex::Common qw(new obj_init $VERS);
     my $objConsole = $self->{'obj'}->{'console'};
     $objConsole->w32cons_cursor_invisible();
 

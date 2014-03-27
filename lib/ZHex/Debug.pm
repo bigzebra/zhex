@@ -6,7 +6,7 @@ use 5.006;
 use strict;
 use warnings FATAL => 'all';
 
-use ZHex::BoilerPlate qw(new init obj_init $VERS);
+use ZHex::Common qw(new init obj_init $VERS);
 
 use constant DBG_LEVEL => 1;
 
@@ -527,7 +527,7 @@ Used for development/debugging purposes.
 
 Usage:
 
-    use ZHex::BoilerPlate qw(new obj_init $VERS);
+    use ZHex::Common qw(new obj_init $VERS);
     my $objDebug = $self->{'obj'}->{'debug'};
     $objDebug->errmsg ("This error message to be displayed inside editor.");
 

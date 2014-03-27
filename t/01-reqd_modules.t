@@ -28,7 +28,7 @@ BEGIN {
 
 # ______________________________________________________________________
 # Test availablility of modules: program modules (used by program/program modules).
-#    1) ZHex\BoilerPlate.pm	ZHex::BoilerPlate
+#    1) ZHex\Common.pm	        ZHex::Common
 #    2) ZHex\CharMap.pm		ZHex::CharMap
 #    3) ZHex\Console.pm		ZHex::Console
 #    4) ZHex\Cursor.pm		ZHex::Cursor
@@ -41,8 +41,8 @@ BEGIN {
 
 BEGIN {
 
-	use_ok ('ZHex::BoilerPlate') 
-	  or die "Call to use_ok() returned w/ failure (on module 'ZHex::BoilerPlate')";
+	use_ok ('ZHex::Common') 
+	  or die "Call to use_ok() returned w/ failure (on module 'ZHex::Common')";
 
 	use_ok ('ZHex::CharMap') 
 	  or die "Call to use_ok() returned w/ failure (on module 'ZHex::CharMap')";

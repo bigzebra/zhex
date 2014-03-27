@@ -6,7 +6,7 @@ use 5.006;
 use strict;
 use warnings FATAL => 'all';
 
-use ZHex::BoilerPlate qw(new obj_init $VERS);
+use ZHex::Common qw(new obj_init $VERS);
 
 use constant CURS_CTXT_LINE => 0;
 use constant CURS_CTXT_WORD => 1;
@@ -798,7 +798,7 @@ Specifically, the ZHex::Cursor module defines functions which allow for:
 
 Usage:
 
-    use ZHex::BoilerPlate qw(new obj_init $VERS);
+    use ZHex::Common qw(new obj_init $VERS);
     my $objCursor = $self->{'obj'}->{'cursor'};
     $objCursor->curs_mv_right();
 

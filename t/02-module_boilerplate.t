@@ -9,7 +9,7 @@ $| = 1;
 use Test::More tests => 4;
 
 # ______________________________________________________________________
-# ZHex\BoilerPlate.pm
+# ZHex\Common.pm
 #
 # Functions exported:
 #   init()
@@ -24,16 +24,16 @@ use Test::More tests => 4;
 # Values exported: 
 #   <NONE>
 
-use_ok ('ZHex::BoilerPlate') 
-  or die "Call to use_ok() returned w/ failure (on module 'ZHex::BoilerPlate')";
+use_ok ('ZHex::Common') 
+  or die "Call to use_ok() returned w/ failure (on module 'ZHex::Common')";
 
-my @objBoilerPlateSubs = 
+my @objCommonSubs = 
   ('init', 
    'new', 
    'obj_init');
 
-can_ok ('ZHex::BoilerPlate', 'new');
-my $objBoilerPlate = ZHex::BoilerPlate->new();
-isa_ok ($objBoilerPlate, 'ZHex::BoilerPlate', 'BoilerPlate');
-can_ok ($objBoilerPlate, @objBoilerPlateSubs);
+can_ok ('ZHex::Common', 'new');
+my $objCommon = ZHex::Common->new();
+isa_ok ($objCommon, 'ZHex::Common', 'Common');
+can_ok ($objCommon, @objCommonSubs);
 

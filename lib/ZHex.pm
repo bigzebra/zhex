@@ -6,7 +6,7 @@ use 5.006;
 use strict;
 use warnings FATAL => 'all';
 
-use ZHex::BoilerPlate qw(new init obj_init $VERS);
+use ZHex::Common qw(new init obj_init $VERS);
 use ZHex::CharMap;
 use ZHex::Console;
 use ZHex::Cursor;

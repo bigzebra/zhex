@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 
-package ZHex::BoilerPlate;
+package ZHex::Common;
 
 use 5.006;
 use strict;
@@ -137,7 +137,7 @@ __END__
 
 =head1 NAME
 
-ZHex::BoilerPlate (ZHex/BoilerPlate.pm) - BoilerPlate Module, ZebraHex Editor.
+ZHex::Common (ZHex/Common.pm) - Common Module, ZebraHex Editor.
 
 =head1 VERSION
 
@@ -149,7 +149,7 @@ our $VERSION = '0.01';
 
 =head1 SYNOPSIS
 
-The ZHex::BoilerPlate module provides three functions which are used by 
+The ZHex::Common module provides three functions which are used by 
 submodules (files named ZHex/*.pm), they are:
 
     new()        Constructor method.
@@ -159,10 +159,10 @@ submodules (files named ZHex/*.pm), they are:
 Usage:
 
     # Define my own init() function.
-    use ZHex::BoilerPlate qw(new obj_init $VERS);
+    use ZHex::Common qw(new obj_init $VERS);
 
     # Use stub function init().
-    use ZHex::BoilerPlate qw(new init obj_init $VERS);
+    use ZHex::Common qw(new init obj_init $VERS);
 
     ...
 

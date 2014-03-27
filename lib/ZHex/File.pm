@@ -6,7 +6,7 @@ use 5.006;
 use strict;
 use warnings FATAL => 'all';
 
-use ZHex::BoilerPlate qw(new obj_init $VERS);
+use ZHex::Common qw(new obj_init $VERS);
 
 use IO::Handle;
 use Fcntl qw(:DEFAULT :Fcompat);
@@ -448,7 +448,7 @@ reading, and writing files which are being edited (within the hex editor).
 
 Usage:
 
-    use ZHex::BoilerPlate qw(new obj_init $VERS);
+    use ZHex::Common qw(new obj_init $VERS);
     my $objFile = $self->{'obj'}->{'file'};
     $objFile->stat_file({'fn' => $abspath_w_filename});
 

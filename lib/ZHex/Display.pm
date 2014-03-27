@@ -6,7 +6,7 @@ use 5.006;
 use strict;
 use warnings FATAL => 'all';
 
-use ZHex::BoilerPlate qw(new obj_init $VERS);
+use ZHex::Common qw(new obj_init $VERS);
 
 BEGIN { require Exporter;
 	our $VERSION   = $VERS;
@@ -1017,7 +1017,7 @@ Specifically, the ZHex::Display module functions provide for:
 
 Usage:
 
-    use ZHex::BoilerPlate qw(new obj_init $VERS);
+    use ZHex::Common qw(new obj_init $VERS);
     my $objDisplay = $self->{'obj'}->{'display'};
     $objDisplay->padding_set ('dsp_ypad' => 2, 'dsp_xpad' => 2);
 

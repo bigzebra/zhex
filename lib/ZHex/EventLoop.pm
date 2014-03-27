@@ -6,7 +6,7 @@ use 5.006;
 use strict;
 use warnings FATAL => 'all';
 
-use ZHex::BoilerPlate qw(new obj_init $VERS);
+use ZHex::Common qw(new obj_init $VERS);
 
 BEGIN { require Exporter;
 	our $VERSION   = $VERS;
@@ -924,7 +924,7 @@ the hex editor is currently operating within.
 
 Usage:
 
-    use ZHex::BoilerPlate qw(new obj_init $VERS);
+    use ZHex::Common qw(new obj_init $VERS);
     my $objEventLoop = $self->{'obj'}->{'eventloop'};
     $objEventLoop->adjust_display();
 
