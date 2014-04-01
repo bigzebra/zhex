@@ -28,37 +28,21 @@ sub init {
 
 	my $self = shift;
 
-	# Event loop context: depending upon the state of the 'CTXT' 
-	# variable, keystrokes have different meanings.
-
-	$self->{'CTXT'} = 'DEFAULT';	# In DEFAULT context, keystrokes mostly cause events.
-					# In SEARCH  context, keystrokes are added to the search string until the ENTER key is pressed.
-					# In INSERT  context, keystrokes are added to the file being edited, until the ESCAPE key is pressed.
-
-	# Flag controls exit from main event loop.
-
-	$self->{'FLAG_QUIT'} = 0;
-
-	# Mouse handling: position, character, attributes.
-
-	$self->{'mouse_over_char'}   = '';   # ...
-	$self->{'mouse_over_attr'}   = '';   # ...
-	$self->{'mouse_over_x'}      =  0;   # ...
-	$self->{'mouse_over_y'}      =  0;   # ...
-	$self->{'mouse_over_x_prev'} =  0;   # ...
-	$self->{'mouse_over_y_prev'} =  0;   # ...
-
-	# Counters: ...
-
-	$self->{'ct_evt_functional'} = 0;   # ...
-
-	# Event callback subroutine references.
-
-	$self->{'cb'} = {};
-
-	# Event history (makes 'undo' possible).
-
-	$self->{'evt_history'} = [];
+	                                     # Event loop context: depending upon the state of the 'CTXT' 
+	                                     # variable, keystrokes have different meanings.
+	$self->{'CTXT'} = 'DEFAULT';	     # In DEFAULT context, keystrokes mostly cause events.
+					     # In SEARCH  context, keystrokes are added to the search string until the ENTER key is pressed.
+					     # In INSERT  context, keystrokes are added to the file being edited, until the ESCAPE key is pressed.
+	$self->{'FLAG_QUIT'} = 0;            # Flag controls exit from main event loop.
+	$self->{'mouse_over_char'}   = '';   # Mouse handling: position, character, attributes.
+	$self->{'mouse_over_attr'}   = '';   # Mouse handling: position, character, attributes.
+	$self->{'mouse_over_x'}      =  0;   # Mouse handling: position, character, attributes.
+	$self->{'mouse_over_y'}      =  0;   # Mouse handling: position, character, attributes.
+	$self->{'mouse_over_x_prev'} =  0;   # Mouse handling: position, character, attributes.
+	$self->{'mouse_over_y_prev'} =  0;   # Mouse handling: position, character, attributes.
+	$self->{'ct_evt_functional'} = 0;    # Counters: ...
+	$self->{'cb'} = {};                  # Event callback subroutine references.
+	$self->{'evt_history'} = [];         # Event history (makes 'undo' possible).
 
 	return (1);
 }
@@ -110,8 +94,6 @@ sub event_loop {
 	my $objCursor  = $self->{'obj'}->{'cursor'};
 	my $objDebug   = $self->{'obj'}->{'debug'};
 	my $objDisplay = $self->{'obj'}->{'display'};
-	my $objEditor  = $self->{'obj'}->{'editor'};
-	my $objFile    = $self->{'obj'}->{'file'};
 
 	# ___________________________________________________________________________________
 	# LOOP: READ CONSOLE EVENTS      [w/ CALL TO read_evt()]
@@ -174,10 +156,7 @@ sub event_loop {
 
 			# Check to see if a callback routine has been registered to handle this event.
 
-			if (defined $evt_nm && 
-				 ! ($evt_nm eq '') && 
-				   ($evt_nm =~ /^[\w\_]+?$/) && 
-			    exists  $self->{'cb'} && 
+			if (exists  $self->{'cb'} && 
 			    defined $self->{'cb'} && 
 			      (ref ($self->{'cb'}) eq 'HASH') && 
 			    exists  $self->{'cb'}->{ $self->{'CTXT'} } && 
@@ -220,7 +199,8 @@ sub event_loop {
 			  ({ 'dsp'      => $objDisplay->{'dsp'}, 
 			     'dsp_prev' => $objDisplay->{'dsp_prev'}, 
 			     'dsp_xpad' => $objDisplay->{'dsp_xpad'}, 
-			     'dsp_ypad' => $objDisplay->{'dsp_ypad'} });
+			     'dsp_ypad' => $objDisplay->{'dsp_ypad'},
+			     'd_width'  => $objDisplay->{'d_width'} });
 
 			$objCursor->curs_display 
 			  ({ 'dsp_xpad' => $objDisplay->{'dsp_xpad'}, 
@@ -247,10 +227,7 @@ sub read_evt {
 	      ! (ref ($arg->{'evt_stack'}) eq 'ARRAY')) 
 		{ die "Call to read_evt() failed, value associated w/ key 'evt_stack' must be array ref"; }
 
-	my $objCharMap = $self->{'obj'}->{'charmap'};
 	my $objConsole = $self->{'obj'}->{'console'};
-	my $objDebug   = $self->{'obj'}->{'debug'};
-	my $objEditor  = $self->{'obj'}->{'editor'};
 
 	# Function: GetEvents() 
 	#   Returns the number of unread input events in the console's 
@@ -414,35 +391,35 @@ sub evt_map {
 		# DEFAULT CONTEXT
 
 		# QUIT, <LATIN SMALL LETTER Q> Character.
-		if ($evt->[5] == $objCharMap->{'chr_map'}->{'LATIN SMALL LETTER Q'}{'byte'}) 
+		if ($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN SMALL LETTER Q' })) 
 			{ $func = 'QUIT'; } 
 
 		# DEBUG_OFF, <LATIN SMALL LETTER D> Character.
-		elsif ($evt->[5] == $objCharMap->{'chr_map'}->{'LATIN SMALL LETTER D'}{'byte'}) 
+		elsif ($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN SMALL LETTER D' })) 
 			{ $func = 'DEBUG_OFF'; } 
 
 		# DEBUG_ON, <LATIN CAPITAL LETTER D> Character.
-		elsif ($evt->[5] == $objCharMap->{'chr_map'}->{'LATIN CAPITAL LETTER D'}{'byte'}) 
+		elsif ($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN CAPITAL LETTER D' })) 
 			{ $func = 'DEBUG_ON'; } 
 
 		# MOVE_BEG, <CIRCUMFLEX ACCENT> Character.
-		elsif ($evt->[5] == $objCharMap->{'chr_map'}->{'CIRCUMFLEX ACCENT'}{'byte'}) 
+		elsif ($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'CIRCUMFLEX ACCENT' })) 
 			{ $func = 'MOVE_BEG'; } 
 
 		# MOVE_END, <DOLLAR SIGN> Character.
-		elsif ($evt->[5] == $objCharMap->{'chr_map'}->{'DOLLAR SIGN'}{'byte'}) 
+		elsif ($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'DOLLAR SIGN' })) 
 			{ $func = 'MOVE_END'; } 
 		
 		# CONSCURS_INVIS, <LATIN SMALL LETTER V> Character.
-		elsif ($evt->[5] == $objCharMap->{'chr_map'}->{'LATIN SMALL LETTER V'}{'byte'}) 
+		elsif ($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN SMALL LETTER V' })) 
 			{ $func = 'CONSCURS_INVIS'; } 
 
 		# CONSCURS_VISIBL, <LATIN CAPITAL LETTER V> Character.
-		elsif ($evt->[5] == $objCharMap->{'chr_map'}->{'LATIN CAPITAL LETTER V'}{'byte'}) 
+		elsif ($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN CAPITAL LETTER V' })) 
 			{ $func = 'CONSCURS_VIS'; } 
 
 		# INSERT_MODE, <LATIN SMALL LETTER I> Character, [INSERT] Key.
-		elsif (($evt->[5] == $objCharMap->{'chr_map'}->{'LATIN SMALL LETTER I'}{'byte'}) || 
+		elsif (($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN SMALL LETTER I' })) || 
 		      (($evt->[3] ==  45) && 
 		       ($evt->[4] ==  82) && 
 		       ($evt->[5] ==   0) && 
@@ -450,34 +427,34 @@ sub evt_map {
 			{ $func = 'INSERT_MODE'; } 
 
 		# WRITE_DISK, <LATIN SMALL LETTER W> Character.
-		elsif ($evt->[5] == $objCharMap->{'chr_map'}->{'LATIN SMALL LETTER W'}{'byte'}) 
+		elsif ($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN SMALL LETTER W' })) 
 			{ $func = 'WRITE_DISK'; } 
 
 		# SEARCH_MODE, <LATIN SMALL LETTER S> Character.
-		elsif ($evt->[5] == $objCharMap->{'chr_map'}->{'LATIN SMALL LETTER S'}{'byte'}) 
+		elsif ($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN SMALL LETTER S' })) 
 			{ $func = 'SEARCH_MODE'; } 
 
 		# JUMP_TO_LINE, <LATIN CAPITAL LETTER L> Character, <NUMBER SIGN> Character.
-		elsif ($evt->[5] == $objCharMap->{'chr_map'}->{'LATIN CAPITAL LETTER L'}{'byte'})
+		elsif ($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN CAPITAL LETTER L' }))
 			{ $func = 'JUMP_TO_LINE'; } 
 
 		# INCR_CURS_CTXT, <CARRIAGE RETURN CR> Character.
-		elsif ($evt->[5] == $objCharMap->{'chr_map'}->{'CARRIAGE RETURN (CR)'}{'byte'}) 
+		elsif ($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'CARRIAGE RETURN (CR)' })) 
 			{ $func = 'INCR_CURS_CTXT'; } 
 
 		# DECR_CURS_CTXT, [ESCAPE] Key.
-		elsif ($evt->[5] == $objCharMap->{'chr_map'}->{'ESCAPE'}{'byte'}) 
+		elsif ($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'ESCAPE' })) 
 			{ $func = 'DECR_CURS_CTXT'; } 
 
 		# SCROLL_UP_1LN, <LATIN SMALL LETTER K> Character, <MOUSE WHEEL ROLL UP>.
-		elsif (($evt->[5] == $objCharMap->{'chr_map'}->{'LATIN SMALL LETTER K'}{'byte'}) || 
+		elsif (($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN SMALL LETTER K' })) || 
 		      (($evt->[0] == 2) && 
 		       ($evt->[3] == 7864320) && 
 		       ($evt->[5] == 4))) 
 			{ $func = 'SCROLL_UP_1LN'; } 
 
 		# SCROLL_UP_1PG, <LATIN CAPITAL LETTER K> Character, [PAGE UP] Key.
-		elsif (($evt->[5] == $objCharMap->{'chr_map'}->{'LATIN CAPITAL LETTER J'}{'byte'}) || 
+		elsif (($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN CAPITAL LETTER J' })) || 
 		      (($evt->[5] ==  0) && 
 		       ($evt->[3] ==  33) && 
 		       ($evt->[4] == 73) && 
@@ -485,15 +462,15 @@ sub evt_map {
 			{ $func = 'SCROLL_UP_1PG'; } 
 
 		# SCROLL_DOWN_1LN, <LATIN SMALL LETTER J> Character, <MOUSE WHEEL ROLL DOWN>.
-		elsif (($evt->[5] == $objCharMap->{'chr_map'}->{'LATIN SMALL LETTER J'}{'byte'}) || 
+		elsif (($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN SMALL LETTER J' })) || 
 		      (($evt->[0] == 2) && 
 		       ($evt->[3] == -7864320) && 
 		       ($evt->[5] == 4))) 
 			{ $func = 'SCROLL_DOWN_1LN'; } 
 
 		# SCROLL_DOWN_1PG, <LATIN CAPITAL LETTER K> Character, [SPACE] Key, [PAGE DOWN] Key.
-		elsif (($evt->[5] == $objCharMap->{'chr_map'}->{'LATIN CAPITAL LETTER K'}{'byte'}) || 
-		       ($evt->[5] == $objCharMap->{'chr_map'}->{'SPACE'}{'byte'}) || 
+		elsif (($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN CAPITAL LETTER K' })) || 
+		       ($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'SPACE' })) || 
 		      (($evt->[3] ==  34) && 
 		       ($evt->[4] ==  81) && 
 		       ($evt->[5] ==   0) && 
@@ -529,7 +506,7 @@ sub evt_map {
 			{ $func = 'MOVE_CURS_DOWN'; } 
 
 		# MOVE_CURS_LEFT, [LEFT ARROW] Key.
-		elsif (($evt->[5] == $objCharMap->{'chr_map'}->{'LATIN SMALL LETTER H'}{'byte'}) || 
+		elsif (($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN SMALL LETTER H' })) || 
 		      (($evt->[3] ==  37) && 
 		       ($evt->[4] ==  75) && 
 		       ($evt->[5] ==   0) && 
@@ -537,7 +514,7 @@ sub evt_map {
 			{ $func = 'MOVE_CURS_LEFT'; } 
 
 		# MOVE_CURS_RIGHT, [RIGHT ARROW] Key.
-		elsif (($evt->[5] == $objCharMap->{'chr_map'}->{'LATIN SMALL LETTER L'}{'byte'}) || 
+		elsif (($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN SMALL LETTER L' })) || 
 		      (($evt->[3] ==  39) && 
 		       ($evt->[4] ==  77) && 
 		       ($evt->[5] ==   0) && 
@@ -575,113 +552,113 @@ sub evt_map {
 		# _______________
 		# INSERT CONTEXT
 
-		if ( ($evt->[5] == $objCharMap->{'chr_map'}->{'SPACE'}{'byte'}) || 
-		     ($evt->[5] == $objCharMap->{'chr_map'}->{'EXCLAMATION MARK'}{'byte'}) || 
-		     ($evt->[5] == $objCharMap->{'chr_map'}->{'QUOTATION MARK'}{'byte'}) || 
-		     ($evt->[5] == $objCharMap->{'chr_map'}->{'NUMBER SIGN'}{'byte'}) || 
-		     ($evt->[5] == $objCharMap->{'chr_map'}->{'DOLLAR SIGN'}{'byte'}) || 
-		     ($evt->[5] == $objCharMap->{'chr_map'}->{'PERCENT SIGN'}{'byte'}) || 
-		     ($evt->[5] == $objCharMap->{'chr_map'}->{'AMPERSAND'}{'byte'}) || 
-		     ($evt->[5] == $objCharMap->{'chr_map'}->{'APOSTROPHE'}{'byte'}) || 
-		     ($evt->[5] == $objCharMap->{'chr_map'}->{'LEFT PARENTHESIS'}{'byte'}) || 
-		     ($evt->[5] == $objCharMap->{'chr_map'}->{'RIGHT PARENTHESIS'}{'byte'}) || 
-		     ($evt->[5] == $objCharMap->{'chr_map'}->{'ASTERISK'}{'byte'}) || 
-		     ($evt->[5] == $objCharMap->{'chr_map'}->{'PLUS SIGN'}{'byte'}) || 
-		     ($evt->[5] == $objCharMap->{'chr_map'}->{'COMMA'}{'byte'}) || 
-		     ($evt->[5] == $objCharMap->{'chr_map'}->{'HYPHEN-MINUS'}{'byte'}) || 
-		     ($evt->[5] == $objCharMap->{'chr_map'}->{'FULL STOP'}{'byte'}) || 
-		     ($evt->[5] == $objCharMap->{'chr_map'}->{'SOLIDUS'}{'byte'}) || 
-		     ($evt->[5] == $objCharMap->{'chr_map'}->{'DIGIT ZERO'}{'byte'}) || 
-		     ($evt->[5] == $objCharMap->{'chr_map'}->{'DIGIT ONE'}{'byte'}) || 
-		     ($evt->[5] == $objCharMap->{'chr_map'}->{'DIGIT TWO'}{'byte'}) || 
-		     ($evt->[5] == $objCharMap->{'chr_map'}->{'DIGIT THREE'}{'byte'}) || 
-		     ($evt->[5] == $objCharMap->{'chr_map'}->{'DIGIT FOUR'}{'byte'}) || 
-		     ($evt->[5] == $objCharMap->{'chr_map'}->{'DIGIT FIVE'}{'byte'}) || 
-		     ($evt->[5] == $objCharMap->{'chr_map'}->{'DIGIT SIX'}{'byte'}) || 
-		     ($evt->[5] == $objCharMap->{'chr_map'}->{'DIGIT SEVEN'}{'byte'}) || 
-		     ($evt->[5] == $objCharMap->{'chr_map'}->{'DIGIT EIGHT'}{'byte'}) || 
-		     ($evt->[5] == $objCharMap->{'chr_map'}->{'DIGIT NINE'}{'byte'}) || 
-		     ($evt->[5] == $objCharMap->{'chr_map'}->{'COLON'}{'byte'}) || 
-		     ($evt->[5] == $objCharMap->{'chr_map'}->{'SEMICOLON'}{'byte'}) || 
-		     ($evt->[5] == $objCharMap->{'chr_map'}->{'LESS-THAN SIGN'}{'byte'}) || 
-		     ($evt->[5] == $objCharMap->{'chr_map'}->{'EQUALS SIGN'}{'byte'}) || 
-		     ($evt->[5] == $objCharMap->{'chr_map'}->{'GREATER-THAN SIGN'}{'byte'}) || 
-		     ($evt->[5] == $objCharMap->{'chr_map'}->{'QUESTION MARK'}{'byte'}) || 
-		     ($evt->[5] == $objCharMap->{'chr_map'}->{'COMMERCIAL AT'}{'byte'}) || 
-		     ($evt->[5] == $objCharMap->{'chr_map'}->{'LATIN CAPITAL LETTER A'}{'byte'}) || 
-		     ($evt->[5] == $objCharMap->{'chr_map'}->{'LATIN CAPITAL LETTER B'}{'byte'}) || 
-		     ($evt->[5] == $objCharMap->{'chr_map'}->{'LATIN CAPITAL LETTER C'}{'byte'}) || 
-		     ($evt->[5] == $objCharMap->{'chr_map'}->{'LATIN CAPITAL LETTER D'}{'byte'}) || 
-		     ($evt->[5] == $objCharMap->{'chr_map'}->{'LATIN CAPITAL LETTER E'}{'byte'}) || 
-		     ($evt->[5] == $objCharMap->{'chr_map'}->{'LATIN CAPITAL LETTER F'}{'byte'}) || 
-		     ($evt->[5] == $objCharMap->{'chr_map'}->{'LATIN CAPITAL LETTER G'}{'byte'}) || 
-		     ($evt->[5] == $objCharMap->{'chr_map'}->{'LATIN CAPITAL LETTER H'}{'byte'}) || 
-		     ($evt->[5] == $objCharMap->{'chr_map'}->{'LATIN CAPITAL LETTER I'}{'byte'}) || 
-		     ($evt->[5] == $objCharMap->{'chr_map'}->{'LATIN CAPITAL LETTER J'}{'byte'}) || 
-		     ($evt->[5] == $objCharMap->{'chr_map'}->{'LATIN CAPITAL LETTER K'}{'byte'}) || 
-		     ($evt->[5] == $objCharMap->{'chr_map'}->{'LATIN CAPITAL LETTER L'}{'byte'}) || 
-		     ($evt->[5] == $objCharMap->{'chr_map'}->{'LATIN CAPITAL LETTER M'}{'byte'}) || 
-		     ($evt->[5] == $objCharMap->{'chr_map'}->{'LATIN CAPITAL LETTER N'}{'byte'}) || 
-		     ($evt->[5] == $objCharMap->{'chr_map'}->{'LATIN CAPITAL LETTER O'}{'byte'}) || 
-		     ($evt->[5] == $objCharMap->{'chr_map'}->{'LATIN CAPITAL LETTER P'}{'byte'}) || 
-		     ($evt->[5] == $objCharMap->{'chr_map'}->{'LATIN CAPITAL LETTER Q'}{'byte'}) || 
-		     ($evt->[5] == $objCharMap->{'chr_map'}->{'LATIN CAPITAL LETTER R'}{'byte'}) || 
-		     ($evt->[5] == $objCharMap->{'chr_map'}->{'LATIN CAPITAL LETTER S'}{'byte'}) || 
-		     ($evt->[5] == $objCharMap->{'chr_map'}->{'LATIN CAPITAL LETTER T'}{'byte'}) || 
-		     ($evt->[5] == $objCharMap->{'chr_map'}->{'LATIN CAPITAL LETTER U'}{'byte'}) || 
-		     ($evt->[5] == $objCharMap->{'chr_map'}->{'LATIN CAPITAL LETTER V'}{'byte'}) || 
-		     ($evt->[5] == $objCharMap->{'chr_map'}->{'LATIN CAPITAL LETTER W'}{'byte'}) || 
-		     ($evt->[5] == $objCharMap->{'chr_map'}->{'LATIN CAPITAL LETTER X'}{'byte'}) || 
-		     ($evt->[5] == $objCharMap->{'chr_map'}->{'LATIN CAPITAL LETTER Y'}{'byte'}) || 
-		     ($evt->[5] == $objCharMap->{'chr_map'}->{'LATIN CAPITAL LETTER Z'}{'byte'}) || 
-		     ($evt->[5] == $objCharMap->{'chr_map'}->{'LEFT SQUARE BRACKET'}{'byte'}) || 
-		     ($evt->[5] == $objCharMap->{'chr_map'}->{'REVERSE SOLIDUS'}{'byte'}) || 
-		     ($evt->[5] == $objCharMap->{'chr_map'}->{'RIGHT SQUARE BRACKET'}{'byte'}) || 
-		     ($evt->[5] == $objCharMap->{'chr_map'}->{'CIRCUMFLEX ACCENT'}{'byte'}) || 
-		     ($evt->[5] == $objCharMap->{'chr_map'}->{'LOW LINE'}{'byte'}) || 
-		     ($evt->[5] == $objCharMap->{'chr_map'}->{'GRAVE ACCENT'}{'byte'}) || 
-		     ($evt->[5] == $objCharMap->{'chr_map'}->{'LATIN SMALL LETTER A'}{'byte'}) || 
-		     ($evt->[5] == $objCharMap->{'chr_map'}->{'LATIN SMALL LETTER B'}{'byte'}) || 
-		     ($evt->[5] == $objCharMap->{'chr_map'}->{'LATIN SMALL LETTER C'}{'byte'}) || 
-		     ($evt->[5] == $objCharMap->{'chr_map'}->{'LATIN SMALL LETTER D'}{'byte'}) || 
-		     ($evt->[5] == $objCharMap->{'chr_map'}->{'LATIN SMALL LETTER E'}{'byte'}) || 
-		     ($evt->[5] == $objCharMap->{'chr_map'}->{'LATIN SMALL LETTER F'}{'byte'}) || 
-		     ($evt->[5] == $objCharMap->{'chr_map'}->{'LATIN SMALL LETTER G'}{'byte'}) || 
-		     ($evt->[5] == $objCharMap->{'chr_map'}->{'LATIN SMALL LETTER H'}{'byte'}) || 
-		     ($evt->[5] == $objCharMap->{'chr_map'}->{'LATIN SMALL LETTER I'}{'byte'}) || 
-		     ($evt->[5] == $objCharMap->{'chr_map'}->{'LATIN SMALL LETTER J'}{'byte'}) || 
-		     ($evt->[5] == $objCharMap->{'chr_map'}->{'LATIN SMALL LETTER K'}{'byte'}) || 
-		     ($evt->[5] == $objCharMap->{'chr_map'}->{'LATIN SMALL LETTER L'}{'byte'}) || 
-		     ($evt->[5] == $objCharMap->{'chr_map'}->{'LATIN SMALL LETTER M'}{'byte'}) || 
-		     ($evt->[5] == $objCharMap->{'chr_map'}->{'LATIN SMALL LETTER N'}{'byte'}) || 
-		     ($evt->[5] == $objCharMap->{'chr_map'}->{'LATIN SMALL LETTER O'}{'byte'}) || 
-		     ($evt->[5] == $objCharMap->{'chr_map'}->{'LATIN SMALL LETTER P'}{'byte'}) || 
-		     ($evt->[5] == $objCharMap->{'chr_map'}->{'LATIN SMALL LETTER Q'}{'byte'}) || 
-		     ($evt->[5] == $objCharMap->{'chr_map'}->{'LATIN SMALL LETTER R'}{'byte'}) || 
-		     ($evt->[5] == $objCharMap->{'chr_map'}->{'LATIN SMALL LETTER S'}{'byte'}) || 
-		     ($evt->[5] == $objCharMap->{'chr_map'}->{'LATIN SMALL LETTER T'}{'byte'}) || 
-		     ($evt->[5] == $objCharMap->{'chr_map'}->{'LATIN SMALL LETTER U'}{'byte'}) || 
-		     ($evt->[5] == $objCharMap->{'chr_map'}->{'LATIN SMALL LETTER V'}{'byte'}) || 
-		     ($evt->[5] == $objCharMap->{'chr_map'}->{'LATIN SMALL LETTER W'}{'byte'}) || 
-		     ($evt->[5] == $objCharMap->{'chr_map'}->{'LATIN SMALL LETTER X'}{'byte'}) || 
-		     ($evt->[5] == $objCharMap->{'chr_map'}->{'LATIN SMALL LETTER Y'}{'byte'}) || 
-		     ($evt->[5] == $objCharMap->{'chr_map'}->{'LATIN SMALL LETTER Z'}{'byte'}) || 
-		     ($evt->[5] == $objCharMap->{'chr_map'}->{'LEFT CURLY BRACKET'}{'byte'}) || 
-		     ($evt->[5] == $objCharMap->{'chr_map'}->{'VERTICAL LINE'}{'byte'}) || 
-		     ($evt->[5] == $objCharMap->{'chr_map'}->{'RIGHT CURLY BRACKET'}{'byte'}) || 
-		     ($evt->[5] == $objCharMap->{'chr_map'}->{'TILDE'}{'byte'}) ) 
+		if ( ($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'SPACE' })) || 
+		     ($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'EXCLAMATION MARK' })) || 
+		     ($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'QUOTATION MARK' })) || 
+		     ($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'NUMBER SIGN' })) || 
+		     ($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'DOLLAR SIGN' })) || 
+		     ($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'PERCENT SIGN' })) || 
+		     ($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'AMPERSAND' })) || 
+		     ($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'APOSTROPHE' })) || 
+		     ($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'LEFT PARENTHESIS' })) || 
+		     ($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'RIGHT PARENTHESIS' })) || 
+		     ($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'ASTERISK' })) || 
+		     ($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'PLUS SIGN' })) || 
+		     ($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'COMMA' })) || 
+		     ($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'HYPHEN-MINUS' })) || 
+		     ($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'FULL STOP' })) || 
+		     ($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'SOLIDUS' })) || 
+		     ($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'DIGIT ZERO' })) || 
+		     ($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'DIGIT ONE' })) || 
+		     ($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'DIGIT TWO' })) || 
+		     ($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'DIGIT THREE' })) || 
+		     ($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'DIGIT FOUR' })) || 
+		     ($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'DIGIT FIVE' })) || 
+		     ($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'DIGIT SIX' })) || 
+		     ($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'DIGIT SEVEN' })) || 
+		     ($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'DIGIT EIGHT' })) || 
+		     ($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'DIGIT NINE' })) || 
+		     ($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'COLON' })) || 
+		     ($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'SEMICOLON' })) || 
+		     ($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'LESS-THAN SIGN' })) || 
+		     ($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'EQUALS SIGN' })) || 
+		     ($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'GREATER-THAN SIGN' })) || 
+		     ($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'QUESTION MARK' })) || 
+		     ($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'COMMERCIAL AT' })) || 
+		     ($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN CAPITAL LETTER A' })) || 
+		     ($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN CAPITAL LETTER B' })) || 
+		     ($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN CAPITAL LETTER C' })) || 
+		     ($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN CAPITAL LETTER D' })) || 
+		     ($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN CAPITAL LETTER E' })) || 
+		     ($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN CAPITAL LETTER F' })) || 
+		     ($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN CAPITAL LETTER G' })) || 
+		     ($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN CAPITAL LETTER H' })) || 
+		     ($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN CAPITAL LETTER I' })) || 
+		     ($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN CAPITAL LETTER J' })) || 
+		     ($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN CAPITAL LETTER K' })) || 
+		     ($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN CAPITAL LETTER L' })) || 
+		     ($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN CAPITAL LETTER M' })) || 
+		     ($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN CAPITAL LETTER N' })) || 
+		     ($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN CAPITAL LETTER O' })) || 
+		     ($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN CAPITAL LETTER P' })) || 
+		     ($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN CAPITAL LETTER Q' })) || 
+		     ($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN CAPITAL LETTER R' })) || 
+		     ($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN CAPITAL LETTER S' })) || 
+		     ($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN CAPITAL LETTER T' })) || 
+		     ($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN CAPITAL LETTER U' })) || 
+		     ($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN CAPITAL LETTER V' })) || 
+		     ($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN CAPITAL LETTER W' })) || 
+		     ($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN CAPITAL LETTER X' })) || 
+		     ($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN CAPITAL LETTER Y' })) || 
+		     ($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN CAPITAL LETTER Z' })) || 
+		     ($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'LEFT SQUARE BRACKET' })) || 
+		     ($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'REVERSE SOLIDUS' })) || 
+		     ($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'RIGHT SQUARE BRACKET' })) || 
+		     ($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'CIRCUMFLEX ACCENT' })) || 
+		     ($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'LOW LINE' })) || 
+		     ($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'GRAVE ACCENT' })) || 
+		     ($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN SMALL LETTER A' })) || 
+		     ($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN SMALL LETTER B' })) || 
+		     ($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN SMALL LETTER C' })) || 
+		     ($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN SMALL LETTER D' })) || 
+		     ($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN SMALL LETTER E' })) || 
+		     ($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN SMALL LETTER F' })) || 
+		     ($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN SMALL LETTER G' })) || 
+		     ($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN SMALL LETTER H' })) || 
+		     ($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN SMALL LETTER I' })) || 
+		     ($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN SMALL LETTER J' })) || 
+		     ($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN SMALL LETTER K' })) || 
+		     ($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN SMALL LETTER L' })) || 
+		     ($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN SMALL LETTER M' })) || 
+		     ($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN SMALL LETTER N' })) || 
+		     ($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN SMALL LETTER O' })) || 
+		     ($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN SMALL LETTER P' })) || 
+		     ($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN SMALL LETTER Q' })) || 
+		     ($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN SMALL LETTER R' })) || 
+		     ($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN SMALL LETTER S' })) || 
+		     ($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN SMALL LETTER T' })) || 
+		     ($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN SMALL LETTER U' })) || 
+		     ($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN SMALL LETTER V' })) || 
+		     ($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN SMALL LETTER W' })) || 
+		     ($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN SMALL LETTER X' })) || 
+		     ($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN SMALL LETTER Y' })) || 
+		     ($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN SMALL LETTER Z' })) || 
+		     ($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'LEFT CURLY BRACKET' })) || 
+		     ($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'VERTICAL LINE' })) || 
+		     ($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'RIGHT CURLY BRACKET' })) || 
+		     ($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'TILDE' })) ) 
 			{ $func = 'INSERT_CHAR'; }
 
 		# SEARCH_BACKSPACE, [BACKSPACE] Key.
-		elsif ($evt->[5] == $objCharMap->{'chr_map'}->{'BACKSPACE'}{'byte'}) 
+		elsif ($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'BACKSPACE' })) 
 			{ $func = 'INSERT_BACKSPACE'; }
 
 		# SEARCH_ENTER, <CARRIAGE RETURN (CR)> Character.
-		elsif ($evt->[5] == $objCharMap->{'chr_map'}->{'CARRIAGE RETURN (CR)'}{'byte'}) 
+		elsif ($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'CARRIAGE RETURN (CR)' })) 
 			{ $func = 'INSERT_ENTER'; }
 
 		# INSERT_ESCAPE, [ESCAPE] Key.
-		elsif ($evt->[5] == $objCharMap->{'chr_map'}->{'ESCAPE'}{'byte'}) 
+		elsif ($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'ESCAPE' })) 
 			{ $func = 'INSERT_ESCAPE'; }
 
 		# SEARCH_L_ARROW, [Left Arrow] Key.
@@ -707,113 +684,113 @@ sub evt_map {
 
 		# Event_Type 1: Keyboard event.
 
-		if ( ($evt->[5] == $objCharMap->{'chr_map'}->{'SPACE'}{'byte'}) || 
-		     ($evt->[5] == $objCharMap->{'chr_map'}->{'EXCLAMATION MARK'}{'byte'}) || 
-		     ($evt->[5] == $objCharMap->{'chr_map'}->{'QUOTATION MARK'}{'byte'}) || 
-		     ($evt->[5] == $objCharMap->{'chr_map'}->{'NUMBER SIGN'}{'byte'}) || 
-		     ($evt->[5] == $objCharMap->{'chr_map'}->{'DOLLAR SIGN'}{'byte'}) || 
-		     ($evt->[5] == $objCharMap->{'chr_map'}->{'PERCENT SIGN'}{'byte'}) || 
-		     ($evt->[5] == $objCharMap->{'chr_map'}->{'AMPERSAND'}{'byte'}) || 
-		     ($evt->[5] == $objCharMap->{'chr_map'}->{'APOSTROPHE'}{'byte'}) || 
-		     ($evt->[5] == $objCharMap->{'chr_map'}->{'LEFT PARENTHESIS'}{'byte'}) || 
-		     ($evt->[5] == $objCharMap->{'chr_map'}->{'RIGHT PARENTHESIS'}{'byte'}) || 
-		     ($evt->[5] == $objCharMap->{'chr_map'}->{'ASTERISK'}{'byte'}) || 
-		     ($evt->[5] == $objCharMap->{'chr_map'}->{'PLUS SIGN'}{'byte'}) || 
-		     ($evt->[5] == $objCharMap->{'chr_map'}->{'COMMA'}{'byte'}) || 
-		     ($evt->[5] == $objCharMap->{'chr_map'}->{'HYPHEN-MINUS'}{'byte'}) || 
-		     ($evt->[5] == $objCharMap->{'chr_map'}->{'FULL STOP'}{'byte'}) || 
-		     ($evt->[5] == $objCharMap->{'chr_map'}->{'SOLIDUS'}{'byte'}) || 
-		     ($evt->[5] == $objCharMap->{'chr_map'}->{'DIGIT ZERO'}{'byte'}) || 
-		     ($evt->[5] == $objCharMap->{'chr_map'}->{'DIGIT ONE'}{'byte'}) || 
-		     ($evt->[5] == $objCharMap->{'chr_map'}->{'DIGIT TWO'}{'byte'}) || 
-		     ($evt->[5] == $objCharMap->{'chr_map'}->{'DIGIT THREE'}{'byte'}) || 
-		     ($evt->[5] == $objCharMap->{'chr_map'}->{'DIGIT FOUR'}{'byte'}) || 
-		     ($evt->[5] == $objCharMap->{'chr_map'}->{'DIGIT FIVE'}{'byte'}) || 
-		     ($evt->[5] == $objCharMap->{'chr_map'}->{'DIGIT SIX'}{'byte'}) || 
-		     ($evt->[5] == $objCharMap->{'chr_map'}->{'DIGIT SEVEN'}{'byte'}) || 
-		     ($evt->[5] == $objCharMap->{'chr_map'}->{'DIGIT EIGHT'}{'byte'}) || 
-		     ($evt->[5] == $objCharMap->{'chr_map'}->{'DIGIT NINE'}{'byte'}) || 
-		     ($evt->[5] == $objCharMap->{'chr_map'}->{'COLON'}{'byte'}) || 
-		     ($evt->[5] == $objCharMap->{'chr_map'}->{'SEMICOLON'}{'byte'}) || 
-		     ($evt->[5] == $objCharMap->{'chr_map'}->{'LESS-THAN SIGN'}{'byte'}) || 
-		     ($evt->[5] == $objCharMap->{'chr_map'}->{'EQUALS SIGN'}{'byte'}) || 
-		     ($evt->[5] == $objCharMap->{'chr_map'}->{'GREATER-THAN SIGN'}{'byte'}) || 
-		     ($evt->[5] == $objCharMap->{'chr_map'}->{'QUESTION MARK'}{'byte'}) || 
-		     ($evt->[5] == $objCharMap->{'chr_map'}->{'COMMERCIAL AT'}{'byte'}) || 
-		     ($evt->[5] == $objCharMap->{'chr_map'}->{'LATIN CAPITAL LETTER A'}{'byte'}) || 
-		     ($evt->[5] == $objCharMap->{'chr_map'}->{'LATIN CAPITAL LETTER B'}{'byte'}) || 
-		     ($evt->[5] == $objCharMap->{'chr_map'}->{'LATIN CAPITAL LETTER C'}{'byte'}) || 
-		     ($evt->[5] == $objCharMap->{'chr_map'}->{'LATIN CAPITAL LETTER D'}{'byte'}) || 
-		     ($evt->[5] == $objCharMap->{'chr_map'}->{'LATIN CAPITAL LETTER E'}{'byte'}) || 
-		     ($evt->[5] == $objCharMap->{'chr_map'}->{'LATIN CAPITAL LETTER F'}{'byte'}) || 
-		     ($evt->[5] == $objCharMap->{'chr_map'}->{'LATIN CAPITAL LETTER G'}{'byte'}) || 
-		     ($evt->[5] == $objCharMap->{'chr_map'}->{'LATIN CAPITAL LETTER H'}{'byte'}) || 
-		     ($evt->[5] == $objCharMap->{'chr_map'}->{'LATIN CAPITAL LETTER I'}{'byte'}) || 
-		     ($evt->[5] == $objCharMap->{'chr_map'}->{'LATIN CAPITAL LETTER J'}{'byte'}) || 
-		     ($evt->[5] == $objCharMap->{'chr_map'}->{'LATIN CAPITAL LETTER K'}{'byte'}) || 
-		     ($evt->[5] == $objCharMap->{'chr_map'}->{'LATIN CAPITAL LETTER L'}{'byte'}) || 
-		     ($evt->[5] == $objCharMap->{'chr_map'}->{'LATIN CAPITAL LETTER M'}{'byte'}) || 
-		     ($evt->[5] == $objCharMap->{'chr_map'}->{'LATIN CAPITAL LETTER N'}{'byte'}) || 
-		     ($evt->[5] == $objCharMap->{'chr_map'}->{'LATIN CAPITAL LETTER O'}{'byte'}) || 
-		     ($evt->[5] == $objCharMap->{'chr_map'}->{'LATIN CAPITAL LETTER P'}{'byte'}) || 
-		     ($evt->[5] == $objCharMap->{'chr_map'}->{'LATIN CAPITAL LETTER Q'}{'byte'}) || 
-		     ($evt->[5] == $objCharMap->{'chr_map'}->{'LATIN CAPITAL LETTER R'}{'byte'}) || 
-		     ($evt->[5] == $objCharMap->{'chr_map'}->{'LATIN CAPITAL LETTER S'}{'byte'}) || 
-		     ($evt->[5] == $objCharMap->{'chr_map'}->{'LATIN CAPITAL LETTER T'}{'byte'}) || 
-		     ($evt->[5] == $objCharMap->{'chr_map'}->{'LATIN CAPITAL LETTER U'}{'byte'}) || 
-		     ($evt->[5] == $objCharMap->{'chr_map'}->{'LATIN CAPITAL LETTER V'}{'byte'}) || 
-		     ($evt->[5] == $objCharMap->{'chr_map'}->{'LATIN CAPITAL LETTER W'}{'byte'}) || 
-		     ($evt->[5] == $objCharMap->{'chr_map'}->{'LATIN CAPITAL LETTER X'}{'byte'}) || 
-		     ($evt->[5] == $objCharMap->{'chr_map'}->{'LATIN CAPITAL LETTER Y'}{'byte'}) || 
-		     ($evt->[5] == $objCharMap->{'chr_map'}->{'LATIN CAPITAL LETTER Z'}{'byte'}) || 
-		     ($evt->[5] == $objCharMap->{'chr_map'}->{'LEFT SQUARE BRACKET'}{'byte'}) || 
-		     ($evt->[5] == $objCharMap->{'chr_map'}->{'REVERSE SOLIDUS'}{'byte'}) || 
-		     ($evt->[5] == $objCharMap->{'chr_map'}->{'RIGHT SQUARE BRACKET'}{'byte'}) || 
-		     ($evt->[5] == $objCharMap->{'chr_map'}->{'CIRCUMFLEX ACCENT'}{'byte'}) || 
-		     ($evt->[5] == $objCharMap->{'chr_map'}->{'LOW LINE'}{'byte'}) || 
-		     ($evt->[5] == $objCharMap->{'chr_map'}->{'GRAVE ACCENT'}{'byte'}) || 
-		     ($evt->[5] == $objCharMap->{'chr_map'}->{'LATIN SMALL LETTER A'}{'byte'}) || 
-		     ($evt->[5] == $objCharMap->{'chr_map'}->{'LATIN SMALL LETTER B'}{'byte'}) || 
-		     ($evt->[5] == $objCharMap->{'chr_map'}->{'LATIN SMALL LETTER C'}{'byte'}) || 
-		     ($evt->[5] == $objCharMap->{'chr_map'}->{'LATIN SMALL LETTER D'}{'byte'}) || 
-		     ($evt->[5] == $objCharMap->{'chr_map'}->{'LATIN SMALL LETTER E'}{'byte'}) || 
-		     ($evt->[5] == $objCharMap->{'chr_map'}->{'LATIN SMALL LETTER F'}{'byte'}) || 
-		     ($evt->[5] == $objCharMap->{'chr_map'}->{'LATIN SMALL LETTER G'}{'byte'}) || 
-		     ($evt->[5] == $objCharMap->{'chr_map'}->{'LATIN SMALL LETTER H'}{'byte'}) || 
-		     ($evt->[5] == $objCharMap->{'chr_map'}->{'LATIN SMALL LETTER I'}{'byte'}) || 
-		     ($evt->[5] == $objCharMap->{'chr_map'}->{'LATIN SMALL LETTER J'}{'byte'}) || 
-		     ($evt->[5] == $objCharMap->{'chr_map'}->{'LATIN SMALL LETTER K'}{'byte'}) || 
-		     ($evt->[5] == $objCharMap->{'chr_map'}->{'LATIN SMALL LETTER L'}{'byte'}) || 
-		     ($evt->[5] == $objCharMap->{'chr_map'}->{'LATIN SMALL LETTER M'}{'byte'}) || 
-		     ($evt->[5] == $objCharMap->{'chr_map'}->{'LATIN SMALL LETTER N'}{'byte'}) || 
-		     ($evt->[5] == $objCharMap->{'chr_map'}->{'LATIN SMALL LETTER O'}{'byte'}) || 
-		     ($evt->[5] == $objCharMap->{'chr_map'}->{'LATIN SMALL LETTER P'}{'byte'}) || 
-		     ($evt->[5] == $objCharMap->{'chr_map'}->{'LATIN SMALL LETTER Q'}{'byte'}) || 
-		     ($evt->[5] == $objCharMap->{'chr_map'}->{'LATIN SMALL LETTER R'}{'byte'}) || 
-		     ($evt->[5] == $objCharMap->{'chr_map'}->{'LATIN SMALL LETTER S'}{'byte'}) || 
-		     ($evt->[5] == $objCharMap->{'chr_map'}->{'LATIN SMALL LETTER T'}{'byte'}) || 
-		     ($evt->[5] == $objCharMap->{'chr_map'}->{'LATIN SMALL LETTER U'}{'byte'}) || 
-		     ($evt->[5] == $objCharMap->{'chr_map'}->{'LATIN SMALL LETTER V'}{'byte'}) || 
-		     ($evt->[5] == $objCharMap->{'chr_map'}->{'LATIN SMALL LETTER W'}{'byte'}) || 
-		     ($evt->[5] == $objCharMap->{'chr_map'}->{'LATIN SMALL LETTER X'}{'byte'}) || 
-		     ($evt->[5] == $objCharMap->{'chr_map'}->{'LATIN SMALL LETTER Y'}{'byte'}) || 
-		     ($evt->[5] == $objCharMap->{'chr_map'}->{'LATIN SMALL LETTER Z'}{'byte'}) || 
-		     ($evt->[5] == $objCharMap->{'chr_map'}->{'LEFT CURLY BRACKET'}{'byte'}) || 
-		     ($evt->[5] == $objCharMap->{'chr_map'}->{'VERTICAL LINE'}{'byte'}) || 
-		     ($evt->[5] == $objCharMap->{'chr_map'}->{'RIGHT CURLY BRACKET'}{'byte'}) || 
-		     ($evt->[5] == $objCharMap->{'chr_map'}->{'TILDE'}{'byte'}) ) 
+		if ( ($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'SPACE' })) || 
+		     ($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'EXCLAMATION MARK' })) || 
+		     ($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'QUOTATION MARK' })) || 
+		     ($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'NUMBER SIGN' })) || 
+		     ($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'DOLLAR SIGN' })) || 
+		     ($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'PERCENT SIGN' })) || 
+		     ($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'AMPERSAND' })) || 
+		     ($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'APOSTROPHE' })) || 
+		     ($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'LEFT PARENTHESIS' })) || 
+		     ($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'RIGHT PARENTHESIS' })) || 
+		     ($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'ASTERISK' })) || 
+		     ($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'PLUS SIGN' })) || 
+		     ($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'COMMA' })) || 
+		     ($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'HYPHEN-MINUS' })) || 
+		     ($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'FULL STOP' })) || 
+		     ($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'SOLIDUS' })) || 
+		     ($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'DIGIT ZERO' })) || 
+		     ($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'DIGIT ONE' })) || 
+		     ($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'DIGIT TWO' })) || 
+		     ($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'DIGIT THREE' })) || 
+		     ($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'DIGIT FOUR' })) || 
+		     ($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'DIGIT FIVE' })) || 
+		     ($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'DIGIT SIX' })) || 
+		     ($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'DIGIT SEVEN' })) || 
+		     ($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'DIGIT EIGHT' })) || 
+		     ($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'DIGIT NINE' })) || 
+		     ($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'COLON' })) || 
+		     ($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'SEMICOLON' })) || 
+		     ($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'LESS-THAN SIGN' })) || 
+		     ($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'EQUALS SIGN' })) || 
+		     ($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'GREATER-THAN SIGN' })) || 
+		     ($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'QUESTION MARK' })) || 
+		     ($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'COMMERCIAL AT' })) || 
+		     ($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN CAPITAL LETTER A' })) || 
+		     ($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN CAPITAL LETTER B' })) || 
+		     ($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN CAPITAL LETTER C' })) || 
+		     ($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN CAPITAL LETTER D' })) || 
+		     ($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN CAPITAL LETTER E' })) || 
+		     ($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN CAPITAL LETTER F' })) || 
+		     ($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN CAPITAL LETTER G' })) || 
+		     ($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN CAPITAL LETTER H' })) || 
+		     ($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN CAPITAL LETTER I' })) || 
+		     ($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN CAPITAL LETTER J' })) || 
+		     ($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN CAPITAL LETTER K' })) || 
+		     ($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN CAPITAL LETTER L' })) || 
+		     ($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN CAPITAL LETTER M' })) || 
+		     ($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN CAPITAL LETTER N' })) || 
+		     ($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN CAPITAL LETTER O' })) || 
+		     ($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN CAPITAL LETTER P' })) || 
+		     ($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN CAPITAL LETTER Q' })) || 
+		     ($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN CAPITAL LETTER R' })) || 
+		     ($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN CAPITAL LETTER S' })) || 
+		     ($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN CAPITAL LETTER T' })) || 
+		     ($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN CAPITAL LETTER U' })) || 
+		     ($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN CAPITAL LETTER V' })) || 
+		     ($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN CAPITAL LETTER W' })) || 
+		     ($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN CAPITAL LETTER X' })) || 
+		     ($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN CAPITAL LETTER Y' })) || 
+		     ($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN CAPITAL LETTER Z' })) || 
+		     ($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'LEFT SQUARE BRACKET' })) || 
+		     ($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'REVERSE SOLIDUS' })) || 
+		     ($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'RIGHT SQUARE BRACKET' })) || 
+		     ($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'CIRCUMFLEX ACCENT' })) || 
+		     ($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'LOW LINE' })) || 
+		     ($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'GRAVE ACCENT' })) || 
+		     ($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN SMALL LETTER A' })) || 
+		     ($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN SMALL LETTER B' })) || 
+		     ($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN SMALL LETTER C' })) || 
+		     ($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN SMALL LETTER D' })) || 
+		     ($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN SMALL LETTER E' })) || 
+		     ($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN SMALL LETTER F' })) || 
+		     ($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN SMALL LETTER G' })) || 
+		     ($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN SMALL LETTER H' })) || 
+		     ($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN SMALL LETTER I' })) || 
+		     ($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN SMALL LETTER J' })) || 
+		     ($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN SMALL LETTER K' })) || 
+		     ($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN SMALL LETTER L' })) || 
+		     ($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN SMALL LETTER M' })) || 
+		     ($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN SMALL LETTER N' })) || 
+		     ($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN SMALL LETTER O' })) || 
+		     ($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN SMALL LETTER P' })) || 
+		     ($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN SMALL LETTER Q' })) || 
+		     ($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN SMALL LETTER R' })) || 
+		     ($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN SMALL LETTER S' })) || 
+		     ($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN SMALL LETTER T' })) || 
+		     ($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN SMALL LETTER U' })) || 
+		     ($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN SMALL LETTER V' })) || 
+		     ($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN SMALL LETTER W' })) || 
+		     ($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN SMALL LETTER X' })) || 
+		     ($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN SMALL LETTER Y' })) || 
+		     ($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN SMALL LETTER Z' })) || 
+		     ($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'LEFT CURLY BRACKET' })) || 
+		     ($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'VERTICAL LINE' })) || 
+		     ($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'RIGHT CURLY BRACKET' })) || 
+		     ($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'TILDE' })) ) 
 			{ $func = 'SEARCH_CHAR'; }
 
 		# SEARCH_BACKSPACE, [BACKSPACE] Key.
-		elsif ($evt->[5] == $objCharMap->{'chr_map'}->{'BACKSPACE'}{'byte'}) 
+		elsif ($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'BACKSPACE' })) 
 			{ $func = 'SEARCH_BACKSPACE'; }
 
 		# SEARCH_ENTER, <CARRIAGE RETURN (CR)> Character.
-		elsif ($evt->[5] == $objCharMap->{'chr_map'}->{'CARRIAGE RETURN (CR)'}{'byte'}) 
+		elsif ($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'CARRIAGE RETURN (CR)' })) 
 			{ $func = 'SEARCH_ENTER'; }
 
 		# SEARCH_ESCAPE, [ESCAPE] Key.
-		elsif ($evt->[5] == $objCharMap->{'chr_map'}->{'ESCAPE'}{'byte'}) 
+		elsif ($evt->[5] == $objCharMap->chr_map_ord_val ({ 'lname' => 'ESCAPE' })) 
 			{ $func = 'SEARCH_ESCAPE'; }
 
 		# SEARCH_L_ARROW, [Left Arrow] Key.
@@ -837,60 +814,6 @@ sub evt_map {
 	             ($func eq '')) 
 	     { return (undef); }
 	else { return ($func); }
-}
-
-sub adjust_display {
-
-	my $self = shift;
-
-	INIT_EDITOR_DISPLAY_ELEMENTS: {
-
-		# 1) Initialize editor display elements: 
-		#      X,Y coordinates within display, padding, enabled.
-		# 2) Initialize colorization elements.
-		#      Associate color elements with editor display elements.
-		# 3) Store references to: 
-		#      Display elements data structure, 
-		#      Colorization elements data structure.
-
-		$self->{'obj'}->{'display'}->d_elements_set 
-		  ({ 'd_elements' => $self->{'obj'}->{'display'}->d_elements_init() });
-
-		$self->{'obj'}->{'display'}->c_elements_set 
-		  ({ 'c_elements' => $self->{'obj'}->{'display'}->c_elements_init() });
-	}
-
-	WRITE_EDITOR_DISPLAY_TO_CONSOLE: {
-
-		# 1) Generate the editor display, store within display object 
-		#    under key 'display' (confusing choice of variable names,  
-		#    I know).
-		# 2) Write editor display to display console.
-
-		$self->{'obj'}->{'display'}->dsp_set 
-		  ({ 'dsp' => $self->{'obj'}->{'display'}->generate_editor_display() });
-
-		$self->{'obj'}->{'console'}->w32cons_refresh_display 
-		  ({ 'dsp'      => $self->{'obj'}->{'display'}->{'dsp'}, 
-		     'dsp_prev' => $self->{'obj'}->{'display'}->{'dsp_prev'}, 
-		     'dsp_xpad' => $self->{'obj'}->{'display'}->{'dsp_xpad'}, 
-		     'dsp_ypad' => $self->{'obj'}->{'display'}->{'dsp_ypad'} });
-
-		# 1) Colorize elements of the editor display.
-		# 2) Highlight the cursor within the editor display.
-
-		$self->{'obj'}->{'console'}->colorize_display 
-		  ({ 'c_elements' => $self->{'obj'}->{'display'}->active_c_elements(), 
-		     'dsp_xpad'   => $self->{'obj'}->{'display'}->{'dsp_xpad'}, 
-		     'dsp_ypad'   => $self->{'obj'}->{'display'}->{'dsp_ypad'} });
-
-		$self->{'obj'}->{'cursor'}->curs_display 
-		  ({ 'dsp_xpad' => $self->{'obj'}->{'display'}->{'dsp_xpad'}, 
-		     'dsp_ypad' => $self->{'obj'}->{'display'}->{'dsp_ypad'}, 
-		     'force'    => 1 });
-	}
-
-	return (1)
 }
 
 
@@ -926,7 +849,7 @@ Usage:
 
     use ZHex::Common qw(new obj_init $VERS);
     my $objEventLoop = $self->{'obj'}->{'eventloop'};
-    $objEventLoop->adjust_display();
+    $objEventLoop->read_evt();
 
 =head1 EXPORT
 
@@ -952,10 +875,6 @@ Method read_evt()...
 
 =head2 register_callback
 Method register_callback()...
-= cut
-
-=head2 adjust_display
-Method adjust_display()...
 = cut
 
 =head1 AUTHOR

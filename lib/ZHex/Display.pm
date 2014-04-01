@@ -165,28 +165,6 @@ sub dsp_prev_init {
 	return ($dsp_prev);
 }
 
-sub dsp_set {
-
-	my $self = shift;
-	my $arg  = shift;
-
-	if (! defined $arg || 
-	      ! (ref ($arg) eq 'HASH')) 
-		{ die "Call to dsp_prev_set() failed, argument must be hash reference"; }
-
-	if (! exists  $arg->{'dsp'} || 
-	    ! defined $arg->{'dsp'} || 
-	      ! (ref ($arg->{'dsp'}) eq 'ARRAY')) 
-		{ die "Call to dsp_set() failed, value associated w/ key 'dsp' must be array reference"; }
-
-	if (! (scalar (@{ $arg->{'dsp'} }) == $self->{'d_height'})) 
-		{ die "Call to dsp_set() failed, value associated w/ key 'dsp' did not have correct number of elements defined"; }
-
-	$self->{'dsp'} = $arg->{'dsp'};
-
-	return (1);
-}
-
 sub dsp_prev_set {
 
 	my $self = shift;
@@ -209,6 +187,28 @@ sub dsp_prev_set {
 	return (1);
 }
 
+sub dsp_set {
+
+	my $self = shift;
+	my $arg  = shift;
+
+	if (! defined $arg || 
+	      ! (ref ($arg) eq 'HASH')) 
+		{ die "Call to dsp_prev_set() failed, argument must be hash reference"; }
+
+	if (! exists  $arg->{'dsp'} || 
+	    ! defined $arg->{'dsp'} || 
+	      ! (ref ($arg->{'dsp'}) eq 'ARRAY')) 
+		{ die "Call to dsp_set() failed, value associated w/ key 'dsp' must be array reference"; }
+
+	if (! (scalar (@{ $arg->{'dsp'} }) == $self->{'d_height'})) 
+		{ die "Call to dsp_set() failed, value associated w/ key 'dsp' did not have correct number of elements defined"; }
+
+	$self->{'dsp'} = $arg->{'dsp'};
+
+	return (1);
+}
+
 # Functions: Display handling.
 #
 #   _____________		___________
@@ -221,6 +221,10 @@ sub dsp_prev_set {
 #   generate_blank_e_contents()	Return element-sized array of blank lines.
 #   generate_blank_display()	Return display-sized array of blank lines.
 #   add_elements_to_display()	Assemble display elements together into array of lines.
+#   max_columns()		...
+#   adjust_display()		...
+#   debug_off()			Disable display of debugging information.
+#   debug_on()			Enable  display of debugging information.
 
 sub d_elements_tbl {
 
@@ -310,12 +314,6 @@ sub d_elements_tbl {
 sub d_elements_init {
 
 	my $self = shift;
-
-	my $objConsole   = $self->{'obj'}->{'console'};
-	my $objDebug     = $self->{'obj'}->{'debug'};
-	my $objEditor    = $self->{'obj'}->{'editor'};
-	my $objEvent     = $self->{'obj'}->{'event'};
-	my $objEventLoop = $self->{'obj'}->{'eventloop'};
 
 	# Editor Display Elements: Coordinates/Dimensions.
 	#
@@ -536,8 +534,6 @@ sub active_d_elements {
 sub c_elements_init {
 
 	my $self = shift;
-
-	my $objConsole = $self->{'obj'}->{'console'};
 
 	# Foreground Colors
 	# _________________
@@ -872,8 +868,6 @@ sub generate_editor_display {
 
 	my $self = shift;
 
-	my $objDebug = $self->{'obj'}->{'debug'};
-
 	my $display = 
 	  $self->generate_blank_display 
 	    ({ 'd_width'  => $self->{'d_width'}, 
@@ -919,8 +913,8 @@ sub generate_editor_display {
 
 		my $rv = &{ $subref };
 		if (defined $rv            && 
-		    (ref ($rv) eq 'ARRAY') && 
-		    (scalar (@{ $rv }) == $e_height)) {
+		      (ref ($rv) eq 'ARRAY') && 
+		(scalar (@{ $rv }) == $e_height)) {
 
 			$d_el->{'e_contents'} = $rv;
 		}
@@ -934,10 +928,10 @@ sub generate_editor_display {
 			my $e_idx = ($d_idx - $e_ypos);
 			if (length ($d_el->{'e_contents'}->[$e_idx]) < $e_width) {
 
-				warn "Display element '" . $nm . "', " . 
-				     "e_contents indice '" . $e_idx . "' " . 
-				     "holds string w/ length '" . length ($d_el->{'e_contents'}->[$e_idx]) . "' " . 
-				     "(less than e_width: '" . $e_width . "')";
+				# warn "Display element '" . $nm . "', " . 
+				#      "e_contents indice '" . $e_idx . "' " . 
+				#      "holds string w/ length '" . length ($d_el->{'e_contents'}->[$e_idx]) . "' " . 
+				#      "(less than e_width: '" . $e_width . "')";
 
 				$d_el->{'e_contents'}->[$e_idx] .= 
 				  (' ' x ($e_width - (length ($d_el->{'e_contents'}->[$e_idx]))));
@@ -968,9 +962,9 @@ sub generate_editor_display {
 
 				if ((length ($display->[$d_idx])) < $self->{'d_width'}) {
 
-					warn "Display line indice '" . $d_idx . "' " . 
-					     "holds string w/ length '" . length ($display->[$d_idx]) . "' " . 
-					     "(str len less than d_width '" . $self->{'d_width'} . "')";
+					# warn "Display line indice '" . $d_idx . "' " . 
+					#      "holds string w/ length '" . length ($display->[$d_idx]) . "' " . 
+					#      "(str len less than d_width '" . $self->{'d_width'} . "')";
 
 					$display->[$d_idx] .= (' ' x ($self->{'d_width'} - (length ($display->[$d_idx]))));
 				}
@@ -981,6 +975,118 @@ sub generate_editor_display {
 	# Return reference to array of display lines to caller.
 
 	return ($display);
+}
+
+sub max_columns {
+
+	my $self = shift;
+
+	my $max_columns = 
+	  ($self->{'d_height'} - 
+	     ($self->{'dsp_ypad'} + 
+	      $self->{'d_elements'}->{'column_titles'}->{'e_height'} + 
+	      $self->{'d_elements'}->{'column_titles'}->{'vpad'} + 
+	      $self->{'d_elements'}->{'sep'}->{'e_height'} + 
+	      $self->{'d_elements'}->{'sep'}->{'vpad'} + 
+	      $self->{'d_elements'}->{'errmsg_queue'}->{'e_height'} + 
+	      $self->{'d_elements'}->{'errmsg_queue'}->{'vpad'}));
+
+	return ($max_columns);
+}
+
+sub adjust_display {
+
+	my $self = shift;
+
+	INIT_EDITOR_DISPLAY_ELEMENTS: {
+
+		# 1) Initialize editor display elements: 
+		#      X,Y coordinates within display, padding, enabled.
+		# 2) Initialize colorization elements.
+		#      Associate color elements with editor display elements.
+		# 3) Store references to: 
+		#      Display elements data structure, 
+		#      Colorization elements data structure.
+
+		$self->d_elements_set 
+		  ({ 'd_elements' => $self->d_elements_init() });
+
+		$self->c_elements_set 
+		  ({ 'c_elements' => $self->c_elements_init() });
+	}
+
+	WRITE_EDITOR_DISPLAY_TO_CONSOLE: {
+
+		# 1) Generate the editor display, store within display object 
+		#    under key 'display' (confusing choice of variable names,  
+		#    I know).
+		# 2) Write editor display to display console.
+
+		$self->dsp_set 
+		  ({ 'dsp' => $self->generate_editor_display() });
+
+		$self->{'obj'}->{'console'}->w32cons_refresh_display 
+		  ({ 'dsp'      => $self->{'dsp'}, 
+		     'dsp_prev' => $self->{'dsp_prev'}, 
+		     'dsp_xpad' => $self->{'dsp_xpad'}, 
+		     'dsp_ypad' => $self->{'dsp_ypad'}, 
+		     'd_width'  => $self->{'d_width'} });
+
+		# 1) Colorize elements of the editor display.
+		# 2) Highlight the cursor within the editor display.
+
+		$self->{'obj'}->{'console'}->colorize_display 
+		  ({ 'c_elements' => $self->active_c_elements(), 
+		     'dsp_xpad'   => $self->{'dsp_xpad'}, 
+		     'dsp_ypad'   => $self->{'dsp_ypad'} });
+
+		$self->{'obj'}->{'cursor'}->curs_display 
+		  ({ 'dsp_xpad' => $self->{'dsp_xpad'}, 
+		     'dsp_ypad' => $self->{'dsp_ypad'}, 
+		     'force'    => 1 });
+	}
+
+	return (1)
+}
+
+sub debug_off {
+
+	my $self = shift;
+
+	foreach my $d_element_nm 
+	  ('dbg_mouse_evt', 
+	   'dbg_keybd_evt', 
+	   'dbg_unmatched_evt', 
+	   'dbg_curs', 
+	   'dbg_display', 
+	   'dbg_count', 
+	   'dbg_console', 
+	   'errmsg_queue') {
+
+		$self->{'d_elements'}->{$d_element_nm}->{'enabled'} = 0;
+	}
+
+	return (1);
+}
+
+sub debug_on {
+
+	my $self = shift;
+
+	foreach my $d_element_nm 
+	  ('dbg_mouse_evt', 
+	   'dbg_keybd_evt', 
+	   'dbg_unmatched_evt', 
+	   'dbg_curs', 
+	   'dbg_display', 
+	   'dbg_count', 
+	   'dbg_console', 
+	   'errmsg_queue') {
+
+		$self->{'d_elements'}->{$d_element_nm}->{'enabled'} = 1;
+	}
+
+	return (1);
 }
 
 
@@ -1026,6 +1132,22 @@ Usage:
 No functions are exported.
 
 =head1 SUBROUTINES/METHODS
+
+=head2 adjust_display
+Method adjust_display()...
+= cut
+
+=head2 debug_off
+Method debug_off()...
+= cut
+
+=head2 debug_on
+Method debug_on()...
+= cut
+
+=head2 max_columns
+Method max_columns()...
+= cut
 
 =head2 active_c_elements
 Method active_c_elements()...

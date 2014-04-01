@@ -31,12 +31,122 @@ sub init {
 
 	my $self = shift;
 
+	# Sizes: Word, line, column.
+
+	$self->{'sz_word'}   = 0;
+	$self->{'sz_line'}   = 0;
+	$self->{'sz_column'} = 0;
+
 	# Cursor: Position, update flag, context, row pointer, offset from top row.
 
 	$self->{'curs_pos'}        =  0;   # Offset (in bytes) of the cursor position within the file (0 indicates cursor at beginning).
 	$self->{'curs_ctxt'}       =  0;   # Context of cursor: 0/1/2 (Row/Column/Character).
 	$self->{'curs_coords'}     = [];   # Cursor coordinates.
 	$self->{'ct_display_curs'} =  0;
+
+	return (1);
+}
+
+#   _____________	___________
+#   Function Name	Description
+#   _____________	___________
+#   set_curs_pos()	Member variable accessor.
+#   set_curs_ctxt()	...
+#   set_sz_word()	Member variable accessor.
+#   set_sz_line()	Member variable accessor.
+#   set_sz_column()	Member variable accessor.
+
+sub set_curs_pos {
+
+	my $self = shift;
+	my $arg  = shift;
+
+	if (! defined $arg || 
+	      ! (ref ($arg) eq 'HASH')) 
+		{ die "Call to set_curs_pos() failed, argument must be hash reference"; }
+
+	if (! exists  $arg->{'curs_pos'} || 
+	    ! defined $arg->{'curs_pos'} || 
+	           ! ($arg->{'curs_pos'} =~ /^\d+?$/)) 
+		{ die "Call to set_curs_pos() failed, value of key 'curs_pos' must be numeric"; }
+
+	$self->{'curs_pos'} = $arg->{'curs_pos'};
+
+	return (1);
+}
+
+sub set_curs_ctxt {
+
+	my $self = shift;
+	my $arg  = shift;
+
+	if (! defined $arg || 
+	      ! (ref ($arg) eq 'HASH')) 
+		{ die "Call to set_curs_ctxt() failed, argument must be hash reference"; }
+
+	if (! exists  $arg->{'curs_ctxt'} || 
+	    ! defined $arg->{'curs_ctxt'} || 
+	           ! ($arg->{'curs_ctxt'} =~ /^[0123]$/)) 
+		{ die "Call to set_curs_ctxt() failed, value of key 'curs_ctxt' must be a digit 0, 1, 2, or 3"; }
+
+	$self->{'curs_ctxt'} = $arg->{'curs_ctxt'};
+
+	return (1);
+}
+
+sub set_sz_word {
+
+	my $self = shift;
+	my $arg  = shift;
+
+	if (! defined $arg || 
+	      ! (ref ($arg) eq 'HASH')) 
+		{ die "Call to set_sz_word() failed, argument must be hash reference"; }
+
+	if (! exists  $arg->{'sz_word'} || 
+	    ! defined $arg->{'sz_word'} || 
+	           ! ($arg->{'sz_word'} =~ /^\d+?$/)) 
+		{ die "Call to set_sz_word() failed, value of key 'sz_word' must be numeric"; }
+
+	$self->{'sz_word'} = $arg->{'sz_word'};
+
+	return (1);
+}
+
+sub set_sz_line {
+
+	my $self = shift;
+	my $arg  = shift;
+
+	if (! defined $arg || 
+	      ! (ref ($arg) eq 'HASH')) 
+		{ die "Call to set_sz_line() failed, argument must be hash reference"; }
+
+	if (! exists  $arg->{'sz_line'} || 
+	    ! defined $arg->{'sz_line'} || 
+	           ! ($arg->{'sz_line'} =~ /^\d+?$/)) 
+		{ die "Call to set_sz_line() failed, value of key 'sz_line' must be numeric"; }
+
+	$self->{'sz_line'} = $arg->{'sz_line'};
+
+	return (1);
+}
+
+sub set_sz_column {
+
+	my $self = shift;
+	my $arg  = shift;
+
+	if (! defined $arg || 
+	      ! (ref ($arg) eq 'HASH')) 
+		{ die "Call to set_sz_column() failed, argument must be hash reference"; }
+
+	if (! exists  $arg->{'sz_column'} || 
+	    ! defined $arg->{'sz_column'} || 
+	           ! ($arg->{'sz_column'} =~ /^\d+?$/)) 
+		{ die "Call to set_sz_column() failed, value of key 'sz_column' must be numeric"; }
+
+	$self->{'sz_column'} = $arg->{'sz_column'};
 
 	return (1);
 }
@@ -50,14 +160,6 @@ sub init {
 #   curs_display()		Update display console to reflect the present cursor position.
 #   calc_coord_array()		...
 #   comp_coord_arrays()		...
-#   curs_mv_back()		Move cursor backward one column/character/row.
-#   curs_mv_fwd()		Move cursor forward  one column/character/row.
-#   curs_move_up()		Move cursor up       one row.
-#   curs_move_down()		Move cursor down     one row.
-#   curs_move_left()		Move cursor left     one column/character.
-#   curs_move_right()		Move cursor right    one column/character.
-#   curs_ctxt_decr()		Adjust cursor context, decrement value.
-#   curs_ctxt_incr()		Adjust cursor context, increment value.
 #   calc_row_offset()		...
 #   calc_row()			...
 #   align_word_boundary()	...
@@ -96,14 +198,10 @@ sub dsp_coord {
 	my $objDisplay = $self->{'obj'}->{'display'};
 	my $objEditor  = $self->{'obj'}->{'editor'};
 
-	# $objDebug->errmsg ("a) dsp_coord: curs_pos='" . $arg->{'curs_pos'} . "'.");
-
 	if ($arg->{'curs_pos'} < $arg->{'dsp_pos'}) {
 		
 		die "#1 Call to dsp_coord() failed: curs_pos='" . $arg->{'curs_pos'} . "'";
 	}
-
-	# $objDebug->errmsg ("b) dsp_coord: curs_pos='" . $arg->{'curs_pos'} . "'.");
 
 	if ($arg->{'curs_pos'} > ($arg->{'dsp_pos'} + ($objEditor->{'sz_line'} * $objEditor->{'sz_column'}))) {
 
@@ -236,7 +334,9 @@ sub curs_display {
 				     'xc'         => ($xc + $arg->{'dsp_xpad'}), 
 				     'yc'         => ($yc + $arg->{'dsp_ypad'}), 
 				     'width'      => 2, 
-				     'action'     => 'off' });
+				     'action'     => 'off', 
+				     'dsp_xpad'   => $arg->{'dsp_xpad'}, 
+				     'dsp_ypad'   => $arg->{'dsp_ypad'} });
 			}
 		}
 	}
@@ -266,7 +366,9 @@ sub curs_display {
 			     'xc'         => ($xc + $arg->{'dsp_xpad'}),         # <--- Use of uninitialized value $xc in addition (+) at ZHex/Cursor.pm line 239.
 			     'yc'         => ($yc + $arg->{'dsp_ypad'}), 
 			     'width'      => 2, 
-			     'action'     => 'on' });
+			     'action'     => 'on', 
+			     'dsp_xpad'   => $arg->{'dsp_xpad'}, 
+			     'dsp_ypad'   => $arg->{'dsp_ypad'} });
 		}
 	}
 
@@ -420,33 +522,127 @@ sub comp_coord_arrays {
 	return (1);
 }
 
+sub calc_row_offset {
+
+	my $self = shift;
+	my $arg  = shift;
+
+	if (! defined $arg || 
+	      ! (ref ($arg) eq 'HASH')) 
+		{ die "Call to calc_row_offset() failed, argument must be hash reference"; }
+
+	if (! exists  $arg->{'pos'} || 
+	    ! defined $arg->{'pos'} || 
+	             ($arg->{'pos'} eq "") || 
+	           ! ($arg->{'pos'} =~ /^\d+?$/)) 
+		{ die "Call to calc_row_offset() failed, value associated w/ key 'pos' must be one or more digits"; }
+
+	if ($arg->{'pos'} == 0) 
+		{ return (0); }
+
+	my $row = ($arg->{'pos'} / $self->{'sz_line'});
+	if ($row =~ s/\.\d.*$//) {
+
+		my $ofs = $arg->{'pos'} - ($row * $self->{'sz_line'});
+		return ($ofs);
+	}
+	else {
+
+		return (0);
+	}
+}
+
+sub align_word_boundary {
+
+	my $self = shift;
+	my $arg  = shift;
+
+	if (! defined $arg || 
+	      ! (ref ($arg) eq 'HASH')) 
+		{ die "Call to align_line_boundary() failed, argument must be hash reference"; }
+
+	if (! exists  $arg->{'pos'} || 
+	    ! defined $arg->{'pos'} || 
+	             ($arg->{'pos'} eq "") || 
+	           ! ($arg->{'pos'} =~ /^\d+?$/)) 
+		{ die "Call to align_line_boundary() failed, value associated w/ key 'pos' must be one or more digits"; }
+
+	if (($arg->{'pos'} >= 0) &&
+	    ($arg->{'pos'} < $self->{'sz_word'})) {
+
+		return (0);
+	}
+
+	my $word  = ($arg->{'pos'} / $self->{'sz_word'});
+	$word     =~ s/\.\d.*$//;
+	my $bound = ($word * $self->{'sz_word'});
+
+	return ($bound);
+}
+
+sub align_line_boundary {
+
+	my $self = shift;
+	my $arg  = shift;
+
+	if (! defined $arg || 
+	      ! (ref ($arg) eq 'HASH')) 
+		{ die "Call to align_line_boundary() failed, argument must be hash reference"; }
+
+	if (! exists  $arg->{'pos'} || 
+	    ! defined $arg->{'pos'} || 
+	             ($arg->{'pos'} eq "") || 
+	           ! ($arg->{'pos'} =~ /^\d+?$/)) 
+		{ die "Call to align_line_boundary() failed, value associated w/ key 'pos' must be one or more digits"; }
+
+	if ($arg->{'pos'} < 0) {
+
+		return (undef);
+	}
+	elsif (($arg->{'pos'} >= 0) &&
+	       ($arg->{'pos'} < $self->{'sz_line'})) {
+
+		return (0);
+	}
+
+	my $line = ($arg->{'pos'} / $self->{'sz_line'});
+	$line =~ s/\.\d.*$//;
+	my $bound = ($line * $self->{'sz_line'});
+
+	return ($bound);
+}
+
+# Cursor Functions.
+#
+#   ____			___________
+#   NAME			DESCRIPTION
+#   ____			___________
+#   curs_mv_back()		Move cursor backward one column/character/row.
+#   curs_mv_fwd()		Move cursor forward  one column/character/row.
+#   curs_move_up()		Move cursor up       one row.
+#   curs_move_down()		Move cursor down     one row.
+#   curs_move_left()		Move cursor left     one column/character.
+#   curs_move_right()		Move cursor right    one column/character.
+#   curs_ctxt_decr()		Adjust cursor context, decrement value.
+#   curs_ctxt_incr()		Adjust cursor context, increment value.
+#   curs_adjust()		...
+
 sub curs_mv_back {
 
 	my $self = shift;
 
-	my $objEditor = $self->{'obj'}->{'editor'};
-
 	if (($self->{'curs_ctxt'} == 0) && 
-	    ($self->{'curs_pos'} >= $objEditor->{'sz_line'})) {
+	    ($self->{'curs_pos'} >= $self->{'sz_line'})) {
 
-		if ($self->{'curs_pos'} == $objEditor->{'dsp_pos'}) 
-			{ $objEditor->{'dsp_pos'} -= $objEditor->{'sz_line'}; }
-
-		$self->{'curs_pos'} -= $objEditor->{'sz_line'};
+		$self->{'curs_pos'} -= $self->{'sz_line'};
 	}
 	elsif (($self->{'curs_ctxt'} == 1) && 
-	       ($self->{'curs_pos'} >= $objEditor->{'sz_word'})) {
+	       ($self->{'curs_pos'} >= $self->{'sz_word'})) {
 
-		if ($self->{'curs_pos'} <= $objEditor->{'dsp_pos'}) 
-			{ $objEditor->{'dsp_pos'} -= $objEditor->{'sz_line'}; }
-
-		$self->{'curs_pos'} -= $objEditor->{'sz_word'};
+		$self->{'curs_pos'} -= $self->{'sz_word'};
 	}
 	elsif (($self->{'curs_ctxt'} == 2) && 
 	       ($self->{'curs_pos'} >= 1)) {
-
-		if ($self->{'curs_pos'} <= $objEditor->{'dsp_pos'}) 
-			{ $objEditor->{'dsp_pos'} -= $objEditor->{'sz_line'}; }
 
 		$self->{'curs_pos'} -= 1;
 	}
@@ -457,31 +653,30 @@ sub curs_mv_back {
 sub curs_mv_fwd {
 
 	my $self = shift;
+	my $arg  = shift;
 
-	my $objEditor = $self->{'obj'}->{'editor'};
-	my $objFile   = $self->{'obj'}->{'file'};
+	if (! defined $arg || 
+	      ! (ref ($arg) eq 'HASH')) 
+		{ die "Call to curs_mv_fwd() failed, argument must be hash reference"; }
+
+	if (! exists  $arg->{'file_len'} || 
+	    ! defined $arg->{'file_len'} || 
+	             ($arg->{'file_len'} eq "") || 
+	           ! ($arg->{'file_len'} =~ /^\d+?$/)) 
+		{ die "Call to curs_mv_fwd() failed, value associated w/ key 'file_len' must be one or more digits"; }
 
 	if (($self->{'curs_ctxt'} == 0) && 
-	    ($self->{'curs_pos'} < ($objFile->file_len() - $objEditor->{'sz_line'} - 1))) {
+	    ($self->{'curs_pos'} < ($arg->{'file_len'} - $self->{'sz_line'} - 1))) {
 
-		if ($self->{'curs_pos'} >= ($objEditor->{'dsp_pos'} + ($objEditor->{'sz_line'} * $objEditor->{'sz_column'}) - $objEditor->{'sz_line'})) 
-			{ $objEditor->{'dsp_pos'} += $objEditor->{'sz_line'}; }
-
-		$self->{'curs_pos'} += $objEditor->{'sz_line'};
+		$self->{'curs_pos'} += $self->{'sz_line'};
 	}
 	elsif (($self->{'curs_ctxt'} == 1) &&
-	       ($self->{'curs_pos'} < ($objFile->file_len() - $objEditor->{'sz_word'} - 1))) {
+	       ($self->{'curs_pos'} < ($arg->{'file_len'} - $self->{'sz_word'} - 1))) {
 
-		if ($self->{'curs_pos'} >= ($objEditor->{'dsp_pos'} + ($objEditor->{'sz_line'} * $objEditor->{'sz_column'}) - $objEditor->{'sz_word'})) 
-			{ $objEditor->{'dsp_pos'} += $objEditor->{'sz_line'}; }
-
-		$self->{'curs_pos'} += $objEditor->{'sz_word'};
+		$self->{'curs_pos'} += $self->{'sz_word'};
 	}
 	elsif (($self->{'curs_ctxt'} == 2) &&
-	       ($self->{'curs_pos'} < ($objFile->file_len() - 1))) {
-
-		if ($self->{'curs_pos'} >= ($objEditor->{'dsp_pos'} + ($objEditor->{'sz_line'} * $objEditor->{'sz_column'}) - 1)) 
-			{ $objEditor->{'dsp_pos'} += $objEditor->{'sz_line'}; }
+	       ($self->{'curs_pos'} < ($arg->{'file_len'} - 1))) {
 
 		$self->{'curs_pos'} += 1;
 	}
@@ -493,17 +688,12 @@ sub curs_mv_up {
 
 	my $self = shift;
 
-	my $objEditor = $self->{'obj'}->{'editor'};
-
 	if ($self->{'curs_ctxt'} > 2) 
 		{ return (undef); }
 
-	if ($self->{'curs_pos'} >= $objEditor->{'sz_line'}) {
+	if ($self->{'curs_pos'} >= $self->{'sz_line'}) {
 
-		$self->{'curs_pos'} -= $objEditor->{'sz_line'};
-
-		if ($objEditor->{'dsp_pos'} > $self->{'curs_pos'}) 
-			{ $objEditor->{'dsp_pos'} -= $objEditor->{'sz_line'}; }
+		$self->{'curs_pos'} -= $self->{'sz_line'};
 	}
  
 	return (1);
@@ -512,21 +702,26 @@ sub curs_mv_up {
 sub curs_mv_down {
 
 	my $self = shift;
+	my $arg  = shift;
 
-	my $objEditor = $self->{'obj'}->{'editor'};
-	my $objFile   = $self->{'obj'}->{'file'};
+	if (! defined $arg || 
+	      ! (ref ($arg) eq 'HASH')) 
+		{ die "Call to curs_mv_down() failed, argument must be hash reference"; }
+
+	if (! exists  $arg->{'file_len'} || 
+	    ! defined $arg->{'file_len'} || 
+	             ($arg->{'file_len'} eq "") || 
+	           ! ($arg->{'file_len'} =~ /^\d+?$/)) 
+		{ die "Call to curs_mv_down() failed, value associated w/ key 'file_len' must be one or more digits"; }
 
 	# Error here when scrolling to last line, last byte...
 
 	if ((($self->{'curs_ctxt'} == 0)  || 
 	     ($self->{'curs_ctxt'} == 1)  || 
 	     ($self->{'curs_ctxt'} == 2)) && 
-	     ($self->{'curs_pos'} < ($objFile->file_len() - $objEditor->{'sz_line'}))) {
+	     ($self->{'curs_pos'} < ($arg->{'file_len'} - $self->{'sz_line'}))) {
 
-		if ($self->{'curs_pos'} >= ($objEditor->{'dsp_pos'} + ($objEditor->{'sz_line'} * $objEditor->{'sz_column'}) - $objEditor->{'sz_line'})) 
-			{ $objEditor->{'dsp_pos'} += $objEditor->{'sz_line'}; }
-
-		$self->{'curs_pos'} += $objEditor->{'sz_line'};
+		$self->{'curs_pos'} += $self->{'sz_line'};
 	}
 	
 	return (1);
@@ -536,18 +731,16 @@ sub curs_mv_left {
 
 	my $self = shift;
 
-	my $objEditor = $self->{'obj'}->{'editor'};
-
-	my $ofs = $self->calc_row_offset ($self->{'curs_pos'});
+	my $ofs = $self->calc_row_offset ({ 'pos' => $self->{'curs_pos'} });
 
 	if ($self->{'curs_ctxt'} < 1) {
 
 		return (undef);
 	}
 	if (($self->{'curs_ctxt'} == 1) && 
-	    ($ofs >= $objEditor->{'sz_word'})) {
+	    ($ofs >= $self->{'sz_word'})) {
 
-		$self->{'curs_pos'} -= $objEditor->{'sz_word'};
+		$self->{'curs_pos'} -= $self->{'sz_word'};
 	}
 	elsif (($self->{'curs_ctxt'} == 2) && 
 	       ($ofs >= 1)) {
@@ -565,11 +758,19 @@ sub curs_mv_left {
 sub curs_mv_right {
 
 	my $self = shift;
+	my $arg  = shift;
 
-	my $objEditor = $self->{'obj'}->{'editor'};
-	my $objFile   = $self->{'obj'}->{'file'};
+	if (! defined $arg || 
+	      ! (ref ($arg) eq 'HASH')) 
+		{ die "Call to curs_mv_right() failed, argument must be hash reference"; }
 
-	my $ofs = $self->calc_row_offset ($self->{'curs_pos'});
+	if (! exists  $arg->{'file_len'} || 
+	    ! defined $arg->{'file_len'} || 
+	             ($arg->{'file_len'} eq "") || 
+	           ! ($arg->{'file_len'} =~ /^\d+?$/)) 
+		{ die "Call to curs_mv_right() failed, value associated w/ key 'file_len' must be one or more digits"; }
+
+	my $ofs = $self->calc_row_offset ({ 'pos' => $self->{'curs_pos'} });
 
 	if ($self->{'curs_ctxt'} < 1) {
 
@@ -577,15 +778,15 @@ sub curs_mv_right {
 	}
 	if (($self->{'curs_ctxt'} == 1) && 
 	    ($ofs < 12)                 && 
-	    ($self->{'curs_pos'} <= (($objFile->file_len() - $objEditor->{'sz_word'}) - 1))) {
+	    ($self->{'curs_pos'} <= (($arg->{'file_len'} - $self->{'sz_word'}) - 1))) {
 
 		# Error here, when moving cursor right at end of file. Cursor will highlight partial word at end...
 
-		$self->{'curs_pos'} += $objEditor->{'sz_word'};
+		$self->{'curs_pos'} += $self->{'sz_word'};
 	}
 	elsif (($self->{'curs_ctxt'} == 2) && 
 	       ($ofs < 15)                 && 
-	       ($self->{'curs_pos'} <= (($objFile->file_len() - 1) - 1))) {
+	       ($self->{'curs_pos'} <= (($arg->{'file_len'} - 1) - 1))) {
 
 		$self->{'curs_pos'} += 1;
 	}
@@ -661,102 +862,49 @@ sub curs_ctxt_incr {
 	return (1);
 }
 
-sub calc_row_offset {
-
-	my $self = shift;
-	my $pos  = shift;
-
-	my $objEditor = $self->{'obj'}->{'editor'};
-
-	if ($pos == 0) 
-		{ return (0); }
-
-	my $row = ($pos / $objEditor->{'sz_line'});
-	if ($row =~ s/\.\d.*$//) {
-
-		my $ofs = $pos - ($row * $objEditor->{'sz_line'});
-		return ($ofs);
-	}
-	else {
-
-		return (0);
-	}
-}
-
-sub calc_row {
-
-	my $self = shift;
-	my $pos  = shift;
-
-	my $objEditor = $self->{'obj'}->{'editor'};
-
-	if ($pos == 0) 
-		{ return (0); }
-
-	my $row = ($pos / $objEditor->{'sz_line'});
-	$row =~ s/\.\d.*$//;
-
-	return ($row);
-}
-
-sub align_word_boundary {
-
-	my $self = shift;
-	my $pos  = shift;
-
-	my $objEditor = $self->{'obj'}->{'editor'};
-
-	if (! defined $pos        || 
-	             ($pos eq '') || 
-	             ($pos < 0)) {
-
-		return (undef);
-	}
-	elsif (($pos >= 0) &&
-	       ($pos <  $objEditor->{'sz_word'})) {
-
-		return (0);
-	}
-
-	my $word  = ($pos / $objEditor->{'sz_word'});
-	$word     =~ s/\.\d.*$//;
-	my $bound = ($word * $objEditor->{'sz_word'});
-
-	return ($bound);
-}
-
-sub align_line_boundary {
+sub curs_adjust {
 
 	my $self = shift;
 	my $arg  = shift;
 
 	if (! defined $arg || 
 	      ! (ref ($arg) eq 'HASH')) 
-		{ die "Call to align_line_boundary() failed, argument must be hash reference"; }
+		{ die "Call to curs_adjust() failed, argument must be hash reference"; }
 
-	if (! exists  $arg->{'pos'} || 
-	    ! defined $arg->{'pos'} || 
-	             ($arg->{'pos'} eq "") || 
-	           ! ($arg->{'pos'} =~ /^\d+?$/)) 
-		{ die "Call to align_line_boundary() failed, value associated w/ key 'pos' must be one or more digits"; }
+	if (! exists  $arg->{'dsp_pos'} || 
+	    ! defined $arg->{'dsp_pos'} || 
+	             ($arg->{'dsp_pos'} eq '') || 
+	           ! ($arg->{'dsp_pos'} =~ /^\d+?$/)) 
+		{ die "Call to curs_adjust() failed, value associated w/ key 'dsp_pos' must be one or more digits"; }
 
-	my $objEditor = $self->{'obj'}->{'editor'};
+	# If cursor is OOB: update cursor position [below bottom line in editor display].
 
-	if ($arg->{'pos'} < 0) {
+	while ($self->{'curs_pos'} >= 
+	         ($arg->{'dsp_pos'} + ($self->{'sz_line'} * $self->{'sz_column'}))) 
+		{ $self->{'curs_pos'} -= $self->{'sz_line'}; }
 
-		return (undef);
-	}
-	elsif (($arg->{'pos'} >= 0) &&
-	       ($arg->{'pos'} < $objEditor->{'sz_line'})) {
+	# If cursor is OOB: update cursor position [above top line in editor display].
 
-		return (0);
-	}
+	while ($self->{'curs_pos'} < $arg->{'dsp_pos'}) 
+		{ $self->{'curs_pos'} += $self->{'sz_line'}; }
 
-	my $line = ($arg->{'pos'} / $objEditor->{'sz_line'});
-	$line =~ s/\.\d.*$//;
-	my $bound = ($line * $objEditor->{'sz_line'});
+	# If cursor is OOB: update cursor position [below bottom line in editor display, AGAIN???].
 
-	return ($bound);
+	while (($self->{'curs_ctxt'} == 0) && 
+	       ($self->{'curs_pos'} > ($arg->{'dsp_pos'} + ($self->{'sz_line'} * $self->{'sz_column'}) - $self->{'sz_line'}))) 
+		{ $self->{'curs_pos'} -= $self->{'sz_line'}; }
+
+	while ((($self->{'curs_ctxt'} == 1)  || 
+	        ($self->{'curs_ctxt'} == 2)) && 
+	        ($self->{'curs_pos'} > ($arg->{'dsp_pos'} + ($self->{'sz_line'} * $self->{'sz_column'}) - 1))) 
+		{ $self->{'curs_pos'} -= $self->{'sz_line'}; }
+
+	# If cursor is OOB: update cursor position [above top line in editor display, AGAIN???].
+
+	while ($self->{'curs_pos'} < $arg->{'dsp_pos'}) 
+		{ $self->{'curs_pos'} += $self->{'sz_line'}; }
+
+	return (1);
 }
 
 
@@ -807,6 +955,30 @@ Usage:
 No functions are exported.
 
 =head1 SUBROUTINES/METHODS
+
+=head2 set_curs_pos
+Method set_curs_pos()...
+= cut
+
+=head2 set_curs_ctxt
+Method set_curs_ctxt()...
+= cut
+
+=head2 set_sz_word
+Method set_sz_word()...
+= cut
+
+=head2 set_sz_line
+Method set_sz_line()...
+= cut
+
+=head2 set_sz_column
+Method set_sz_column()...
+= cut
+
+=head2 curs_adjust
+Method curs_adjust()...
+= cut
 
 =head2 align_line_boundary
 Method align_line_boundary()...

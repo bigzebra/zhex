@@ -484,7 +484,10 @@ sub w32cons_refresh_display {
 	           ! ($arg->{'dsp_ypad'} =~ /^\d\d?\d?$/)) 
 		{ die "Call to w32cons_refresh_display() failed, value of key 'dsp_ypad' must be numeric"; }
 
-	my $objDisplay = $self->{'obj'}->{'display'};
+	if (! exists  $arg->{'d_width'} || 
+	    ! defined $arg->{'d_width'} || 
+	           ! ($arg->{'d_width'} =~ /^\d\d?\d?$/)) 
+		{ die "Call to w32cons_refresh_display() failed, value of key 'd_width' must be numeric"; }
 
 	LINE_BY_LINE: 
 	  for my $lnum (0 .. (scalar (@{ $arg->{'dsp'} }) -1)) {
@@ -496,11 +499,11 @@ sub w32cons_refresh_display {
 			if (! exists  $arg->{$key}->[$lnum] && 
 			    ! defined $arg->{$key}->[$lnum] && 
 				     ($arg->{$key}->[$lnum] eq '') && 
-			   ! (length ($arg->{$key}->[$lnum]) == $objDisplay->{'d_width'})) {
+			   ! (length ($arg->{$key}->[$lnum]) == $arg->{'d_width'})) {
 
 				die "Display array '" . $key . 
 				    "' indice '" . $lnum . 
-				    "' holds string w/ wrong length ('" . $objDisplay->{'d_width'} . 
+				    "' holds string w/ wrong length ('" . $arg->{'d_width'} . 
 				    "' chars width req'd)";
 			}
 		}
@@ -853,7 +856,15 @@ sub colorize_reverse {
 	          ! (($arg->{'action'} eq 'on') || ($arg->{'action'} eq 'off'))) 
 		{ die "Call to colorize_reverse() failed, value of key 'action' must be 'on' or 'off'"; }
 
-	my $objDisplay = $self->{'obj'}->{'display'};
+	if (! exists  $arg->{'dsp_xpad'} || 
+	    ! defined $arg->{'dsp_xpad'} || 
+	           ! ($arg->{'dsp_xpad'} =~ /^\d\d?\d?$/)) 
+		{ die "Call to colorize_reverse() failed, value of key 'dsp_xpad' must be numeric"; }
+
+	if (! exists  $arg->{'dsp_ypad'} || 
+	    ! defined $arg->{'dsp_ypad'} || 
+	           ! ($arg->{'dsp_ypad'} =~ /^\d\d?\d?$/)) 
+		{ die "Call to colorize_reverse() failed, value of key 'dsp_ypad' must be numeric"; }
 
 	# Function colorize():
 	#   ________	___________
@@ -879,11 +890,11 @@ sub colorize_reverse {
 
 	foreach my $c_element (@{ $arg->{'c_elements'} }) {
 
-		if (((($arg->{'xc'} >= ($c_element->{'x'} + $objDisplay->{'dsp_xpad'})) && 
-		      ($arg->{'xc'} <  ($c_element->{'x'} + $objDisplay->{'dsp_xpad'} + $c_element->{'wd'}))) && 
+		if (((($arg->{'xc'} >= ($c_element->{'x'} + $arg->{'dsp_xpad'})) && 
+		      ($arg->{'xc'} <  ($c_element->{'x'} + $arg->{'dsp_xpad'} + $c_element->{'wd'}))) && 
 
-		     (($arg->{'yc'} >= ($c_element->{'y'} + $objDisplay->{'dsp_ypad'})) && 
-		      ($arg->{'yc'} <  ($c_element->{'y'} + $objDisplay->{'dsp_ypad'} + $c_element->{'ht'})))) && 
+		     (($arg->{'yc'} >= ($c_element->{'y'} + $arg->{'dsp_ypad'})) && 
+		      ($arg->{'yc'} <  ($c_element->{'y'} + $arg->{'dsp_ypad'} + $c_element->{'ht'})))) && 
 
 		      (exists  $c_element->{$on_off} && 
 		       defined $c_element->{$on_off} && 

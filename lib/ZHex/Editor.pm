@@ -49,9 +49,9 @@ sub init {
 #   Function Name	Description
 #   _____________	___________
 #   set_dsp_pos()	Member variable accessor.
+#   set_sz_word()	Member variable accessor.
 #   set_sz_line()	Member variable accessor.
 #   set_sz_column()	Member variable accessor.
-#   set_sz_word()	Member variable accessor.
 
 sub set_dsp_pos {
 
@@ -759,23 +759,18 @@ sub gen_sep {
 #   scroll_down_1x_line()	Scroll down one line.
 #   scroll_up_1x_page()		Scroll up   one page.
 #   scroll_down_1x_page()	Scroll down one page.
+#   vstretch()			Stretch the editor display vertically.
+#   vcompress()                 Compress the editor display vertically.
+#   dsp_pos_adjust()		...
 
 sub scroll_up_1x_line {
 
 	my $self = shift;
 
-	my $objCursor = $self->{'obj'}->{'cursor'};
-
 	if ($self->{'dsp_pos'} < $self->{'sz_line'}) 
 		{ return (undef); }
 
 	$self->{'dsp_pos'} -= $self->{'sz_line'};
-
-	# Update cursor (if cursor is no longer located within editor display).
-
-	while ($objCursor->{'curs_pos'} >= 
-	         ($self->{'dsp_pos'} + ($self->{'sz_line'} * $self->{'sz_column'}))) 
-		{ $objCursor->{'curs_pos'} -= $self->{'sz_line'}; }
 
 	return (1);
 }
@@ -783,19 +778,22 @@ sub scroll_up_1x_line {
 sub scroll_down_1x_line {
 
 	my $self = shift;
+	my $arg  = shift;
 
-	my $objCursor = $self->{'obj'}->{'cursor'};
-	my $objFile   = $self->{'obj'}->{'file'};
+	if (! defined $arg || 
+	      ! (ref ($arg) eq 'HASH')) 
+		{ die "Call to scroll_down_1x_line() failed, argument must be hash reference"; }
 
-	if ($self->{'dsp_pos'} > ($objFile->file_len() - ($self->{'sz_line'} * $self->{'sz_column'}))) 
+	if (! exists  $arg->{'file_len'} || 
+	    ! defined $arg->{'file_len'} || 
+	             ($arg->{'file_len'} eq '') || 
+	           ! ($arg->{'file_len'} =~ /^\d+?$/)) 
+		{ die "Call to scroll_down_1x_line() failed, value associated w/ key 'file_len' must be one or more digits"; }
+
+	if ($self->{'dsp_pos'} > ($arg->{'file_len'} - ($self->{'sz_line'} * $self->{'sz_column'}))) 
 		{ return (undef); }
 
 	$self->{'dsp_pos'} += $self->{'sz_line'};
-
-	# Update cursor (if cursor is no longer located within editor display).
-
-	while ($objCursor->{'curs_pos'} < $self->{'dsp_pos'}) 
-		{ $objCursor->{'curs_pos'} += $self->{'sz_line'}; }
 
 	return (1); 
 }
@@ -804,24 +802,11 @@ sub scroll_up_1x_page {
 
 	my $self = shift;
 
-	my $objCursor = $self->{'obj'}->{'cursor'};
-
 	if (($self->{'dsp_pos'} - ($self->{'sz_line'} * $self->{'sz_column'})) <= 0) 
 		{ $self->{'dsp_pos'} = 0; }   # Scroll to beginning of page (less than one full page).
 	
 	elsif (($self->{'dsp_pos'} - ($self->{'sz_line'} * $self->{'sz_column'})) > 0) 
 		{ $self->{'dsp_pos'} -= ($self->{'sz_line'} * $self->{'sz_column'}); }   # Scroll one full page.
-
-	# Update cursor (if cursor is no longer located within editor display).
-
-	while (($objCursor->{'curs_ctxt'} == 0) && 
-	       ($objCursor->{'curs_pos'} > ($self->{'dsp_pos'} + ($self->{'sz_line'} * $self->{'sz_column'}) - $self->{'sz_line'}))) 
-		{ $objCursor->{'curs_pos'} -= $self->{'sz_line'}; }
-
-	while ((($objCursor->{'curs_ctxt'} == 1)  || 
-	        ($objCursor->{'curs_ctxt'} == 2)) && 
-	        ($objCursor->{'curs_pos'} > ($self->{'dsp_pos'} + ($self->{'sz_line'} * $self->{'sz_column'}) - 1))) 
-		{ $objCursor->{'curs_pos'} -= $self->{'sz_line'}; }
 
         return (1);
 }
@@ -829,19 +814,27 @@ sub scroll_up_1x_page {
 sub scroll_down_1x_page {
 
 	my $self = shift;
+	my $arg  = shift;
 
-	my $objCursor = $self->{'obj'}->{'cursor'};
-	my $objFile   = $self->{'obj'}->{'file'};
+	if (! defined $arg || 
+	      ! (ref ($arg) eq 'HASH')) 
+		{ die "Call to scroll_down_1x_page() failed, argument must be hash reference"; }
+
+	if (! exists  $arg->{'file_len'} || 
+	    ! defined $arg->{'file_len'} || 
+	             ($arg->{'file_len'} eq '') || 
+	           ! ($arg->{'file_len'} =~ /^\d+?$/)) 
+		{ die "Call to scroll_down_1x_page() failed, value associated w/ key 'file_len' must be one or more digits"; }
 
 	if (($self->{'dsp_pos'} + ($self->{'sz_line'} * $self->{'sz_column'})) < 
-	       ($objFile->file_len() - ($self->{'sz_line'} * $self->{'sz_column'}))) {
+	       ($arg->{'file_len'} - ($self->{'sz_line'} * $self->{'sz_column'}))) {
 
 		$self->{'dsp_pos'} += ($self->{'sz_line'} * $self->{'sz_column'});
 	}
 	elsif (($self->{'dsp_pos'} + ($self->{'sz_line'} * $self->{'sz_column'})) > 
-	          ($objFile->file_len() - ($self->{'sz_line'} * $self->{'sz_column'}))) {
+	          ($arg->{'file_len'} - ($self->{'sz_line'} * $self->{'sz_column'}))) {
 
-		my $lines = ($objFile->file_len() / $self->{'sz_line'});
+		my $lines = ($arg->{'file_len'} / $self->{'sz_line'});
 		if ($lines =~ s/\.\d+?$//) 
 			{ $lines++; }
 
@@ -853,10 +846,87 @@ sub scroll_down_1x_page {
 		return (undef); 
 	}
 
-	# Update cursor (if cursor is no longer located within editor display).
+	return (1);
+}
 
-	while ($objCursor->{'curs_pos'} < $self->{'dsp_pos'}) 
-		{ $objCursor->{'curs_pos'} += $self->{'sz_line'}; }
+sub vstretch {
+
+	my $self = shift;
+	my $arg  = shift;
+
+	if (! defined $arg || 
+	      ! (ref ($arg) eq 'HASH')) 
+		{ die "Call to vstretch() failed, argument must be hash reference"; }
+
+	if (! exists  $arg->{'max_columns'} || 
+	    ! defined $arg->{'max_columns'} || 
+	             ($arg->{'max_columns'} eq '') || 
+	           ! ($arg->{'max_columns'} =~ /^\d+?$/)) 
+		{ die "Call to vstretch() failed, value associated w/ key 'max_columns' must be one or more digits"; }
+
+	if (! exists  $arg->{'file_len'} || 
+	    ! defined $arg->{'file_len'} || 
+	             ($arg->{'file_len'} eq '') || 
+	           ! ($arg->{'file_len'} =~ /^\d+?$/)) 
+		{ die "Call to vstretch() failed, value associated w/ key 'file_len' must be one or more digits"; }
+
+	if ($self->{'sz_column'} < $arg->{'max_columns'}) {
+
+		$self->set_sz_column 
+		  ({ 'sz_column' => ($self->{'sz_column'} + 1) });
+
+		if ($self->{'dsp_pos'} > 
+		      ($arg->{'file_len'} - 
+			 (($self->{'sz_column'} * $self->{'sz_line'}) - 
+		            $self->{'sz_line'}))) {
+
+			$self->set_dsp_pos 
+			  ({ 'dsp_pos' => ($self->{'dsp_pos'} - 
+			                   $self->{'sz_line'}) });
+		}
+	}
+
+	return (1);
+}
+
+sub vcompress {
+
+	my $self = shift;
+
+	if ($self->{'sz_column'} > 1) {
+
+		$self->set_sz_column 
+		  ({ 'sz_column' => ($self->{'sz_column'} - 1) });
+	}
+
+	return (1);
+}
+
+sub dsp_pos_adjust {
+
+	my $self = shift;
+	my $arg  = shift;
+
+	if (! defined $arg || 
+	      ! (ref ($arg) eq 'HASH')) 
+		{ die "Call to dsp_pos_adjust() failed, argument must be hash reference"; }
+
+	if (! exists  $arg->{'curs_pos'} || 
+	    ! defined $arg->{'curs_pos'} || 
+	             ($arg->{'curs_pos'} eq '') || 
+	           ! ($arg->{'curs_pos'} =~ /^\d+?$/)) 
+		{ die "Call to dsp_pos_adjust() failed, value associated w/ key 'curs_pos' must be one or more digits"; }
+
+	# If curs_pos is OOB: adjust display position [curs_mv_up].
+
+	while ($self->{'dsp_pos'} > $arg->{'curs_pos'}) 
+		{ $self->{'dsp_pos'} -= $self->{'sz_line'}; }
+
+	# If curs_pos is OOB: adjust display position [curs_mv_up].
+
+	while ($self->{'dsp_pos'} <= ($arg->{'curs_pos'} - 
+	                               ($self->{'sz_line'} * $self->{'sz_column'})))
+		{ $self->{'dsp_pos'} += $self->{'sz_line'}; }
 
 	return (1);
 }
@@ -898,6 +968,18 @@ Usage:
 No functions are exported.
 
 =head1 SUBROUTINES/METHODS
+
+=head2 dsp_pos_adjust
+Method dsp_pos_adjust()...
+= cut
+
+=head2 vcompress
+Method vcompress()...
+= cut
+
+=head2 vstretch
+Method vstretch()...
+= cut
 
 =head2 gen_char
 Method gen_char()...

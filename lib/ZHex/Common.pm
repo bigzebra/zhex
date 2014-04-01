@@ -6,15 +6,32 @@ use 5.006;
 use strict;
 use warnings FATAL => 'all';
 
+BEGIN {
+
+	use constant CURS_POS  => 0;
+	use constant CURS_CTXT => 0;
+	use constant DSP_POS   => 0;
+	use constant SZ_WORD   => 4;
+	use constant SZ_LINE   => 16;
+	use constant SZ_COLUMN => 40;
+}
+
 BEGIN { require Exporter;
-	our $VERS      = 0.01;
+	our $VERS      = 0.02;
 	our $VERSION   = $VERS;
 	our @ISA       = qw(Exporter);
 	our @EXPORT    = qw();
-	our @EXPORT_OK = qw(new 
-                            init 
-                            obj_init
-                            $VERS);
+	our @EXPORT_OK = 
+	  qw(new 
+             init 
+	     obj_init 
+	     $VERS 
+	     CURS_POS 
+	     CURS_CTXT 
+	     DSP_POS 
+	     SZ_WORD 
+	     SZ_LINE 
+	     SZ_COLUMN);
 }
 
 # Functions: Start-up/initialization.

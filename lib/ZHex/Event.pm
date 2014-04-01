@@ -53,6 +53,7 @@ sub register_event_callbacks {
 	my $self = shift;
 
 	my $objConsole   = $self->{'obj'}->{'console'};
+	my $objDisplay   = $self->{'obj'}->{'display'};
 	my $objEditor    = $self->{'obj'}->{'editor'};
 	my $objEventLoop = $self->{'obj'}->{'eventloop'};
 	my $objFile      = $self->{'obj'}->{'file'};
@@ -82,11 +83,11 @@ sub register_event_callbacks {
 	# DEFAULT INSERT_MODE       [INSERT] Key        |  0 | 45 | 82 |256 | Insert                                     insert_mode() 
 	# DEFAULT WRITE_DISK        [w] Key (Low Case)  |119 |  - |  - |  - | Write  (Write Changes to Disk)             ZHex::File->write_file()
 	# DEFAULT SEARCH_MODE       [s] Key (Low Case)  |115 |  - |  - |  - | Search (Enter String  to Search For)       search_mode()
-# >>>	# DEFAULT JUMP_TO_LINE      [L] Key (Upp Case)  |... |  - |  - |  - | Line Number (Jump To)                      *** NOT IMPLEMENTED *** 
-# >>>	# DEFAULT COPY_REGION       [CTRL][C]           |  ? |  ? |  ? |  ? | Copy Highlighted/Selected Region           *** NOT IMPLEMENTED *** 
-# >>>	# DEFAULT CUT_REGION        [CTRL][X]           |  ? |  ? |  ? |  ? | Cut  Highlighted/Selected Region           *** NOT IMPLEMENTED *** 
-# >>>	# DEFAULT PASTE_BUFFER      [CTRL][V]           |  ? |  ? |  ? |  ? | Paste Contents Of Buffer To Cursor Pos     *** NOT IMPLEMENTED *** 
-# >>>	# DEFAULT UNDO_LAST         [CTRL][Z]           |  ? |  ? |  ? |  ? | Undo Last Operation (Copy/Cut/Paste)       *** NOT IMPLEMENTED *** 
+# >	# DEFAULT JUMP_TO_LINE      [L] Key (Upp Case)  |... |  - |  - |  - | Line Number (Jump To)                      *** NOT IMPLEMENTED *** 
+# >	# DEFAULT COPY_REGION       [CTRL][C]           |  ? |  ? |  ? |  ? | Copy Highlighted/Selected Region           *** NOT IMPLEMENTED *** 
+# >	# DEFAULT CUT_REGION        [CTRL][X]           |  ? |  ? |  ? |  ? | Cut  Highlighted/Selected Region           *** NOT IMPLEMENTED *** 
+# >	# DEFAULT PASTE_BUFFER      [CTRL][V]           |  ? |  ? |  ? |  ? | Paste Contents Of Buffer To Cursor Pos     *** NOT IMPLEMENTED *** 
+# >	# DEFAULT UNDO_LAST         [CTRL][Z]           |  ? |  ? |  ? |  ? | Undo Last Operation (Copy/Cut/Paste)       *** NOT IMPLEMENTED *** 
 	# DEFAULT INCR_CURS_CTXT    [ENTER]  Key        | 13 |  - |  - |  - | Increse  Cursor Context/Begin Editing      curs_ctxt_incr() 
 	# DEFAULT DECR_CURS_CTXT    [ESCAPE] Key        | 27 |  - |  - |  - | Decrease Cursor Context/Stop  Editing      curs_ctxt_decr() 
 	# DEFAULT SCROLL_UP_1LN     [k] Key (Low Case)  |107 |  - |  - |  - | Scroll Up x 1 Line                         scroll_down_1x_line() 
@@ -127,31 +128,67 @@ sub register_event_callbacks {
 	  [ 'DEFAULT', 'INSERT_MODE',       sub { $self->insert_mode(); } ],
 	  [ 'DEFAULT', 'WRITE_DISK',        sub { $objFile->write_file ({'fn' => $objFile->{'fn'}}); } ],
 	  [ 'DEFAULT', 'SEARCH_MODE',       sub { $self->search_mode(); } ],
-	  [ 'DEFAULT', 'JUMP_TO_LINE',      sub { return (0); } ],
-	  [ 'DEFAULT', 'COPY_REGION',       sub { return (0); } ],
-	  [ 'DEFAULT', 'CUT_REGION',        sub { return (0); } ],
-	  [ 'DEFAULT', 'PASTE_BUFFER',      sub { return (0); } ],
-	  [ 'DEFAULT', 'UNDO_LAST',         sub { return (0); } ],
-	  [ 'DEFAULT', 'SCROLL_UP_1LN',     sub { $objEditor->scroll_up_1x_line(); } ],
-	  [ 'DEFAULT', 'SCROLL_UP_1PG',     sub { $objEditor->scroll_up_1x_page(); } ],
-	  [ 'DEFAULT', 'SCROLL_DOWN_1LN',   sub { $objEditor->scroll_down_1x_line(); } ],
-	  [ 'DEFAULT', 'SCROLL_DOWN_1PG',   sub { $objEditor->scroll_down_1x_page(); } ],
+
+	  [ 'DEFAULT', 'JUMP_TO_LINE',      sub { return (0); } ],   # <--- NOT IMPLEMENTED
+	  [ 'DEFAULT', 'COPY_REGION',       sub { return (0); } ],   # <--- NOT IMPLEMENTED
+	  [ 'DEFAULT', 'CUT_REGION',        sub { return (0); } ],   # <--- NOT IMPLEMENTED
+	  [ 'DEFAULT', 'PASTE_BUFFER',      sub { return (0); } ],   # <--- NOT IMPLEMENTED
+	  [ 'DEFAULT', 'UNDO_LAST',         sub { return (0); } ],   # <--- NOT IMPLEMENTED
+
+	  [ 'DEFAULT', 'SCROLL_UP_1LN',     sub { $objEditor->scroll_up_1x_line(); 
+	                                          $objCursor->curs_adjust 
+	                                            ({ 'dsp_pos' => $objEditor->{'dsp_pos'} }); } ],
+	  [ 'DEFAULT', 'SCROLL_UP_1PG',     sub { $objEditor->scroll_up_1x_page();
+	                                          $objCursor->curs_adjust 
+	                                            ({ 'dsp_pos' => $objEditor->{'dsp_pos'} }); } ],
+	  [ 'DEFAULT', 'SCROLL_DOWN_1LN',   sub { $objEditor->scroll_down_1x_line({ 'file_len' => $objFile->file_len() });
+	                                          $objCursor->curs_adjust 
+	                                            ({ 'dsp_pos' => $objEditor->{'dsp_pos'} }); } ],
+	  [ 'DEFAULT', 'SCROLL_DOWN_1PG',   sub { $objEditor->scroll_down_1x_page({ 'file_len' => $objFile->file_len() });
+	                                          $objCursor->curs_adjust 
+	                                            ({ 'dsp_pos' => $objEditor->{'dsp_pos'} }); } ],
 	  [ 'DEFAULT', 'INCR_CURS_CTXT',    sub { $objCursor->curs_ctxt_incr(); } ],
 	  [ 'DEFAULT', 'DECR_CURS_CTXT',    sub { $objCursor->curs_ctxt_decr(); } ],
-	  [ 'DEFAULT', 'MOVE_CURS_FORWARD', sub { $objCursor->curs_mv_fwd(); } ],
-	  [ 'DEFAULT', 'MOVE_CURS_BACK',    sub { $objCursor->curs_mv_back(); } ],
-	  [ 'DEFAULT', 'MOVE_CURS_UP',      sub { $objCursor->curs_mv_up(); } ],
-	  [ 'DEFAULT', 'MOVE_CURS_DOWN',    sub { $objCursor->curs_mv_down(); } ],
-	  [ 'DEFAULT', 'MOVE_CURS_LEFT',    sub { $objCursor->curs_mv_left(); } ],
-	  [ 'DEFAULT', 'MOVE_CURS_RIGHT',   sub { $objCursor->curs_mv_right(); } ],
+	  [ 'DEFAULT', 'MOVE_CURS_FORWARD', sub { $objCursor->curs_mv_fwd({ 'file_len' => $objFile->file_len() });
+	                                          $objEditor->dsp_pos_adjust 
+	                                            ({ 'curs_pos' => $objCursor->{'curs_pos'} }); } ],
+	  [ 'DEFAULT', 'MOVE_CURS_BACK',    sub { $objCursor->curs_mv_back();
+	                                          $objEditor->dsp_pos_adjust 
+	                                            ({ 'curs_pos' => $objCursor->{'curs_pos'} }); } ],
+	  [ 'DEFAULT', 'MOVE_CURS_UP',      sub { $objCursor->curs_mv_up();
+	                                          $objEditor->dsp_pos_adjust 
+	                                            ({ 'curs_pos' => $objCursor->{'curs_pos'} }); } ],
+	  [ 'DEFAULT', 'MOVE_CURS_DOWN',    sub { $objCursor->curs_mv_down({ 'file_len' => $objFile->file_len() });
+	                                          $objEditor->dsp_pos_adjust 
+	                                            ({ 'curs_pos' => $objCursor->{'curs_pos'} }); } ],
+	  [ 'DEFAULT', 'MOVE_CURS_LEFT',    sub { $objCursor->curs_mv_left();
+	                                          $objEditor->dsp_pos_adjust 
+	                                            ({ 'curs_pos' => $objCursor->{'curs_pos'} }); } ],
+	  [ 'DEFAULT', 'MOVE_CURS_RIGHT',   sub { $objCursor->curs_mv_right({ 'file_len' => $objFile->file_len() });
+	                                          $objEditor->dsp_pos_adjust 
+	                                            ({ 'curs_pos' => $objCursor->{'curs_pos'} }); } ],
 	  [ 'DEFAULT', 'L_MOUSE_BUTTON',    sub { $objConsole->lmouse(); } ],
 	  [ 'DEFAULT', 'R_MOUSE_BUTTON',    sub { $objConsole->rmouse(); } ],
-	  [ 'DEFAULT', 'DEBUG_OFF',         sub { $self->debug_off(); } ],
-	  [ 'DEFAULT', 'DEBUG_ON',          sub { $self->debug_on(); } ],
-	  [ 'DEFAULT', 'MOVE_BEG',          sub { $self->move_to_beginning(); } ],
-	  [ 'DEFAULT', 'MOVE_END',          sub { $self->move_to_end(); } ],
-	  [ 'DEFAULT', 'VSTRETCH',          sub { $self->vstretch(); } ],
-	  [ 'DEFAULT', 'VCOMPRESS',         sub { $self->vcompress(); } ],
+	  [ 'DEFAULT', 'DEBUG_OFF',         sub { $objDisplay->debug_off(); } ],
+	  [ 'DEFAULT', 'DEBUG_ON',          sub { $objDisplay->debug_on(); } ],
+	  [ 'DEFAULT', 'MOVE_BEG',          sub { $objCursor->set_curs_pos ({ 'curs_pos' => 0 });
+	                                          $objEditor->set_dsp_pos ({ 'dsp_pos' => 0 });
+	                                        } ],
+	  [ 'DEFAULT', 'MOVE_END',          sub { $objCursor->set_curs_ctxt ({ 'curs_ctxt' => 2 });
+	                                          $objCursor->set_curs_pos ({ 'curs_pos' => ($objFile->file_len() - 1) });
+	                                          $objEditor->dsp_pos_adjust 
+	                                            ({ 'curs_pos' => $objCursor->{'curs_pos'} }); 
+	                                        } ],
+	  [ 'DEFAULT', 'VSTRETCH',          sub { $objEditor->vstretch 
+	                                            ({ 'max_columns' => $objDisplay->max_columns(), 
+	                                               'file_len'    => $objFile->file_len() });
+	                                          $objCursor->set_sz_column ({ 'sz_column' => $objEditor->{'sz_column'} });
+	                                          $objDisplay->adjust_display(); } ],
+	  [ 'DEFAULT', 'VCOMPRESS',         sub { $objEditor->vcompress();
+	                                          $objCursor->set_sz_column ({ 'sz_column' => $objEditor->{'sz_column'} });
+	                                          $objCursor->curs_adjust 
+	                                            ({ 'dsp_pos' => $objEditor->{'dsp_pos'} });
+	                                          $objDisplay->adjust_display(); } ],
 
 	# _____________________________________________________________________________________________________
 	# EVENT DRIVEN FUNCTION TABLE: TABLE OF WRAPPER FUNCTIONS PROVIDING UNIFORM NAMES/API TO EVENT HANDLERS
@@ -207,8 +244,6 @@ sub register_event_callbacks {
 #   ____			__________	___________
 #   NAME			Event Name	DESCRIPTION
 #   ____			__________	___________
-#   debug_off()			DEBUG_OFF	Disable display of debugging information.
-#   debug_on()			DEBUG_ON	Enable  display of debugging information.
 #   insert_mode()		INSERT_MODE	Switch to 'INSERT' context.
 #   search_mode()		SEARCH_MODE	Switch to 'SEARCH' context.
 #   move_to_beginning()		MOVE_BEG	Move to first byte of file.
@@ -216,50 +251,6 @@ sub register_event_callbacks {
 #   quit()			QUIT		Break out of event_loop(), clean up, exit().
 #   vstretch()			VSTRETCH	Stretch the editor display vertically.
 #   vcompress()                 VCOMPRESS       Compress the editor display vertically.
-
-sub debug_off {
-
-	my $self = shift;
-
-	my $objDisplay = $self->{'obj'}->{'display'};
-
-	foreach my $d_element_nm 
-	  ('dbg_mouse_evt', 
-	   'dbg_keybd_evt', 
-	   'dbg_unmatched_evt', 
-	   'dbg_curs', 
-	   'dbg_display', 
-	   'dbg_count', 
-	   'dbg_console', 
-	   'errmsg_queue') {
-
-		$objDisplay->{'d_elements'}->{$d_element_nm}->{'enabled'} = 0;
-	}
-
-	return (1);
-}
-
-sub debug_on {
-
-	my $self = shift;
-
-	my $objDisplay = $self->{'obj'}->{'display'};
-
-	foreach my $d_element_nm 
-	  ('dbg_mouse_evt', 
-	   'dbg_keybd_evt', 
-	   'dbg_unmatched_evt', 
-	   'dbg_curs', 
-	   'dbg_display', 
-	   'dbg_count', 
-	   'dbg_console', 
-	   'errmsg_queue') {
-
-		$objDisplay->{'d_elements'}->{$d_element_nm}->{'enabled'} = 1;
-	}
-
-	return (1);
-}
 
 sub insert_mode {
 
@@ -364,47 +355,6 @@ sub search_mode {
 	return (1);
 }
 
-sub move_to_beginning {
-
-	my $self = shift;
-
-	my $objCursor = $self->{'obj'}->{'cursor'};
-	my $objEditor = $self->{'obj'}->{'editor'};
-
-	$objEditor->{'dsp_pos'} = 0;
-	$objCursor->{'curs_pos'} = 0;
-
-	return (1);
-}
-
-sub move_to_end {
-
-	my $self = shift;
-
-	my $objCursor = $self->{'obj'}->{'cursor'};
-	my $objEditor = $self->{'obj'}->{'editor'};
-	my $objFile   = $self->{'obj'}->{'file'};
-
-	if ($objFile->file_len() > 
-	      (($objEditor->{'sz_line'} * $objEditor->{'sz_column'}) + $objEditor->{'sz_line'})) {
-	
-		$objEditor->{'dsp_pos'} = 
-		  ($objCursor->align_line_boundary 
-		     ({ 'pos' => $objFile->file_len() }) - 
-		   (($objEditor->{'sz_line'} * $objEditor->{'sz_column'}) - 
-		       $objEditor->{'sz_line'}));
-	}
-	else {
-	
-		$objEditor->{'dsp_pos'} = 0;
-	}
-
-	$objCursor->{'curs_pos'} = ($objFile->file_len() - 1);
-	$objCursor->{'curs_ctxt'} = 2;
-
-	return (1);
-}
-
 sub quit {
 
 	my $self = shift;
@@ -415,71 +365,6 @@ sub quit {
 
 	return (1);
 }
-
-sub vstretch {
-
-	my $self = shift;
-
-	my $objDisplay   = $self->{'obj'}->{'display'};     # Used.
-	my $objEditor    = $self->{'obj'}->{'editor'};      # Used.
-	my $objEventLoop = $self->{'obj'}->{'eventloop'};   # Used.
-	my $objFile      = $self->{'obj'}->{'file'};        # Used.
-
-	if ($objEditor->{'sz_column'} <= 
-	    ($objDisplay->{'d_height'} - 
-	     ($objDisplay->{'dsp_ypad'} + 
-	      $objDisplay->{'d_elements'}->{'column_titles'}->{'e_height'} + 
-	      $objDisplay->{'d_elements'}->{'column_titles'}->{'vpad'} + 
-	      $objDisplay->{'d_elements'}->{'sep'}->{'e_height'} + 
-	      $objDisplay->{'d_elements'}->{'sep'}->{'vpad'} + 
-	      $objDisplay->{'d_elements'}->{'errmsg_queue'}->{'e_height'} + 
-	      $objDisplay->{'d_elements'}->{'errmsg_queue'}->{'vpad'}))) {
-
-		$objEditor->set_sz_column 
-		  ({ 'sz_column' => ($objEditor->{'sz_column'} + 1) });
-
-		if ($objEditor->{'dsp_pos'} > 
-		      ($objFile->file_len() - 
-			 (($objEditor->{'sz_column'} * $objEditor->{'sz_line'}) - 
-		            $objEditor->{'sz_line'}))) {
-
-			$objEditor->set_dsp_pos 
-			  ({ 'dsp_pos' => ($objEditor->{'dsp_pos'} - 
-			                   $objEditor->{'sz_line'}) });
-		}
-
-		$objEventLoop->adjust_display();
-	}
-
-	return (1);
-}
-
-sub vcompress {
-
-	my $self = shift;
-
-	my $objCursor    = $self->{'obj'}->{'cursor'};
-	my $objEditor    = $self->{'obj'}->{'editor'};
-	my $objEventLoop = $self->{'obj'}->{'eventloop'};
-
-	if ($objEditor->{'sz_column'} > 1) {
-
-		$objEditor->set_sz_column 
-		  ({ 'sz_column' => ($objEditor->{'sz_column'} - 1) });
-	}
-
-	while ($objCursor->{'curs_pos'} >= 
-	       ($objEditor->{'dsp_pos'} + 
-	        ($objEditor->{'sz_column'} * $objEditor->{'sz_line'}))) {
-
-		$objCursor->curs_mv_up();
-	}
-
-	$objEventLoop->adjust_display();
-
-	return (1);
-}
-
 
 # Functions: 'INSERT' context event handlers.
 #

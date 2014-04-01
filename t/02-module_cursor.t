@@ -20,7 +20,6 @@ use Test::More tests => 4;
 #   align_line_boundary()
 #   align_word_boundary()
 #   calc_coord_array()
-#   calc_row()
 #   calc_row_offset()
 #   comp_coord_arrays()
 #   curs_ctxt_decr()
@@ -47,7 +46,6 @@ my @objCursorSubs =
   ('align_line_boundary', 
    'align_word_boundary', 
    'calc_coord_array', 
-   'calc_row', 
    'calc_row_offset', 
    'comp_coord_arrays', 
    'curs_ctxt_decr', 

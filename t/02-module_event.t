@@ -17,8 +17,6 @@ use Test::More tests => 4;
 #   new()		IMPORTED FROM ZHex::Common.pm.
 #   obj_init()		IMPORTED FROM ZHex::Common.pm.
 # Member functions:
-#   debug_off()
-#   debug_on()
 #   init()
 #   insert_backspace()
 #   insert_char()
@@ -27,8 +25,6 @@ use Test::More tests => 4;
 #   insert_l_arrow()
 #   insert_mode()
 #   insert_r_arrow()
-#   move_to_beginning()
-#   move_to_end()
 #   quit()
 #   register_event_callbacks()
 #   search_backspace()
@@ -39,8 +35,6 @@ use Test::More tests => 4;
 #   search_l_arrow()
 #   search_mode()
 #   search_r_arrow()
-#   vstretch()
-#   vcompress()
 # Values exported: 
 #   <NONE>
 
@@ -48,9 +42,7 @@ use_ok ('ZHex::Event')
   or die "Call to use_ok() returned w/ failure (on module 'ZHex::Event')";
 
 my @objEventSubs = 
-  ('debug_off', 
-   'debug_on', 
-   'init', 
+  ('init', 
    'insert_backspace', 
    'insert_char', 
    'insert_enter', 
@@ -58,8 +50,6 @@ my @objEventSubs =
    'insert_l_arrow', 
    'insert_mode', 
    'insert_r_arrow', 
-   'move_to_beginning', 
-   'move_to_end', 
    'new', 
    'obj_init', 
    'quit', 
@@ -71,9 +61,7 @@ my @objEventSubs =
    'search_escape', 
    'search_l_arrow', 
    'search_mode', 
-   'search_r_arrow',
-   'vstretch', 
-   'vcompress');
+   'search_r_arrow');
 
 can_ok ('ZHex::Event', 'new');
 my $objEvent = ZHex::Event->new();

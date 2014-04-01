@@ -37,6 +37,8 @@ sub init {
 #   Function Name	Description
 #   _____________	___________
 #   chr_map_set()	...
+#   chr_map_hex_val()	...
+#   chr_map_ord_val()	...
 #   chr_map()		...
 
 sub chr_map_set {
@@ -58,391 +60,449 @@ sub chr_map_set {
 	return (1);
 }
 
+sub chr_map_hex_val {
+
+	my $self = shift;
+	my $arg  = shift;
+
+	if (! defined $arg || 
+	      ! (ref ($arg) eq 'HASH')) 
+		{ die "Call to chr_map_hex_val() failed, argument must be hash reference"; }
+
+	if (! exists  $arg->{'lname'} || 
+	    ! defined $arg->{'lname'} || 
+	             ($arg->{'lname'} eq '')) 
+		{ die "Call to chr_map_hex_val() failed, value associated w/ key 'lname' may not be undef/empty"; }
+
+	if (exists  $self->{'chr_map'} && 
+	    defined $self->{'chr_map'} && 
+	    exists  $self->{'chr_map'}->{ $arg->{'lname'} } && 
+	    defined $self->{'chr_map'}->{ $arg->{'lname'} } && 
+	    exists  $self->{'chr_map'}->{ $arg->{'lname'} }->{'hex'} && 
+	    defined $self->{'chr_map'}->{ $arg->{'lname'} }->{'hex'}) {
+
+		return ($self->{'chr_map'}->{ $arg->{'lname'} }->{'hex'});
+	}
+	else {
+
+		return (undef);
+	}
+}
+
+sub chr_map_ord_val {
+
+	my $self = shift;
+	my $arg  = shift;
+
+	if (! defined $arg || 
+	      ! (ref ($arg) eq 'HASH')) 
+		{ die "Call to chr_map_ord_val() failed, argument must be hash reference"; }
+
+	if (! exists  $arg->{'lname'} || 
+	    ! defined $arg->{'lname'} || 
+	             ($arg->{'lname'} eq '')) 
+		{ die "Call to chr_map_ord_val() failed, value associated w/ key 'lname' may not be undef/empty"; }
+
+	if (exists  $self->{'chr_map'} && 
+	    defined $self->{'chr_map'} && 
+	    exists  $self->{'chr_map'}->{ $arg->{'lname'} } && 
+	    defined $self->{'chr_map'}->{ $arg->{'lname'} } && 
+	    exists  $self->{'chr_map'}->{ $arg->{'lname'} }->{'ord'} && 
+	    defined $self->{'chr_map'}->{ $arg->{'lname'} }->{'ord'}) {
+
+		return ($self->{'chr_map'}->{ $arg->{'lname'} }->{'ord'});
+	}
+	else {
+
+		return (undef);
+	}
+}
+
 sub chr_map {
 
 	my $self = shift;
 
 	my $chr_map = 
 	  { 'NULL' => 
-	    { 'byte' => '0', 
+	    { 'ord' => '0', 
 	      'hex'  => '00' }, 
 	  'START OF HEADING' => 
-	    { 'byte' => '1', 
+	    { 'ord' => '1', 
 	      'hex'  => '01'}, 
 	  'START OF TEXT' => 
-	    { 'byte' => '2', 
+	    { 'ord'  => '2', 
 	      'hex'  => '02'}, 
 	  'END OF TEXT' => 
-	    { 'byte' => '3', 
+	    { 'ord'  => '3', 
 	      'hex'  => '03'}, 
 	  'END OF TRANSMISSION' => 
-	    { 'byte' => '4', 
+	    { 'ord'  => '4', 
 	      'hex'  => '04'}, 
 	  'ENQUIRY' => 
-	    { 'byte' => '5', 
+	    { 'ord'  => '5', 
 	      'hex'  => '05'}, 
 	  'ACKNOWLEDGE' => 
-	    { 'byte' => '6', 
+	    { 'ord'  => '6', 
 	      'hex'  => '06'}, 
 	  'BELL' => 
-	    { 'byte' => '7', 
+	    { 'ord'  => '7', 
 	      'hex'  => '07'}, 
 	  'BACKSPACE' => 
-	    { 'byte' => '8', 
+	    { 'ord'  => '8', 
 	      'hex'  => '08'}, 
 	  'CHARACTER TABULATION' => 
-	    { 'byte' => '9', 
+	    { 'ord'  => '9', 
 	      'hex'  => '09'}, 
 	  'LINE FEED (LF)' => 
-	    { 'byte' => '10', 
+	    { 'ord'  => '10', 
 	      'hex'  => '0a'}, 
 	  'LINE TABULATION' => 
-	    { 'byte' => '11', 
+	    { 'ord'  => '11', 
 	      'hex'  => '0b'}, 
 	  'FORM FEED (FF)' => 
-	    { 'byte' => '12', 
+	    { 'ord'  => '12', 
 	      'hex'  => '0c'}, 
 	  'CARRIAGE RETURN (CR)' => 
-	    { 'byte' => '13', 
+	    { 'ord'  => '13', 
 	      'hex'  => '0d'}, 
 	  'SHIFT OUT' => 
-	    { 'byte' => '14', 
+	    { 'ord'  => '14', 
 	      'hex'  => '0e'}, 
 	  'SHIFT IN' => 
-	    { 'byte' => '15', 
+	    { 'ord'  => '15', 
 	      'hex'  => '0f'}, 
 	  'DATA LINK ESCAPE' => 
-	    { 'byte' => '16', 
+	    { 'ord'  => '16', 
 	      'hex'  => '10'}, 
 	  'DEVICE CONTROL ONE' => 
-	    { 'byte' => '17', 
+	    { 'ord'  => '17', 
 	      'hex'  => '11'}, 
 	  'DEVICE CONTROL TWO' => 
-	    { 'byte' => '18', 
+	    { 'ord'  => '18', 
 	      'hex'  => '12'}, 
 	  'DEVICE CONTROL THREE' => 
-	    { 'byte' => '19', 
+	    { 'ord'  => '19', 
 	      'hex'  => '13'}, 
 	  'DEVICE CONTROL FOUR' => 
-	    { 'byte' => '20', 
+	    { 'ord'  => '20', 
 	      'hex'  => '14'}, 
 	  'NEGATIVE ACKNOWLEDGE' => 
-	    { 'byte' => '21', 
+	    { 'ord'  => '21', 
 	      'hex'  => '15'}, 
 	  'SYNCHRONOUS IDLE' => 
-	    { 'byte' => '22', 
+	    { 'ord'  => '22', 
 	      'hex'  => '16'}, 
 	  'END OF TRANSMISSION BLOCK' => 
-	    { 'byte' => '23', 
+	    { 'ord'  => '23', 
 	      'hex'  => '17'}, 
 	  'CANCEL' => 
-	    { 'byte' => '24', 
+	    { 'ord'  => '24', 
 	      'hex'  => '18'}, 
 	  'END OF MEDIUM' => 
-	    { 'byte' => '25', 
+	    { 'ord'  => '25', 
 	      'hex'  => '19'}, 
 	  'SUBSTITUTE' => 
-	    { 'byte' => '26', 
+	    { 'ord'  => '26', 
 	      'hex'  => '1a'}, 
 	  'ESCAPE' => 
-	    { 'byte' => '27', 
+	    { 'ord'  => '27', 
 	      'hex'  => '1b'}, 
 	  'INFORMATION SEPARATOR FOUR' => 
-	    { 'byte' => '28', 
+	    { 'ord'  => '28', 
 	      'hex'  => '1c'}, 
 	  'INFORMATION SEPARATOR THREE' => 
-	    { 'byte' => '29', 
+	    { 'ord'  => '29', 
 	      'hex'  => '1d'}, 
 	  'INFORMATION SEPARATOR TWO' => 
-	    { 'byte' => '30', 
+	    { 'ord'  => '30', 
 	      'hex'  => '1e'}, 
 	  'INFORMATION SEPARATOR ONE' => 
-	    { 'byte' => '31', 
+	    { 'ord'  => '31', 
 	      'hex'  => '1f'}, 
 	  'SPACE' => 
-	    { 'byte' => '32', 
+	    { 'ord'  => '32', 
 	      'hex'  => '20'}, 
 	  'EXCLAMATION MARK' => 
-	    { 'byte' => '33', 
+	    { 'ord'  => '33', 
 	      'hex'  => '21'}, 
 	  'QUOTATION MARK' => 
-	    { 'byte' => '34', 
+	    { 'ord'  => '34', 
 	      'hex'  => '22'}, 
 	  'NUMBER SIGN' => 
-	    { 'byte' => '35', 
+	    { 'ord'  => '35', 
 	      'hex'  => '23'}, 
 	  'DOLLAR SIGN' => 
-	    { 'byte' => '36', 
+	    { 'ord'  => '36', 
 	      'hex'  => '24'}, 
 	  'PERCENT SIGN' => 
-	    { 'byte' => '37', 
+	    { 'ord'  => '37', 
 	      'hex'  => '25'}, 
 	  'AMPERSAND' =>  
-	    { 'byte' => '38', 
+	    { 'ord'  => '38', 
 	      'hex'  => '26'}, 
 	  'APOSTROPHE' =>  
-	    { 'byte' => '39', 
+	    { 'ord'  => '39', 
 	      'hex'  => '27'}, 
 	  'LEFT PARENTHESIS' => 
-	    { 'byte' => '40', 
+	    { 'ord'  => '40', 
 	      'hex'  => '28'}, 
 	  'RIGHT PARENTHESIS' => 
-	    { 'byte' => '41', 
+	    { 'ord'  => '41', 
 	      'hex'  => '29'}, 
 	  'ASTERISK' => 
-	    { 'byte' => '42', 
+	    { 'ord'  => '42', 
 	      'hex'  => '2a'}, 
 	  'PLUS SIGN' => 
-	    { 'byte' => '43', 
+	    { 'ord'  => '43', 
 	      'hex'  => '2b'}, 
 	  'COMMA' => 
-	    { 'byte' => '44', 
+	    { 'ord'  => '44', 
 	      'hex'  => '2c'}, 
 	  'HYPHEN-MINUS' => 
-	    { 'byte' => '45', 
+	    { 'ord'  => '45', 
 	      'hex'  => '2d'}, 
 	  'FULL STOP' => 
-	    { 'byte' => '46', 
+	    { 'ord'  => '46', 
 	      'hex'  => '2e'}, 
 	  'SOLIDUS' => 
-	    { 'byte' => '47', 
+	    { 'ord'  => '47', 
 	      'hex'  => '2f'}, 
 	  'DIGIT ZERO' => 
-	    { 'byte' => '48', 
+	    { 'ord'  => '48', 
 	      'hex'  => '30'}, 
 	  'DIGIT ONE' => 
-	    { 'byte' => '49', 
+	    { 'ord'  => '49', 
 	      'hex'  => '31'}, 
 	  'DIGIT TWO' => 
-	    { 'byte' => '50', 
+	    { 'ord'  => '50', 
 	      'hex'  => '32'}, 
 	  'DIGIT THREE' => 
-	    { 'byte' => '51', 
+	    { 'ord'  => '51', 
 	      'hex'  => '33'}, 
 	  'DIGIT FOUR' => 
-	    { 'byte' => '52', 
+	    { 'ord'  => '52', 
 	      'hex'  => '34'}, 
 	  'DIGIT FIVE' => 
-	    { 'byte' => '53', 
+	    { 'ord'  => '53', 
 	      'hex'  => '35'}, 
 	  'DIGIT SIX' => 
-	    { 'byte' => '54', 
+	    { 'ord'  => '54', 
 	      'hex'  => '36'}, 
 	  'DIGIT SEVEN' => 
-	    { 'byte' => '55', 
+	    { 'ord'  => '55', 
 	      'hex'  => '37'}, 
 	  'DIGIT EIGHT' => 
-	    { 'byte' => '56', 
+	    { 'ord'  => '56', 
 	      'hex'  => '38'}, 
 	  'DIGIT NINE' => 
-	    { 'byte' => '57', 
+	    { 'ord'  => '57', 
 	      'hex'  => '39'}, 
 	  'COLON' => 
-	    { 'byte' => '58', 
+	    { 'ord'  => '58', 
 	      'hex'  => '3a'}, 
 	  'SEMICOLON' => 
-	    { 'byte' => '59', 
+	    { 'ord'  => '59', 
 	      'hex'  => '3b'}, 
 	  'LESS-THAN SIGN' => 
-	    { 'byte' => '60', 
+	    { 'ord'  => '60', 
 	      'hex'  => '3c'}, 
 	  'EQUALS SIGN' => 
-	    { 'byte' => '61', 
+	    { 'ord'  => '61', 
 	      'hex'  => '3d'}, 
 	  'GREATER-THAN SIGN' => 
-	    { 'byte' => '62', 
+	    { 'ord'  => '62', 
 	      'hex'  => '3e'}, 
 	  'QUESTION MARK' => 
-	    { 'byte' => '63', 
+	    { 'ord'  => '63', 
 	      'hex'  => '3f'}, 
 	  'COMMERCIAL AT' => 
-	    { 'byte' => '64', 
+	    { 'ord'  => '64', 
 	      'hex'  => '40'}, 
 	  'LATIN CAPITAL LETTER A' => 
-	    { 'byte' => '65', 
+	    { 'ord'  => '65', 
 	      'hex'  => '41'}, 
 	  'LATIN CAPITAL LETTER B' => 
-	    { 'byte' => '66', 
+	    { 'ord'  => '66', 
 	      'hex'  => '42'}, 
 	  'LATIN CAPITAL LETTER C' => 
-	    { 'byte' => '67', 
+	    { 'ord'  => '67', 
 	      'hex'  => '43'}, 
 	  'LATIN CAPITAL LETTER D' => 
-	    { 'byte' => '68', 
+	    { 'ord'  => '68', 
 	      'hex'  => '44'}, 
 	  'LATIN CAPITAL LETTER E' => 
-	    { 'byte' => '69', 
+	    { 'ord'  => '69', 
 	      'hex'  => '45'}, 
 	  'LATIN CAPITAL LETTER F' => 
-	    { 'byte' => '70', 
+	    { 'ord'  => '70', 
 	      'hex'  => '46'}, 
 	  'LATIN CAPITAL LETTER G' => 
-	    { 'byte' => '71', 
+	    { 'ord'  => '71', 
 	      'hex'  => '47'}, 
 	  'LATIN CAPITAL LETTER H' => 
-	    { 'byte' => '72', 
+	    { 'ord'  => '72', 
 	      'hex'  => '48'}, 
 	  'LATIN CAPITAL LETTER I' => 
-	    { 'byte' => '73', 
+	    { 'ord'  => '73', 
 	      'hex'  => '49'}, 
 	  'LATIN CAPITAL LETTER J' => 
-	    { 'byte' => '74', 
+	    { 'ord'  => '74', 
 	      'hex'  => '4a'}, 
 	  'LATIN CAPITAL LETTER K' => 
-	    { 'byte' => '75', 
+	    { 'ord'  => '75', 
 	      'hex'  => '4b'}, 
 	  'LATIN CAPITAL LETTER L' => 
-	    { 'byte' => '76', 
+	    { 'ord'  => '76', 
 	      'hex'  => '4c'}, 
 	  'LATIN CAPITAL LETTER M' => 
-	    { 'byte' => '77', 
+	    { 'ord'  => '77', 
 	      'hex'  => '4d'},
 	  'LATIN CAPITAL LETTER N' => 
-	    { 'byte' => '78', 
+	    { 'ord'  => '78', 
 	      'hex'  => '4e'}, 
 	  'LATIN CAPITAL LETTER O' => 
-	    { 'byte' => '79', 
+	    { 'ord'  => '79', 
 	      'hex'  => '4f'}, 
 	  'LATIN CAPITAL LETTER P' => 
-	    { 'byte' => '80', 
+	    { 'ord'  => '80', 
 	      'hex'  => '50'}, 
 	  'LATIN CAPITAL LETTER Q' => 
-	    { 'byte' => '81', 
+	    { 'ord'  => '81', 
 	      'hex'  => '51'}, 
 	  'LATIN CAPITAL LETTER R' => 
-	    { 'byte' => '82', 
+	    { 'ord'  => '82', 
 	      'hex'  => '52'}, 
 	  'LATIN CAPITAL LETTER S' => 
-	    { 'byte' => '83', 
+	    { 'ord'  => '83', 
 	      'hex'  => '53'}, 
 	  'LATIN CAPITAL LETTER T' => 
-	    { 'byte' => '84', 
+	    { 'ord'  => '84', 
 	      'hex'  => '54'}, 
 	  'LATIN CAPITAL LETTER U' => 
-	    { 'byte' => '85', 
+	    { 'ord'  => '85', 
 	      'hex'  => '55'}, 
 	  'LATIN CAPITAL LETTER V' => 
-	    { 'byte' => '86', 
+	    { 'ord'  => '86', 
 	      'hex'  => '56'}, 
 	  'LATIN CAPITAL LETTER W' => 
-	    { 'byte' => '87', 
+	    { 'ord'  => '87', 
 	      'hex'  => '57'}, 
 	  'LATIN CAPITAL LETTER X' => 
-	    { 'byte' => '88', 
+	    { 'ord'  => '88', 
 	      'hex'  => '58'}, 
 	  'LATIN CAPITAL LETTER Y' => 
-	    { 'byte' => '89', 
+	    { 'ord'  => '89', 
 	      'hex'  => '59'}, 
 	  'LATIN CAPITAL LETTER Z' => 
-	    { 'byte' => '90', 
+	    { 'ord'  => '90', 
 	      'hex'  => '5a'}, 
 	  'LEFT SQUARE BRACKET' => 
-	    { 'byte' => '91', 
+	    { 'ord'  => '91', 
 	      'hex'  => '5b'}, 
 	  'REVERSE SOLIDUS' => 
-	    { 'byte' => '92', 
+	    { 'ord'  => '92', 
 	      'hex'  => '5c'}, 
 	  'RIGHT SQUARE BRACKET' => 
-	    { 'byte' => '93', 
+	    { 'ord'  => '93', 
 	      'hex'  => '5d'}, 
 	  'CIRCUMFLEX ACCENT' => 
-	    { 'byte' => '94', 
+	    { 'ord'  => '94', 
 	      'hex'  => '5e'}, 
 	  'LOW LINE' => 
-	    { 'byte' => '95', 
+	    { 'ord'  => '95', 
 	      'hex'  => '5f'}, 
 	  'GRAVE ACCENT' => 
-	    { 'byte' => '96', 
+	    { 'ord'  => '96', 
 	      'hex'  => '60'}, 
 	  'LATIN SMALL LETTER A' => 
-	    { 'byte' => '97', 
+	    { 'ord'  => '97', 
 	      'hex'  => '61'}, 
 	  'LATIN SMALL LETTER B' => 
-	    { 'byte' => '98', 
+	    { 'ord'  => '98', 
 	      'hex'  => '62'}, 
 	  'LATIN SMALL LETTER C' => 
-	    { 'byte' => '99', 
+	    { 'ord'  => '99', 
 	      'hex'  => '63'}, 
 	  'LATIN SMALL LETTER D' => 
-	    { 'byte' => '100', 
+	    { 'ord'  => '100', 
 	      'hex'  => '64'}, 
 	  'LATIN SMALL LETTER E' => 
-	    { 'byte' => '101', 
+	    { 'ord'  => '101', 
 	      'hex'  => '65'}, 
 	  'LATIN SMALL LETTER F' => 
-	    { 'byte' => '102', 
+	    { 'ord'  => '102', 
 	      'hex'  => '66'}, 
 	  'LATIN SMALL LETTER G' => 
-	    { 'byte' => '103', 
+	    { 'ord'  => '103', 
 	      'hex'  => '67'}, 
 	  'LATIN SMALL LETTER H' => 
-	    { 'byte' => '104', 
+	    { 'ord'  => '104', 
 	      'hex'  => '68'}, 
 	  'LATIN SMALL LETTER I' => 
-	    { 'byte' => '105', 
+	    { 'ord'  => '105', 
 	      'hex'  => '69'}, 
 	  'LATIN SMALL LETTER J' => 
-	    { 'byte' => '106', 
+	    { 'ord'  => '106', 
 	      'hex'  => '6a'}, 
 	  'LATIN SMALL LETTER K' => 
-	    { 'byte' => '107', 
+	    { 'ord'  => '107', 
 	      'hex'  => '6b'}, 
 	  'LATIN SMALL LETTER L' => 
-	    { 'byte' => '108', 
+	    { 'ord'  => '108', 
 	      'hex'  => '6c'}, 
 	  'LATIN SMALL LETTER M' => 
-	    { 'byte' => '109', 
+	    { 'ord'  => '109', 
 	      'hex'  => '6d'}, 
 	  'LATIN SMALL LETTER N' => 
-	    { 'byte' => '110', 
+	    { 'ord'  => '110', 
 	      'hex'  => '6e'}, 
 	  'LATIN SMALL LETTER O' => 
-	    { 'byte' => '111', 
+	    { 'ord'  => '111', 
 	      'hex'  => '6f'}, 
 	  'LATIN SMALL LETTER P' => 
-	    { 'byte' => '112', 
+	    { 'ord'  => '112', 
 	      'hex'  => '70'}, 
 	  'LATIN SMALL LETTER Q' => 
-	    { 'byte' => '113', 
+	    { 'ord'  => '113', 
 	      'hex'  => '71'}, 
 	  'LATIN SMALL LETTER R' => 
-	    { 'byte' => '114', 
+	    { 'ord'  => '114', 
 	      'hex'  => '72'}, 
 	  'LATIN SMALL LETTER S' => 
-	    { 'byte' => '115', 
+	    { 'ord'  => '115', 
 	      'hex'  => '73'}, 
 	  'LATIN SMALL LETTER T' => 
-	    { 'byte' => '116', 
+	    { 'ord'  => '116', 
 	      'hex'  => '74'}, 
 	  'LATIN SMALL LETTER U' => 
-	    { 'byte' => '117', 
+	    { 'ord'  => '117', 
 	      'hex'  => '75'}, 
 	  'LATIN SMALL LETTER V' => 
-	    { 'byte' => '118', 
+	    { 'ord'  => '118', 
 	      'hex'  => '76'}, 
 	  'LATIN SMALL LETTER W' => 
-	    { 'byte' => '119', 
+	    { 'ord'  => '119', 
 	      'hex'  => '77'}, 
 	  'LATIN SMALL LETTER X' => 
-	    { 'byte' => '120', 
+	    { 'ord'  => '120', 
 	      'hex'  => '78'}, 
 	  'LATIN SMALL LETTER Y' => 
-	    { 'byte' => '121', 
+	    { 'ord'  => '121', 
 	      'hex'  => '79'}, 
 	  'LATIN SMALL LETTER Z' => 
-	    { 'byte' => '122', 
+	    { 'ord'  => '122', 
 	      'hex'  => '7a'}, 
 	  'LEFT CURLY BRACKET' => 
-	    { 'byte' => '123', 
+	    { 'ord'  => '123', 
 	      'hex'  => '7b'}, 
 	  'VERTICAL LINE' => 
-	    { 'byte' => '124', 
+	    { 'ord'  => '124', 
 	      'hex'  => '7c'}, 
 	  'RIGHT CURLY BRACKET' => 
-	    { 'byte' => '125', 
+	    { 'ord'  => '125', 
 	      'hex'  => '7d'}, 
 	  'TILDE' => 
-	    { 'byte' => '126', 
+	    { 'ord'  => '126',  
 	      'hex'  => '7e'}
 	};
 
@@ -477,7 +537,7 @@ values and unicode names. The following code is an example of the data stucture
 defined by the chr_map() function:
 
     'LATIN SMALL LETTER Z' => 
-      {'byte' => '122', 
+      {'ord'  => '122', 
        'hex'  => '7a'}, 
 
 Usage:
@@ -499,6 +559,14 @@ Method init()...
 
 =head2 chr_map_set
 Method chr_map_set()...
+= cut
+
+=head2 chr_map_hex_val
+Method chr_map_hex_val()...
+= cut
+
+=head2 chr_map_ord_val
+Method chr_map_ord_val()...
 = cut
 
 =head2 chr_map
