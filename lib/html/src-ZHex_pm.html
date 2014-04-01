@@ -1,0 +1,654 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="UTF-8">
+	<title>ZHex - ZebraHex Editor v0.01: Project Source Code</title>
+	<link rel="stylesheet" type="text/css" href="desert.css"/>
+</head>
+<body>
+	<h2>ZHex - ZebraHex Editor v0.01</h2>
+	<p>ZHex Editor source code filename: ../ZHex.pm</p>
+	<div><pre class="prettyprint"><span class="com">#!/usr/bin/perl
+</span><span class="pln">
+</span><span class="lit">package</span><span class="pln"> </span><span class="atn">ZHex</span><span class="pun">;</span><span class="pln">
+</span><span class="pln">
+</span><span class="kwd">use</span><span class="pln"> </span><span class="atv">5.006</span><span class="pun">;</span><span class="pln">
+</span><span class="kwd">use</span><span class="pln"> </span><span class="kwd">strict</span><span class="pun">;</span><span class="pln">
+</span><span class="kwd">use</span><span class="pln"> </span><span class="kwd">warnings</span><span class="pln"> </span><span class="str">FATAL</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;all&#39;</span><span class="pun">;</span><span class="pln">
+</span><span class="pln">
+</span><span class="kwd">use</span><span class="pln"> </span><span class="pln">ZHex::Common</span><span class="pln"> 
+</span><span class="pln">  </span><span class="str">qw(new 
+     init 
+     obj_init 
+     $VERS 
+     CURS_POS
+     CURS_CTXT
+     DSP_POS
+     SZ_WORD
+     SZ_LINE
+     SZ_COLUMN)</span><span class="pun">;</span><span class="pln">
+</span><span class="pln">
+</span><span class="kwd">use</span><span class="pln"> </span><span class="pln">ZHex::CharMap</span><span class="pun">;</span><span class="pln">
+</span><span class="kwd">use</span><span class="pln"> </span><span class="pln">ZHex::Console</span><span class="pun">;</span><span class="pln">
+</span><span class="kwd">use</span><span class="pln"> </span><span class="pln">ZHex::Cursor</span><span class="pun">;</span><span class="pln">
+</span><span class="kwd">use</span><span class="pln"> </span><span class="pln">ZHex::Debug</span><span class="pun">;</span><span class="pln">
+</span><span class="kwd">use</span><span class="pln"> </span><span class="pln">ZHex::Display</span><span class="pun">;</span><span class="pln">
+</span><span class="kwd">use</span><span class="pln"> </span><span class="pln">ZHex::Editor</span><span class="pun">;</span><span class="pln">
+</span><span class="kwd">use</span><span class="pln"> </span><span class="pln">ZHex::Event</span><span class="pun">;</span><span class="pln">
+</span><span class="kwd">use</span><span class="pln"> </span><span class="pln">ZHex::EventLoop</span><span class="pun">;</span><span class="pln">
+</span><span class="kwd">use</span><span class="pln"> </span><span class="pln">ZHex::File</span><span class="pun">;</span><span class="pln">
+</span><span class="pln">
+</span><span class="kwd">use</span><span class="pln"> </span><span class="pln">Getopt::Long</span><span class="pun">;</span><span class="pln">
+</span><span class="pln">
+</span><span class="kwd">BEGIN</span><span class="pln"> </span><span class="pun">{</span><span class="pln"> </span><span class="kwd">require</span><span class="pln"> </span><span class="pln">Exporter</span><span class="pun">;</span><span class="pln">
+</span><span class="pln">	</span><span class="kwd">our</span><span class="pln"> </span><span class="typ">$VERSION</span><span class="pln">   </span><span class="pun">=</span><span class="pln"> </span><span class="typ">$VERS</span><span class="pun">;</span><span class="pln">
+</span><span class="pln">	</span><span class="kwd">our</span><span class="pln"> </span><span class="typ">@ISA</span><span class="pln">       </span><span class="pun">=</span><span class="pln"> </span><span class="str">qw(Exporter)</span><span class="pun">;</span><span class="pln">
+</span><span class="pln">	</span><span class="kwd">our</span><span class="pln"> </span><span class="typ">@EXPORT</span><span class="pln">    </span><span class="pun">=</span><span class="pln"> </span><span class="str">qw()</span><span class="pun">;</span><span class="pln">
+</span><span class="pln">	</span><span class="kwd">our</span><span class="pln"> </span><span class="typ">@EXPORT_OK</span><span class="pln"> </span><span class="pun">=</span><span class="pln"> </span><span class="str">qw()</span><span class="pun">;</span><span class="pln"> 
+</span><span class="pun">}</span><span class="pln">
+</span><span class="pln">
+</span><span class="lit">sub</span><span class="pln"> </span><span class="typ">init_config_main</span><span class="pln"> </span><span class="pun">{</span><span class="pln">
+</span><span class="pln">
+	</span><span class="kwd">my</span><span class="pln"> </span><span class="typ">$self</span><span class="pln"> </span><span class="pun">=</span><span class="pln"> </span><span class="kwd">shift</span><span class="pun">;</span><span class="pln">
+</span><span class="pln">
+	</span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;cfg&#39;</span><span class="pun">}</span><span class="pln"> </span><span class="pun">=</span><span class="pln"> </span><span class="pun">{</span><span class="pun">}</span><span class="pun">;</span><span class="pln">   </span><span class="com"># User configurable settings stored here...</span><span class="pln">
+</span><span class="pln">
+</span><span class="com">	# ______________________________
+</span><span class="com">	# Member variables (Console.pm).
+</span><span class="pln">
+	</span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;cfg&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;w32cons_title&#39;</span><span class="pun">}</span><span class="pln"> </span><span class="pun">=</span><span class="pln"> 
+</span><span class="pln">	  </span><span class="str">&#39;ZHex - Console Based Hex Editor (&quot; . $VERS . &quot;) (03/12/2014) (by Double Z)&#39;</span><span class="pun">;</span><span class="pln">
+</span><span class="pln">
+</span><span class="com">	# ______________________________
+</span><span class="com">	# Member variables (Cursor.pm).
+</span><span class="pln">
+	</span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;cfg&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;curs_pos&#39;</span><span class="pun">}</span><span class="pln">  </span><span class="pun">=</span><span class="pln"> </span><span class="pln">CURS_POS</span><span class="pun">;</span><span class="pln">    </span><span class="com"># The first character (byte number) appearing at top/left of hex editor display.</span><span class="pln">
+</span><span class="pln">	</span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;cfg&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;curs_ctxt&#39;</span><span class="pun">}</span><span class="pln"> </span><span class="pun">=</span><span class="pln"> </span><span class="pln">CURS_CTXT</span><span class="pun">;</span><span class="pln">   </span><span class="com"># ...</span><span class="pln">
+</span><span class="pln">	</span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;cfg&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;sz_word&#39;</span><span class="pun">}</span><span class="pln">   </span><span class="pun">=</span><span class="pln"> </span><span class="pln">SZ_WORD</span><span class="pun">;</span><span class="pln">     </span><span class="com"># Size: width (in characters) of a word.</span><span class="pln">
+</span><span class="pln">	</span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;cfg&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;sz_line&#39;</span><span class="pun">}</span><span class="pln">   </span><span class="pun">=</span><span class="pln"> </span><span class="pln">SZ_LINE</span><span class="pun">;</span><span class="pln">     </span><span class="com"># Size: width (in characters) of a line.</span><span class="pln">
+</span><span class="pln">	</span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;cfg&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;sz_column&#39;</span><span class="pun">}</span><span class="pln"> </span><span class="pun">=</span><span class="pln"> </span><span class="pln">SZ_COLUMN</span><span class="pun">;</span><span class="pln">   </span><span class="com"># Size: height (in lines) of a column.</span><span class="pln">
+</span><span class="pln">
+</span><span class="com">	# ______________________________
+</span><span class="com">	# Member variables (Display.pm).
+</span><span class="pln">
+	</span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;cfg&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;dsp&#39;</span><span class="pun">}</span><span class="pln">        </span><span class="pun">=</span><span class="pln"> </span><span class="str">&#39;&#39;</span><span class="pun">;</span><span class="pln">
+</span><span class="pln">	</span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;cfg&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;dsp_prev&#39;</span><span class="pun">}</span><span class="pln">   </span><span class="pun">=</span><span class="pln"> </span><span class="str">&#39;&#39;</span><span class="pun">;</span><span class="pln">
+</span><span class="pln">	</span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;cfg&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;dsp_xpad&#39;</span><span class="pun">}</span><span class="pln">   </span><span class="pun">=</span><span class="pln">  </span><span class="atv">2</span><span class="pun">;</span><span class="pln">   </span><span class="com"># &quot;X&quot; padding (horizontal).</span><span class="pln">
+</span><span class="pln">	</span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;cfg&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;dsp_ypad&#39;</span><span class="pun">}</span><span class="pln">   </span><span class="pun">=</span><span class="pln">  </span><span class="atv">2</span><span class="pun">;</span><span class="pln">   </span><span class="com"># &quot;Y&quot; padding (vertical).</span><span class="pln">
+</span><span class="pln">	</span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;cfg&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;d_width&#39;</span><span class="pun">}</span><span class="pln">    </span><span class="pun">=</span><span class="pln"> </span><span class="str">&#39;&#39;</span><span class="pun">;</span><span class="pln"> 
+</span><span class="pln">	</span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;cfg&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;d_height&#39;</span><span class="pun">}</span><span class="pln">   </span><span class="pun">=</span><span class="pln"> </span><span class="str">&#39;&#39;</span><span class="pun">;</span><span class="pln">
+</span><span class="pln">	</span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;cfg&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;d_elements&#39;</span><span class="pun">}</span><span class="pln"> </span><span class="pun">=</span><span class="pln"> </span><span class="str">&#39;&#39;</span><span class="pun">;</span><span class="pln">
+</span><span class="pln">	</span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;cfg&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;c_elements&#39;</span><span class="pun">}</span><span class="pln"> </span><span class="pun">=</span><span class="pln"> </span><span class="str">&#39;&#39;</span><span class="pun">;</span><span class="pln">
+</span><span class="pln">
+</span><span class="com">	# ______________________________
+</span><span class="com">	# Member variables (Editor.pm).
+</span><span class="pln">
+	</span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;cfg&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;dsp_pos&#39;</span><span class="pun">}</span><span class="pln">    </span><span class="pun">=</span><span class="pln"> </span><span class="pln">DSP_POS</span><span class="pun">;</span><span class="pln">     </span><span class="com"># The first character (byte number) appearing at top/left of hex editor display.</span><span class="pln">
+</span><span class="pln">	</span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;cfg&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;sz_word&#39;</span><span class="pun">}</span><span class="pln">    </span><span class="pun">=</span><span class="pln"> </span><span class="pln">SZ_WORD</span><span class="pun">;</span><span class="pln">     </span><span class="com"># Size: width (in characters) of a word.</span><span class="pln">
+</span><span class="pln">	</span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;cfg&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;sz_line&#39;</span><span class="pun">}</span><span class="pln">    </span><span class="pun">=</span><span class="pln"> </span><span class="pln">SZ_LINE</span><span class="pun">;</span><span class="pln">     </span><span class="com"># Size: width (in characters) of a line.</span><span class="pln">
+</span><span class="pln">	</span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;cfg&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;sz_column&#39;</span><span class="pun">}</span><span class="pln">  </span><span class="pun">=</span><span class="pln"> </span><span class="pln">SZ_COLUMN</span><span class="pun">;</span><span class="pln">   </span><span class="com"># Size: height (in lines) of a column.</span><span class="pln">
+</span><span class="pln">	</span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;cfg&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;horiz_rule&#39;</span><span class="pun">}</span><span class="pln"> </span><span class="pun">=</span><span class="pln"> </span><span class="str">&#39;|&#39;</span><span class="pun">;</span><span class="pln">         </span><span class="com"># Word seperator: a vertical line used in display for readability.</span><span class="pln">
+</span><span class="pln">	</span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;cfg&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;oob_char&#39;</span><span class="pun">}</span><span class="pln">   </span><span class="pun">=</span><span class="pln"> </span><span class="str">&#39;-&#39;</span><span class="pun">;</span><span class="pln">         </span><span class="com"># Out-of-bounds character: displayed in place of non-displayable characters. </span><span class="pln">
+</span><span class="pln">
+</span><span class="com">	# ______________________________
+</span><span class="com">	# Member variables (Event.pm).
+</span><span class="pln">
+	</span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;cfg&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;cb&#39;</span><span class="pun">}</span><span class="pln"> </span><span class="pun">=</span><span class="pln"> </span><span class="pun">{</span><span class="pun">}</span><span class="pun">;</span><span class="pln">
+</span><span class="pln">	</span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;cfg&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;cb&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;DEFAULT&#39;</span><span class="pun">}</span><span class="pln"> </span><span class="pun">=</span><span class="pln"> </span><span class="pun">{</span><span class="pun">}</span><span class="pun">;</span><span class="pln">   </span><span class="com"># DEFAULT context event handlers (callback subroutines).</span><span class="pln">
+</span><span class="pln">	</span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;cfg&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;cb&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;INSERT&#39;</span><span class="pun">}</span><span class="pln">  </span><span class="pun">=</span><span class="pln"> </span><span class="pun">{</span><span class="pun">}</span><span class="pun">;</span><span class="pln">   </span><span class="com"># INSERT  context event handlers (callback subroutines).</span><span class="pln">
+</span><span class="pln">	</span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;cfg&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;cb&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;SEARCH&#39;</span><span class="pun">}</span><span class="pln">  </span><span class="pun">=</span><span class="pln"> </span><span class="pun">{</span><span class="pun">}</span><span class="pun">;</span><span class="pln">   </span><span class="com"># SEARCH  context event handlers (callback subroutines).</span><span class="pln">
+</span><span class="pln">	</span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;cfg&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;search_str&#39;</span><span class="pun">}</span><span class="pln">      </span><span class="pun">=</span><span class="pln"> </span><span class="str">&#39;&#39;</span><span class="pun">;</span><span class="pln">
+</span><span class="pln">	</span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;cfg&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;search_pos&#39;</span><span class="pun">}</span><span class="pln">      </span><span class="pun">=</span><span class="pln"> </span><span class="atv">0</span><span class="pun">;</span><span class="pln">
+</span><span class="pln">	</span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;cfg&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;curs_ctxt_prev&#39;</span><span class="pun">}</span><span class="pln">  </span><span class="pun">=</span><span class="pln"> </span><span class="atv">0</span><span class="pun">;</span><span class="pln">
+</span><span class="pln">
+</span><span class="com">	# ______________________________
+</span><span class="com">	# Member variables (EventLoop.pm).
+</span><span class="pln">
+	</span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;cfg&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;CTXT&#39;</span><span class="pun">}</span><span class="pln"> </span><span class="pun">=</span><span class="pln"> </span><span class="str">&#39;DEFAULT&#39;</span><span class="pun">;</span><span class="pln">         </span><span class="com"># In DEFAULT context, keystrokes mostly cause events.</span><span class="pln">
+</span><span class="com">	                                              # In SEARCH  context, keystrokes are added to the search string until the ENTER key is pressed.
+</span><span class="com">	                                              # In INSERT  context, keystrokes are added to the file being edited, until the ESCAPE key is pressed.
+</span><span class="pln">	</span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;cfg&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;FLAG_QUIT&#39;</span><span class="pun">}</span><span class="pln"> </span><span class="pun">=</span><span class="pln"> </span><span class="atv">0</span><span class="pun">;</span><span class="pln">            </span><span class="com"># Flag controls exit from main event loop.</span><span class="pln">
+</span><span class="pln">	</span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;cfg&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;mouse_over_char&#39;</span><span class="pun">}</span><span class="pln">   </span><span class="pun">=</span><span class="pln"> </span><span class="str">&#39;&#39;</span><span class="pun">;</span><span class="pln">   </span><span class="com"># Mouse handling: position, character, attributes.</span><span class="pln">
+</span><span class="pln">	</span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;cfg&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;mouse_over_attr&#39;</span><span class="pun">}</span><span class="pln">   </span><span class="pun">=</span><span class="pln"> </span><span class="str">&#39;&#39;</span><span class="pun">;</span><span class="pln">   </span><span class="com"># Mouse handling: position, character, attributes.</span><span class="pln">
+</span><span class="pln">	</span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;cfg&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;mouse_over_x&#39;</span><span class="pun">}</span><span class="pln">      </span><span class="pun">=</span><span class="pln">  </span><span class="atv">0</span><span class="pun">;</span><span class="pln">   </span><span class="com"># Mouse handling: position, character, attributes.</span><span class="pln">
+</span><span class="pln">	</span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;cfg&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;mouse_over_y&#39;</span><span class="pun">}</span><span class="pln">      </span><span class="pun">=</span><span class="pln">  </span><span class="atv">0</span><span class="pun">;</span><span class="pln">   </span><span class="com"># Mouse handling: position, character, attributes.</span><span class="pln">
+</span><span class="pln">	</span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;cfg&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;mouse_over_x_prev&#39;</span><span class="pun">}</span><span class="pln"> </span><span class="pun">=</span><span class="pln">  </span><span class="atv">0</span><span class="pun">;</span><span class="pln">   </span><span class="com"># Mouse handling: position, character, attributes.</span><span class="pln">
+</span><span class="pln">	</span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;cfg&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;mouse_over_y_prev&#39;</span><span class="pun">}</span><span class="pln"> </span><span class="pun">=</span><span class="pln">  </span><span class="atv">0</span><span class="pun">;</span><span class="pln">   </span><span class="com"># Mouse handling: position, character, attributes.</span><span class="pln">
+</span><span class="pln">	</span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;cfg&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;ct_evt_functional&#39;</span><span class="pun">}</span><span class="pln"> </span><span class="pun">=</span><span class="pln">  </span><span class="atv">0</span><span class="pun">;</span><span class="pln">   </span><span class="com"># Counters: ...</span><span class="pln">
+</span><span class="pln">	</span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;cfg&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;cb&#39;</span><span class="pun">}</span><span class="pln"> </span><span class="pun">=</span><span class="pln"> </span><span class="pun">{</span><span class="pun">}</span><span class="pun">;</span><span class="pln">                  </span><span class="com"># Event callback subroutine references.</span><span class="pln">
+</span><span class="pln">	</span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;cfg&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;evt_history&#39;</span><span class="pun">}</span><span class="pln"> </span><span class="pun">=</span><span class="pln"> </span><span class="pun">[</span><span class="pun">]</span><span class="pun">;</span><span class="pln">         </span><span class="com"># Event history (makes &#39;undo&#39; possible).</span><span class="pln">
+</span><span class="pln">
+</span><span class="com">	# ______________________________
+</span><span class="com">	# Member variables (File.pm).
+</span><span class="pln">
+</span><span class="com">	# File attributes returned by function stat().
+</span><span class="pln">	</span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;cfg&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;f_dev&#39;</span><span class="pun">}</span><span class="pln">     </span><span class="pun">=</span><span class="pln"> </span><span class="str">&#39;&#39;</span><span class="pun">;</span><span class="pln">   </span><span class="com"># Return value f/ stat() function (13 values returned)</span><span class="pln">
+</span><span class="pln">	</span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;cfg&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;f_ino&#39;</span><span class="pun">}</span><span class="pln">     </span><span class="pun">=</span><span class="pln"> </span><span class="str">&#39;&#39;</span><span class="pun">;</span><span class="pln">   </span><span class="com"># Return value f/ stat() function</span><span class="pln">
+</span><span class="pln">	</span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;cfg&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;f_mode&#39;</span><span class="pun">}</span><span class="pln">    </span><span class="pun">=</span><span class="pln"> </span><span class="str">&#39;&#39;</span><span class="pun">;</span><span class="pln">   </span><span class="com"># Return value f/ stat() function</span><span class="pln">
+</span><span class="pln">	</span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;cfg&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;f_nlink&#39;</span><span class="pun">}</span><span class="pln">   </span><span class="pun">=</span><span class="pln"> </span><span class="str">&#39;&#39;</span><span class="pun">;</span><span class="pln">   </span><span class="com"># Return value f/ stat() function</span><span class="pln">
+</span><span class="pln">	</span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;cfg&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;f_uid&#39;</span><span class="pun">}</span><span class="pln">     </span><span class="pun">=</span><span class="pln"> </span><span class="str">&#39;&#39;</span><span class="pun">;</span><span class="pln">   </span><span class="com"># Return value f/ stat() function</span><span class="pln">
+</span><span class="pln">	</span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;cfg&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;f_gid&#39;</span><span class="pun">}</span><span class="pln">     </span><span class="pun">=</span><span class="pln"> </span><span class="str">&#39;&#39;</span><span class="pun">;</span><span class="pln">   </span><span class="com"># Return value f/ stat() function</span><span class="pln">
+</span><span class="pln">	</span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;cfg&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;f_rdev&#39;</span><span class="pun">}</span><span class="pln">    </span><span class="pun">=</span><span class="pln"> </span><span class="str">&#39;&#39;</span><span class="pun">;</span><span class="pln">   </span><span class="com"># Return value f/ stat() function</span><span class="pln">
+</span><span class="pln">	</span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;cfg&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;f_size&#39;</span><span class="pun">}</span><span class="pln">    </span><span class="pun">=</span><span class="pln"> </span><span class="str">&#39;&#39;</span><span class="pun">;</span><span class="pln">   </span><span class="com"># Return value f/ stat() function</span><span class="pln">
+</span><span class="pln">	</span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;cfg&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;f_atime&#39;</span><span class="pun">}</span><span class="pln">   </span><span class="pun">=</span><span class="pln"> </span><span class="str">&#39;&#39;</span><span class="pun">;</span><span class="pln">   </span><span class="com"># Return value f/ stat() function (date/time: last accessed)</span><span class="pln">
+</span><span class="pln">	</span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;cfg&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;f_mtime&#39;</span><span class="pun">}</span><span class="pln">   </span><span class="pun">=</span><span class="pln"> </span><span class="str">&#39;&#39;</span><span class="pun">;</span><span class="pln">   </span><span class="com"># Return value f/ stat() function (date/time: last modified)</span><span class="pln">
+</span><span class="pln">	</span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;cfg&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;f_ctime&#39;</span><span class="pun">}</span><span class="pln">   </span><span class="pun">=</span><span class="pln"> </span><span class="str">&#39;&#39;</span><span class="pun">;</span><span class="pln">   </span><span class="com"># Return value f/ stat() function (date/time: creation)</span><span class="pln">
+</span><span class="pln">	</span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;cfg&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;f_blksize&#39;</span><span class="pun">}</span><span class="pln"> </span><span class="pun">=</span><span class="pln"> </span><span class="str">&#39;&#39;</span><span class="pun">;</span><span class="pln">   </span><span class="com"># Return value f/ stat() function</span><span class="pln">
+</span><span class="pln">	</span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;cfg&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;f_blocks&#39;</span><span class="pun">}</span><span class="pln">  </span><span class="pun">=</span><span class="pln"> </span><span class="str">&#39;&#39;</span><span class="pun">;</span><span class="pln">   </span><span class="com"># Return value f/ stat() function</span><span class="pln">
+</span><span class="com">	# Extended file attributes (formatted for display).
+</span><span class="pln">	</span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;cfg&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;f_fmt_ctime&#39;</span><span class="pun">}</span><span class="pln"> </span><span class="pun">=</span><span class="pln"> </span><span class="str">&#39;&#39;</span><span class="pun">;</span><span class="pln">   </span><span class="com"># Formatted for display: date/time date/time: creation</span><span class="pln">
+</span><span class="pln">	</span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;cfg&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;f_fmt_atime&#39;</span><span class="pun">}</span><span class="pln"> </span><span class="pun">=</span><span class="pln"> </span><span class="str">&#39;&#39;</span><span class="pun">;</span><span class="pln">   </span><span class="com"># Formatted for display: date/time date/time: last accessed</span><span class="pln">
+</span><span class="pln">	</span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;cfg&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;f_fmt_mtime&#39;</span><span class="pun">}</span><span class="pln"> </span><span class="pun">=</span><span class="pln"> </span><span class="str">&#39;&#39;</span><span class="pun">;</span><span class="pln">   </span><span class="com"># Formatted for display: date/time date/time: last modified</span><span class="pln">
+</span><span class="com">	# Variables defined/used by function ...
+</span><span class="pln">	</span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;cfg&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;fn&#39;</span><span class="pun">}</span><span class="pln"> </span><span class="pun">=</span><span class="pln"> </span><span class="str">&#39;&#39;</span><span class="pun">;</span><span class="pln">   </span><span class="com"># File name.</span><span class="pln">
+</span><span class="pln">	</span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;cfg&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;fc&#39;</span><span class="pun">}</span><span class="pln"> </span><span class="pun">=</span><span class="pln"> </span><span class="pun">[</span><span class="pun">]</span><span class="pun">;</span><span class="pln">   </span><span class="com"># File contents: reference to array of strings (binmode raw).</span><span class="pln">
+</span><span class="pln">	</span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;cfg&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;sz_read&#39;</span><span class="pun">}</span><span class="pln"> </span><span class="pun">=</span><span class="pln"> </span><span class="atv">1024</span><span class="pun">;</span><span class="pln">   </span><span class="com"># Size: number of bytes to read from file w/ each call to read().</span><span class="pln">
+</span><span class="pln">
+	</span><span class="kwd">return</span><span class="pln"> </span><span class="pun">(</span><span class="atv">1</span><span class="pun">)</span><span class="pun">;</span><span class="pln">
+</span><span class="pun">}</span><span class="pln">
+</span><span class="pln">
+</span><span class="lit">sub</span><span class="pln"> </span><span class="typ">set_accessors_main</span><span class="pln"> </span><span class="pun">{</span><span class="pln">
+</span><span class="pln">
+	</span><span class="kwd">my</span><span class="pln"> </span><span class="typ">$self</span><span class="pln"> </span><span class="pun">=</span><span class="pln"> </span><span class="kwd">shift</span><span class="pun">;</span><span class="pln">
+</span><span class="pln">
+</span><span class="com">	# Set variables in Editor.pm.
+</span><span class="pln">
+	</span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;obj&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;editor&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="typ">set_dsp_pos</span><span class="pln"> 
+</span><span class="pln">	  </span><span class="pun">(</span><span class="pun">{</span><span class="pln"> </span><span class="str">&#39;dsp_pos&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;cfg&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;dsp_pos&#39;</span><span class="pun">}</span><span class="pln"> </span><span class="pun">}</span><span class="pun">)</span><span class="pun">;</span><span class="pln">
+</span><span class="pln">
+	</span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;obj&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;editor&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="typ">set_sz_word</span><span class="pln"> 
+</span><span class="pln">	  </span><span class="pun">(</span><span class="pun">{</span><span class="pln"> </span><span class="str">&#39;sz_word&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;cfg&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;sz_word&#39;</span><span class="pun">}</span><span class="pln"> </span><span class="pun">}</span><span class="pun">)</span><span class="pun">;</span><span class="pln">
+</span><span class="pln">
+	</span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;obj&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;editor&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="typ">set_sz_line</span><span class="pln"> 
+</span><span class="pln">	  </span><span class="pun">(</span><span class="pun">{</span><span class="pln"> </span><span class="str">&#39;sz_line&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;cfg&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;sz_line&#39;</span><span class="pun">}</span><span class="pln"> </span><span class="pun">}</span><span class="pun">)</span><span class="pun">;</span><span class="pln">
+</span><span class="pln">
+	</span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;obj&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;editor&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="typ">set_sz_column</span><span class="pln"> 
+</span><span class="pln">	  </span><span class="pun">(</span><span class="pun">{</span><span class="pln"> </span><span class="str">&#39;sz_column&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;cfg&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;sz_column&#39;</span><span class="pun">}</span><span class="pln"> </span><span class="pun">}</span><span class="pun">)</span><span class="pun">;</span><span class="pln">
+</span><span class="pln">
+</span><span class="com">	# Set variables in Cursor.pm.
+</span><span class="pln">
+	</span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;obj&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;cursor&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="typ">set_curs_pos</span><span class="pln"> 
+</span><span class="pln">	  </span><span class="pun">(</span><span class="pun">{</span><span class="pln"> </span><span class="str">&#39;curs_pos&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;cfg&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;curs_pos&#39;</span><span class="pun">}</span><span class="pln"> </span><span class="pun">}</span><span class="pun">)</span><span class="pun">;</span><span class="pln">
+</span><span class="pln">
+	</span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;obj&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;cursor&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="typ">set_curs_ctxt</span><span class="pln"> 
+</span><span class="pln">	  </span><span class="pun">(</span><span class="pun">{</span><span class="pln"> </span><span class="str">&#39;curs_ctxt&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;cfg&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;curs_ctxt&#39;</span><span class="pun">}</span><span class="pln"> </span><span class="pun">}</span><span class="pun">)</span><span class="pun">;</span><span class="pln">
+</span><span class="pln">
+	</span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;obj&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;cursor&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="typ">set_sz_word</span><span class="pln"> 
+</span><span class="pln">	  </span><span class="pun">(</span><span class="pun">{</span><span class="pln"> </span><span class="str">&#39;sz_word&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;cfg&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;sz_word&#39;</span><span class="pun">}</span><span class="pln"> </span><span class="pun">}</span><span class="pun">)</span><span class="pun">;</span><span class="pln">
+</span><span class="pln">
+	</span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;obj&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;cursor&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="typ">set_sz_line</span><span class="pln"> 
+</span><span class="pln">	  </span><span class="pun">(</span><span class="pun">{</span><span class="pln"> </span><span class="str">&#39;sz_line&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;cfg&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;sz_line&#39;</span><span class="pun">}</span><span class="pln"> </span><span class="pun">}</span><span class="pun">)</span><span class="pun">;</span><span class="pln">
+</span><span class="pln">
+	</span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;obj&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;cursor&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="typ">set_sz_column</span><span class="pln"> 
+</span><span class="pln">	  </span><span class="pun">(</span><span class="pun">{</span><span class="pln"> </span><span class="str">&#39;sz_column&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;cfg&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;sz_column&#39;</span><span class="pun">}</span><span class="pln"> </span><span class="pun">}</span><span class="pun">)</span><span class="pun">;</span><span class="pln">
+</span><span class="pln">
+	</span><span class="kwd">return</span><span class="pln"> </span><span class="pun">(</span><span class="atv">1</span><span class="pun">)</span><span class="pun">;</span><span class="pln">
+</span><span class="pun">}</span><span class="pln">
+</span><span class="pln">
+</span><span class="lit">sub</span><span class="pln"> </span><span class="typ">init_cli_opts_main</span><span class="pln"> </span><span class="pun">{</span><span class="pln">
+</span><span class="pln">
+	</span><span class="kwd">my</span><span class="pln"> </span><span class="typ">$self</span><span class="pln"> </span><span class="pun">=</span><span class="pln"> </span><span class="kwd">shift</span><span class="pun">;</span><span class="pln">
+</span><span class="pln">
+</span><span class="com">	# Process command line arguments.
+</span><span class="com">	#
+</span><span class="com">	#   Long Opt	Abbreviation
+</span><span class="com">	#   ________	____________
+</span><span class="com">	#   --dbg	-v
+</span><span class="com">	#   --filename	-f
+</span><span class="com">	#   --help	 ?
+</span><span class="pln">
+	</span><span class="kwd">my</span><span class="pln"> </span><span class="typ">$opt</span><span class="pln"> </span><span class="pun">=</span><span class="pln"> </span><span class="pun">{</span><span class="pun">}</span><span class="pun">;</span><span class="pln">
+</span><span class="pln">	</span><span class="lit">PROCESS_COMMAND_LINE_OPTIONS:</span><span class="pln"> </span><span class="pun">{</span><span class="pln">
+</span><span class="pln">
+</span><span class="com">		# Define keys in the %opt hash, based on command line options.
+</span><span class="com">		#
+</span><span class="com">		#   KEY		DESCRIPTION 
+</span><span class="com">		#   ___		___________ 
+</span><span class="com">		#   cla_dbg	Debug Info Output Argument (Command Line Option) 
+</span><span class="com">		#   cla_fn	Filename Argument (Command Line Option) 
+</span><span class="com">		#   cla_help	Help Argument (Command Line Option) 
+</span><span class="pln">
+		</span><span class="typ">$opt</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;cla_dbg&#39;</span><span class="pun">}</span><span class="pln">  </span><span class="pun">=</span><span class="pln"> </span><span class="str">&#39;&#39;</span><span class="pun">;</span><span class="pln">
+</span><span class="pln">		</span><span class="typ">$opt</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;cla_fn&#39;</span><span class="pun">}</span><span class="pln">   </span><span class="pun">=</span><span class="pln"> </span><span class="str">&#39;&#39;</span><span class="pun">;</span><span class="pln">
+</span><span class="pln">		</span><span class="typ">$opt</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;cla_help&#39;</span><span class="pun">}</span><span class="pln"> </span><span class="pun">=</span><span class="pln"> </span><span class="str">&#39;&#39;</span><span class="pun">;</span><span class="pln">
+</span><span class="pln">
+		</span><span class="kwd">if</span><span class="pln"> </span><span class="pun">(</span><span class="kwd">my</span><span class="pln"> </span><span class="typ">$rv</span><span class="pln"> </span><span class="pun">=</span><span class="pln"> 
+</span><span class="pln">		  </span><span class="pln">GetOptions</span><span class="pln"> 
+</span><span class="pln">		    </span><span class="pun">(</span><span class="str">&#39;dbg|v=i{1,1}&#39;</span><span class="pln">      </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="var">\</span><span class="typ">$opt</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;cla_dbg&#39;</span><span class="pun">}</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">		     </span><span class="str">&#39;filename|n=s{1,1}&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="var">\</span><span class="typ">$opt</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;cla_fn&#39;</span><span class="pun">}</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">		     </span><span class="str">&#39;help|?&#39;</span><span class="pln">            </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="var">\</span><span class="typ">$opt</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;cla_help&#39;</span><span class="pun">}</span><span class="pun">)</span><span class="pun">)</span><span class="pln"> </span><span class="pun">{</span><span class="pln">
+</span><span class="pln">
+			</span><span class="kwd">my</span><span class="pln"> </span><span class="pun">(</span><span class="typ">$cla_dbg_str</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">			    </span><span class="typ">$cla_fn_str</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">			    </span><span class="typ">$cla_help_str</span><span class="pun">)</span><span class="pun">;</span><span class="pln">
+</span><span class="pln">
+			</span><span class="kwd">if</span><span class="pln"> </span><span class="pun">(</span><span class="typ">$opt</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;cla_dbg&#39;</span><span class="pun">}</span><span class="pln"> </span><span class="pun">eq</span><span class="pln"> </span><span class="str">&#39;&#39;</span><span class="pun">)</span><span class="pln"> 
+</span><span class="pln">			     </span><span class="pun">{</span><span class="pln"> </span><span class="typ">$cla_dbg_str</span><span class="pln"> </span><span class="pun">=</span><span class="pln"> </span><span class="str">&#39;&lt;empty&gt;&#39;</span><span class="pun">;</span><span class="pln"> </span><span class="pun">}</span><span class="pln">
+</span><span class="pln">			</span><span class="kwd">else</span><span class="pln"> </span><span class="pun">{</span><span class="pln"> </span><span class="typ">$cla_dbg_str</span><span class="pln"> </span><span class="pun">=</span><span class="pln"> </span><span class="typ">$opt</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;cla_dbg&#39;</span><span class="pun">}</span><span class="pun">;</span><span class="pln"> </span><span class="pun">}</span><span class="pln">
+</span><span class="pln">
+			</span><span class="kwd">if</span><span class="pln"> </span><span class="pun">(</span><span class="typ">$opt</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;cla_fn&#39;</span><span class="pun">}</span><span class="pln"> </span><span class="pun">eq</span><span class="pln"> </span><span class="str">&#39;&#39;</span><span class="pun">)</span><span class="pln"> 
+</span><span class="pln">			     </span><span class="pun">{</span><span class="pln"> </span><span class="typ">$cla_fn_str</span><span class="pln"> </span><span class="pun">=</span><span class="pln"> </span><span class="str">&#39;&lt;empty&gt;&#39;</span><span class="pun">;</span><span class="pln"> </span><span class="pun">}</span><span class="pln">
+</span><span class="pln">			</span><span class="kwd">else</span><span class="pln"> </span><span class="pun">{</span><span class="pln"> </span><span class="typ">$cla_fn_str</span><span class="pln"> </span><span class="pun">=</span><span class="pln"> </span><span class="typ">$opt</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;cla_fn&#39;</span><span class="pun">}</span><span class="pun">;</span><span class="pln"> </span><span class="pun">}</span><span class="pln">
+</span><span class="pln">
+			</span><span class="kwd">if</span><span class="pln"> </span><span class="pun">(</span><span class="typ">$opt</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;cla_help&#39;</span><span class="pun">}</span><span class="pln"> </span><span class="pun">eq</span><span class="pln"> </span><span class="str">&#39;&#39;</span><span class="pun">)</span><span class="pln"> 
+</span><span class="pln">			     </span><span class="pun">{</span><span class="pln"> </span><span class="typ">$cla_help_str</span><span class="pln"> </span><span class="pun">=</span><span class="pln"> </span><span class="str">&#39;&lt;empty&gt;&#39;</span><span class="pun">;</span><span class="pln"> </span><span class="pun">}</span><span class="pln">
+</span><span class="pln">			</span><span class="kwd">else</span><span class="pln"> </span><span class="pun">{</span><span class="pln"> </span><span class="typ">$cla_help_str</span><span class="pln"> </span><span class="pun">=</span><span class="pln"> </span><span class="typ">$opt</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;cla_help&#39;</span><span class="pun">}</span><span class="pun">;</span><span class="pln"> </span><span class="pun">}</span><span class="pln">
+</span><span class="pln">
+			</span><span class="kwd">if</span><span class="pln"> </span><span class="pun">(</span><span class="pun">(</span><span class="typ">$opt</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;cla_dbg&#39;</span><span class="pun">}</span><span class="pln"> </span><span class="pun">ne</span><span class="pln"> </span><span class="str">&#39;&#39;</span><span class="pun">)</span><span class="pln"> </span><span class="pun">&amp;&amp;</span><span class="pln"> </span><span class="pun">(</span><span class="typ">$opt</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;cla_dbg&#39;</span><span class="pun">}</span><span class="pln"> </span><span class="pun">&gt;</span><span class="pln"> </span><span class="atv">0</span><span class="pun">)</span><span class="pun">)</span><span class="pln"> </span><span class="pun">{</span><span class="pln">
+</span><span class="pln">
+				</span><span class="kwd">print</span><span class="pln"> 
+</span><span class="pln">				  </span><span class="str">&quot;Summary of command line arguments:  \n&quot;</span><span class="pln"> </span><span class="pun">.</span><span class="pln"> 
+</span><span class="pln">				  </span><span class="str">&quot;  --dbg      &#39;&quot;</span><span class="pln"> </span><span class="pun">.</span><span class="pln"> </span><span class="typ">$cla_dbg_str</span><span class="pln">  </span><span class="pun">.</span><span class="pln"> </span><span class="str">&quot;&#39;\n&quot;</span><span class="pln"> </span><span class="pun">.</span><span class="pln"> 
+</span><span class="pln">				  </span><span class="str">&quot;  --filename &#39;&quot;</span><span class="pln"> </span><span class="pun">.</span><span class="pln"> </span><span class="typ">$cla_fn_str</span><span class="pln">   </span><span class="pun">.</span><span class="pln"> </span><span class="str">&quot;&#39;\n&quot;</span><span class="pln"> </span><span class="pun">.</span><span class="pln"> 
+</span><span class="pln">				  </span><span class="str">&quot;  --help     &#39;&quot;</span><span class="pln"> </span><span class="pun">.</span><span class="pln"> </span><span class="typ">$cla_help_str</span><span class="pln"> </span><span class="pun">.</span><span class="pln"> </span><span class="str">&quot;&#39;\n\n&quot;</span><span class="pun">;</span><span class="pln">
+</span><span class="pln">			</span><span class="pun">}</span><span class="pln">
+</span><span class="pln">			</span><span class="kwd">else</span><span class="pln"> </span><span class="pun">{</span><span class="pln">
+</span><span class="pln">
+				</span><span class="typ">$opt</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;cla_dbg&#39;</span><span class="pun">}</span><span class="pln"> </span><span class="pun">=</span><span class="pln"> </span><span class="atv">0</span><span class="pun">;</span><span class="pln">
+</span><span class="pln">			</span><span class="pun">}</span><span class="pln">
+</span><span class="pln">		</span><span class="pun">}</span><span class="pln">
+</span><span class="pln">		</span><span class="kwd">else</span><span class="pln"> </span><span class="pun">{</span><span class="pln">
+</span><span class="pln">
+			</span><span class="kwd">die</span><span class="pln"> </span><span class="str">&quot;Call to GetOptions() returned w/ failure. &quot;</span><span class="pln"> </span><span class="pun">.</span><span class="pln"> 
+</span><span class="pln">			    </span><span class="str">&quot;Unable to process command line options. &quot;</span><span class="pln"> </span><span class="pun">.</span><span class="pln"> </span><span class="typ">$!</span><span class="pln"> </span><span class="pun">.</span><span class="pln"> </span><span class="str">&quot;, &quot;</span><span class="pln"> </span><span class="pun">.</span><span class="pln"> </span><span class="typ">$^E</span><span class="pun">;</span><span class="pln">
+</span><span class="pln">		</span><span class="pun">}</span><span class="pln">
+</span><span class="pln">	</span><span class="pun">}</span><span class="pln">
+</span><span class="pln">
+</span><span class="com">	# Display help message and exit (if --help flag was used, or no --filename provided).
+</span><span class="pln">
+	</span><span class="kwd">if</span><span class="pln"> </span><span class="pun">(</span><span class="typ">$opt</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;cla_help&#39;</span><span class="pun">}</span><span class="pln"> </span><span class="pun">||</span><span class="pln"> 
+</span><span class="pln">	    </span><span class="pun">!</span><span class="pln"> </span><span class="pun">(</span><span class="pun">-f</span><span class="pln"> </span><span class="typ">$opt</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;cla_fn&#39;</span><span class="pun">}</span><span class="pun">)</span><span class="pun">)</span><span class="pln"> </span><span class="pun">{</span><span class="pln">
+</span><span class="pln">
+		</span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="typ">display_help_msg</span><span class="pun">(</span><span class="pun">)</span><span class="pun">;</span><span class="pln">
+</span><span class="pln">		</span><span class="kwd">exit</span><span class="pln"> </span><span class="pun">(</span><span class="atv">0</span><span class="pun">)</span><span class="pun">;</span><span class="pln">
+</span><span class="pln">	</span><span class="pun">}</span><span class="pln">
+</span><span class="pln">
+	</span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;opt&#39;</span><span class="pun">}</span><span class="pln"> </span><span class="pun">=</span><span class="pln"> </span><span class="typ">$opt</span><span class="pun">;</span><span class="pln">
+</span><span class="pln">
+	</span><span class="kwd">return</span><span class="pln"> </span><span class="pun">(</span><span class="atv">1</span><span class="pun">)</span><span class="pun">;</span><span class="pln">
+</span><span class="pun">}</span><span class="pln">
+</span><span class="pln">
+</span><span class="lit">sub</span><span class="pln"> </span><span class="typ">init_objects_main</span><span class="pln"> </span><span class="pun">{</span><span class="pln">
+</span><span class="pln">
+	</span><span class="kwd">my</span><span class="pln"> </span><span class="typ">$self</span><span class="pln"> </span><span class="pun">=</span><span class="pln"> </span><span class="kwd">shift</span><span class="pun">;</span><span class="pln">
+</span><span class="pln">
+	</span><span class="kwd">my</span><span class="pln"> </span><span class="typ">$obj</span><span class="pun">;</span><span class="pln">
+</span><span class="pln">	</span><span class="lit">INIT_OBJECTS:</span><span class="pln"> </span><span class="pun">{</span><span class="pln">
+</span><span class="pln">
+</span><span class="com">		# Initialize objects provided by modules.
+</span><span class="com">		# Store references to all objects in obj hash.
+</span><span class="com">		# Store reference to obj hash in each object.
+</span><span class="pln">
+		</span><span class="typ">$obj</span><span class="pln"> </span><span class="pun">=</span><span class="pln"> 
+</span><span class="pln">		  </span><span class="pun">{</span><span class="pln"> </span><span class="str">&#39;charmap&#39;</span><span class="pln">   </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="pln">ZHex::CharMap</span><span class="pun">-&gt;</span><span class="typ">new</span><span class="pun">(</span><span class="pun">)</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">		    </span><span class="str">&#39;console&#39;</span><span class="pln">   </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="pln">ZHex::Console</span><span class="pun">-&gt;</span><span class="typ">new</span><span class="pun">(</span><span class="pun">)</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">		    </span><span class="str">&#39;cursor&#39;</span><span class="pln">    </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="pln">ZHex::Cursor</span><span class="pun">-&gt;</span><span class="typ">new</span><span class="pun">(</span><span class="pun">)</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">		    </span><span class="str">&#39;debug&#39;</span><span class="pln">     </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="pln">ZHex::Debug</span><span class="pun">-&gt;</span><span class="typ">new</span><span class="pun">(</span><span class="pun">)</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">		    </span><span class="str">&#39;display&#39;</span><span class="pln">   </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="pln">ZHex::Display</span><span class="pun">-&gt;</span><span class="typ">new</span><span class="pun">(</span><span class="pun">)</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">		    </span><span class="str">&#39;editor&#39;</span><span class="pln">    </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="pln">ZHex::Editor</span><span class="pun">-&gt;</span><span class="typ">new</span><span class="pun">(</span><span class="pun">)</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">		    </span><span class="str">&#39;event&#39;</span><span class="pln">     </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="pln">ZHex::Event</span><span class="pun">-&gt;</span><span class="typ">new</span><span class="pun">(</span><span class="pun">)</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">		    </span><span class="str">&#39;eventloop&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="pln">ZHex::EventLoop</span><span class="pun">-&gt;</span><span class="typ">new</span><span class="pun">(</span><span class="pun">)</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">		    </span><span class="str">&#39;file&#39;</span><span class="pln">      </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="pln">ZHex::File</span><span class="pun">-&gt;</span><span class="typ">new</span><span class="pun">(</span><span class="pun">)</span><span class="pln"> </span><span class="pun">}</span><span class="pun">;</span><span class="pln">
+</span><span class="pln">
+		</span><span class="kwd">foreach</span><span class="pln"> </span><span class="kwd">my</span><span class="pln"> </span><span class="typ">$module</span><span class="pln"> </span><span class="pun">(</span><span class="kwd">sort</span><span class="pln"> </span><span class="kwd">keys</span><span class="pln"> </span><span class="var">%</span><span class="pun">{</span><span class="pln"> </span><span class="typ">$obj</span><span class="pln"> </span><span class="pun">}</span><span class="pun">)</span><span class="pln"> </span><span class="pun">{</span><span class="pln">
+</span><span class="pln">
+			</span><span class="kwd">if</span><span class="pln"> </span><span class="pun">(</span><span class="pun">!</span><span class="pln"> </span><span class="typ">$obj</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="typ">$module</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="typ">obj_init</span><span class="pln"> </span><span class="pun">(</span><span class="pun">{</span><span class="pln"> </span><span class="str">&#39;obj&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="typ">$obj</span><span class="pln"> </span><span class="pun">}</span><span class="pun">)</span><span class="pun">)</span><span class="pln"> 
+</span><span class="pln">			  </span><span class="pun">{</span><span class="pln"> </span><span class="kwd">die</span><span class="pln"> </span><span class="str">&quot;Call to obj_init() within module &#39;&quot;</span><span class="pln"> </span><span class="pun">.</span><span class="pln"> </span><span class="typ">$module</span><span class="pln"> </span><span class="pun">.</span><span class="pln"> </span><span class="str">&quot;&#39; returned w/ failure&quot;</span><span class="pun">;</span><span class="pln"> </span><span class="pun">}</span><span class="pln">
+</span><span class="pln">		</span><span class="pun">}</span><span class="pln">
+</span><span class="pln">	</span><span class="pun">}</span><span class="pln">
+</span><span class="pln">
+	</span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;obj&#39;</span><span class="pun">}</span><span class="pln"> </span><span class="pun">=</span><span class="pln"> </span><span class="pun">{</span><span class="pun">}</span><span class="pun">;</span><span class="pln">
+</span><span class="pln">	</span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;obj&#39;</span><span class="pun">}</span><span class="pln"> </span><span class="pun">=</span><span class="pln"> </span><span class="typ">$obj</span><span class="pun">;</span><span class="pln">
+</span><span class="pln">
+	</span><span class="kwd">return</span><span class="pln"> </span><span class="pun">(</span><span class="atv">1</span><span class="pun">)</span><span class="pun">;</span><span class="pln">
+</span><span class="pun">}</span><span class="pln">
+</span><span class="pln">
+</span><span class="lit">sub</span><span class="pln"> </span><span class="typ">run</span><span class="pln"> </span><span class="pun">{</span><span class="pln">
+</span><span class="pln">
+	</span><span class="kwd">my</span><span class="pln"> </span><span class="typ">$self</span><span class="pln"> </span><span class="pun">=</span><span class="pln"> </span><span class="kwd">shift</span><span class="pun">;</span><span class="pln">
+</span><span class="pln">
+	</span><span class="lit">OPEN_AND_READ_FILE:</span><span class="pln"> </span><span class="pun">{</span><span class="pln">
+</span><span class="pln">
+</span><span class="com">		# Open, stat, and read file from filesystem.
+</span><span class="com">		#   1) Verify that file exists on filesystem.
+</span><span class="com">		#   2) Store file name (inside &quot;file&quot; object, using set_file() method).
+</span><span class="com">		#   3) Stat file (system call, returns w/ file attributes).
+</span><span class="com">		#   4) Read file into memory.
+</span><span class="pln">
+		</span><span class="kwd">if</span><span class="pln"> </span><span class="pun">(</span><span class="pun">!</span><span class="pln"> </span><span class="pun">(</span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;obj&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;file&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="typ">check_file</span><span class="pln"> </span><span class="pun">(</span><span class="pun">{</span><span class="pln"> </span><span class="str">&#39;fn&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;opt&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;cla_fn&#39;</span><span class="pun">}</span><span class="pln"> </span><span class="pun">}</span><span class="pun">)</span><span class="pun">)</span><span class="pun">)</span><span class="pln"> 
+</span><span class="pln">			</span><span class="pun">{</span><span class="pln"> </span><span class="kwd">die</span><span class="pln"> </span><span class="str">&quot;Call to check_file() returned w/ failure&quot;</span><span class="pun">;</span><span class="pln"> </span><span class="pun">}</span><span class="pln">
+</span><span class="pln">
+		</span><span class="kwd">if</span><span class="pln"> </span><span class="pun">(</span><span class="pun">!</span><span class="pln"> </span><span class="pun">(</span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;obj&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;file&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="typ">set_file</span><span class="pln">   </span><span class="pun">(</span><span class="pun">{</span><span class="pln"> </span><span class="str">&#39;fn&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;opt&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;cla_fn&#39;</span><span class="pun">}</span><span class="pln"> </span><span class="pun">}</span><span class="pun">)</span><span class="pun">)</span><span class="pun">)</span><span class="pln"> 
+</span><span class="pln">			</span><span class="pun">{</span><span class="pln"> </span><span class="kwd">die</span><span class="pln"> </span><span class="str">&quot;Call to set_file() returned w/ failure&quot;</span><span class="pun">;</span><span class="pln"> </span><span class="pun">}</span><span class="pln">
+</span><span class="pln">
+		</span><span class="kwd">if</span><span class="pln"> </span><span class="pun">(</span><span class="pun">!</span><span class="pln"> </span><span class="pun">(</span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;obj&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;file&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="typ">stat_file</span><span class="pln">  </span><span class="pun">(</span><span class="pun">{</span><span class="pln"> </span><span class="str">&#39;fn&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;opt&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;cla_fn&#39;</span><span class="pun">}</span><span class="pln"> </span><span class="pun">}</span><span class="pun">)</span><span class="pun">)</span><span class="pun">)</span><span class="pln"> 
+</span><span class="pln">			</span><span class="pun">{</span><span class="pln"> </span><span class="kwd">die</span><span class="pln"> </span><span class="str">&quot;Call to stat_file() returned w/ failure&quot;</span><span class="pun">;</span><span class="pln"> </span><span class="pun">}</span><span class="pln">
+</span><span class="pln">
+		</span><span class="kwd">if</span><span class="pln"> </span><span class="pun">(</span><span class="pun">!</span><span class="pln"> </span><span class="pun">(</span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;obj&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;file&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="typ">read_file</span><span class="pln">  </span><span class="pun">(</span><span class="pun">{</span><span class="pln"> </span><span class="str">&#39;fn&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;opt&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;cla_fn&#39;</span><span class="pun">}</span><span class="pln"> </span><span class="pun">}</span><span class="pun">)</span><span class="pun">)</span><span class="pun">)</span><span class="pln"> 
+</span><span class="pln">			</span><span class="pun">{</span><span class="pln"> </span><span class="kwd">die</span><span class="pln"> </span><span class="str">&quot;Call to read_file() returned w/ failure&quot;</span><span class="pun">;</span><span class="pln"> </span><span class="pun">}</span><span class="pln">
+</span><span class="pln">	</span><span class="pun">}</span><span class="pln">
+</span><span class="pln">
+	</span><span class="lit">INIT_W32_CONSOLE:</span><span class="pln"> </span><span class="pun">{</span><span class="pln">
+</span><span class="pln">
+</span><span class="com">		# Initialize the system console:
+</span><span class="com">		#
+</span><span class="com">		#   1) Initialize console object.
+</span><span class="com">		#   2) Store terminal settings/characteristics.
+</span><span class="com">		#   3) Store value of display console title.
+</span><span class="pln">
+		</span><span class="kwd">if</span><span class="pln"> </span><span class="pun">(</span><span class="pun">!</span><span class="pln"> </span><span class="pun">(</span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;obj&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;console&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="typ">w32cons_init</span><span class="pun">(</span><span class="pun">)</span><span class="pun">)</span><span class="pun">)</span><span class="pln"> 
+</span><span class="pln">			</span><span class="pun">{</span><span class="pln"> </span><span class="kwd">die</span><span class="pln"> </span><span class="str">&quot;Call to w32cons_init() returned w/ failure&quot;</span><span class="pun">;</span><span class="pln"> </span><span class="pun">}</span><span class="pln">
+</span><span class="pln">
+		</span><span class="kwd">if</span><span class="pln"> </span><span class="pun">(</span><span class="pun">!</span><span class="pln"> </span><span class="pun">(</span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;obj&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;console&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="typ">w32cons_termcap</span><span class="pun">(</span><span class="pun">)</span><span class="pun">)</span><span class="pun">)</span><span class="pln"> 
+</span><span class="pln">			</span><span class="pun">{</span><span class="pln"> </span><span class="kwd">die</span><span class="pln"> </span><span class="str">&quot;Call to w32cons_termcap() returned w/ failure&quot;</span><span class="pun">;</span><span class="pln"> </span><span class="pun">}</span><span class="pln">
+</span><span class="pln">
+		</span><span class="kwd">if</span><span class="pln"> </span><span class="pun">(</span><span class="pun">!</span><span class="pln"> </span><span class="pun">(</span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;obj&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;console&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="typ">w32cons_title_get</span><span class="pun">(</span><span class="pun">)</span><span class="pun">)</span><span class="pun">)</span><span class="pln"> 
+</span><span class="pln">			</span><span class="pun">{</span><span class="pln"> </span><span class="kwd">die</span><span class="pln"> </span><span class="str">&quot;Call to w32cons_title_get() returned w/ failure&quot;</span><span class="pun">;</span><span class="pln"> </span><span class="pun">}</span><span class="pln">
+</span><span class="pln">
+</span><span class="com">		# Prepare the display console for editor display:
+</span><span class="com">		#
+</span><span class="com">		#   1) Update display console title.
+</span><span class="com">		#   2) Clear  display console.
+</span><span class="com">		#   3) Set    display console to white text on black background.
+</span><span class="com">		#   4) Set    Win32   console cursor to invisible.
+</span><span class="com">		#   5) Move   Win32   console cursor to top left corner.
+</span><span class="pln">		
+		</span><span class="kwd">if</span><span class="pln"> </span><span class="pun">(</span><span class="pun">!</span><span class="pln"> </span><span class="pun">(</span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;obj&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;console&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="typ">w32cons_title_set</span><span class="pln"> 
+</span><span class="pln">			</span><span class="pun">(</span><span class="pun">{</span><span class="pln"> </span><span class="str">&#39;w32cons_title&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;cfg&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;w32cons_title&#39;</span><span class="pun">}</span><span class="pln"> </span><span class="pun">}</span><span class="pun">)</span><span class="pun">)</span><span class="pun">)</span><span class="pln"> 
+</span><span class="pln">			</span><span class="pun">{</span><span class="pln"> </span><span class="kwd">die</span><span class="pln"> </span><span class="str">&quot;Call to w32cons_title_set() returned w/ failure&quot;</span><span class="pun">;</span><span class="pln"> </span><span class="pun">}</span><span class="pln">
+</span><span class="pln">
+		</span><span class="kwd">if</span><span class="pln"> </span><span class="pun">(</span><span class="pun">!</span><span class="pln"> </span><span class="pun">(</span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;obj&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;console&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="typ">w32cons_mode_set</span><span class="pun">(</span><span class="pun">)</span><span class="pun">)</span><span class="pun">)</span><span class="pln"> 
+</span><span class="pln">			</span><span class="pun">{</span><span class="pln"> </span><span class="kwd">die</span><span class="pln"> </span><span class="str">&quot;Call to w32cons_mode_set() returned w/ failure&quot;</span><span class="pun">;</span><span class="pln"> </span><span class="pun">}</span><span class="pln">
+</span><span class="pln">
+		</span><span class="kwd">if</span><span class="pln"> </span><span class="pun">(</span><span class="pun">!</span><span class="pln"> </span><span class="pun">(</span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;obj&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;console&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="typ">w32cons_clear</span><span class="pun">(</span><span class="pun">)</span><span class="pun">)</span><span class="pun">)</span><span class="pln"> 
+</span><span class="pln">			</span><span class="pun">{</span><span class="pln"> </span><span class="kwd">die</span><span class="pln"> </span><span class="str">&quot;Call to w32cons_clear() returned w/ failure&quot;</span><span class="pun">;</span><span class="pln"> </span><span class="pun">}</span><span class="pln">
+</span><span class="pln">
+		</span><span class="kwd">if</span><span class="pln"> </span><span class="pun">(</span><span class="pun">!</span><span class="pln"> </span><span class="pun">(</span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;obj&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;console&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="typ">w32cons_fg_white_bg_black</span><span class="pun">(</span><span class="pun">)</span><span class="pun">)</span><span class="pun">)</span><span class="pln"> 
+</span><span class="pln">			</span><span class="pun">{</span><span class="pln"> </span><span class="kwd">die</span><span class="pln"> </span><span class="str">&quot;Call to w32cons_fg_white_bg_black() returned w/ failure&quot;</span><span class="pun">;</span><span class="pln"> </span><span class="pun">}</span><span class="pln">
+</span><span class="pln">
+		</span><span class="kwd">if</span><span class="pln"> </span><span class="pun">(</span><span class="pun">!</span><span class="pln"> </span><span class="pun">(</span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;obj&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;console&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="typ">w32cons_cursor_invisible</span><span class="pun">(</span><span class="pun">)</span><span class="pun">)</span><span class="pun">)</span><span class="pln"> 
+</span><span class="pln">			</span><span class="pun">{</span><span class="pln"> </span><span class="kwd">die</span><span class="pln"> </span><span class="str">&quot;Call to w32cons_cursor_invisible() returned w/ failure&quot;</span><span class="pun">;</span><span class="pln"> </span><span class="pun">}</span><span class="pln">
+</span><span class="pln">
+		</span><span class="kwd">if</span><span class="pln"> </span><span class="pun">(</span><span class="pun">!</span><span class="pln"> </span><span class="pun">(</span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;obj&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;console&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="typ">w32cons_cursor_tleft_dsp</span><span class="pun">(</span><span class="pun">)</span><span class="pun">)</span><span class="pun">)</span><span class="pln"> 
+</span><span class="pln">			</span><span class="pun">{</span><span class="pln"> </span><span class="kwd">die</span><span class="pln"> </span><span class="str">&quot;Call to w32cons_cursor_tleft_dsp() returned w/ failure&quot;</span><span class="pun">;</span><span class="pln"> </span><span class="pun">}</span><span class="pln">
+</span><span class="pln">	</span><span class="pun">}</span><span class="pln">
+</span><span class="pln">
+	</span><span class="lit">INIT_EDITOR_DISPLAY:</span><span class="pln"> </span><span class="pun">{</span><span class="pln">
+</span><span class="pln">
+</span><span class="com">		# Initialize the editor display.
+</span><span class="com">		#   1) Set width/height of editor display.
+</span><span class="com">		#   2) Set vertical/horizontal padding (space at the top/left of editor display).
+</span><span class="com">		#   3) Initialize/store (blank) display_prev array.
+</span><span class="pln">
+		</span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;obj&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;display&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="typ">dimensions_set</span><span class="pln"> 
+</span><span class="pln">		  </span><span class="pun">(</span><span class="pun">{</span><span class="pln"> </span><span class="str">&#39;d_width&#39;</span><span class="pln">  </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="pun">(</span><span class="pun">(</span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;obj&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;console&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;w32cons_last_col&#39;</span><span class="pun">}</span><span class="pln"> </span><span class="pun">+</span><span class="pln"> </span><span class="atv">1</span><span class="pun">)</span><span class="pln"> </span><span class="pun">-</span><span class="pln"> 
+</span><span class="pln">		                     </span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;cfg&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;dsp_xpad&#39;</span><span class="pun">}</span><span class="pun">)</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">		     </span><span class="str">&#39;d_height&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="pun">(</span><span class="pun">(</span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;obj&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;console&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;w32cons_bottom_row&#39;</span><span class="pun">}</span><span class="pln"> </span><span class="pun">+</span><span class="pln"> </span><span class="atv">1</span><span class="pun">)</span><span class="pln"> </span><span class="pun">-</span><span class="pln"> 
+</span><span class="pln">		                     </span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;cfg&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;dsp_ypad&#39;</span><span class="pun">}</span><span class="pun">)</span><span class="pln"> </span><span class="pun">}</span><span class="pun">)</span><span class="pun">;</span><span class="pln">
+</span><span class="pln">
+		</span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;obj&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;display&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="typ">padding_set</span><span class="pln"> 
+</span><span class="pln">		  </span><span class="pun">(</span><span class="pun">{</span><span class="pln"> </span><span class="str">&#39;dsp_ypad&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;cfg&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;dsp_ypad&#39;</span><span class="pun">}</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">		     </span><span class="str">&#39;dsp_xpad&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;cfg&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;dsp_xpad&#39;</span><span class="pun">}</span><span class="pln"> </span><span class="pun">}</span><span class="pun">)</span><span class="pun">;</span><span class="pln">
+</span><span class="pln">
+		</span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;obj&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;display&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="typ">dsp_prev_set</span><span class="pln"> 
+</span><span class="pln">		  </span><span class="pun">(</span><span class="pun">{</span><span class="pln"> </span><span class="str">&#39;dsp_prev&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> 
+</span><span class="pln">			</span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;obj&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;display&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="typ">dsp_prev_init</span><span class="pln"> 
+</span><span class="pln">			  </span><span class="pun">(</span><span class="pun">{</span><span class="pln"> </span><span class="str">&#39;d_width&#39;</span><span class="pln">  </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;obj&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;display&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;d_width&#39;</span><span class="pun">}</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">			     </span><span class="str">&#39;d_height&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;obj&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;display&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;d_height&#39;</span><span class="pun">}</span><span class="pln"> </span><span class="pun">}</span><span class="pun">)</span><span class="pln"> </span><span class="pun">}</span><span class="pun">)</span><span class="pun">;</span><span class="pln">
+</span><span class="pln">
+</span><span class="com">		# Initialize editor display.
+</span><span class="com">		#   1) Initialize editor display elements: 
+</span><span class="com">		#        X,Y coordinates within display, padding, enabled.
+</span><span class="com">		#   2) Initialize colorization elements.
+</span><span class="com">		#        Associate them with editor display element.
+</span><span class="com">		#   3) Store references to: 
+</span><span class="com">		#        Display elements data structure, 
+</span><span class="com">		#        Colorization elements data structure.
+</span><span class="com">		#   4) Initialize content of display elements: &#39;e_contents&#39; 
+</span><span class="com">		#      (key/value pair, container for content of each display 
+</span><span class="com">		#      element).
+</span><span class="pln">
+		</span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;obj&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;display&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="typ">d_elements_set</span><span class="pln"> 
+</span><span class="pln">		  </span><span class="pun">(</span><span class="pun">{</span><span class="pln"> </span><span class="str">&#39;d_elements&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;obj&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;display&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="typ">d_elements_init</span><span class="pun">(</span><span class="pun">)</span><span class="pln"> </span><span class="pun">}</span><span class="pun">)</span><span class="pun">;</span><span class="pln">
+</span><span class="pln">
+		</span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;obj&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;display&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="typ">c_elements_set</span><span class="pln"> 
+</span><span class="pln">		  </span><span class="pun">(</span><span class="pun">{</span><span class="pln"> </span><span class="str">&#39;c_elements&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;obj&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;display&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="typ">c_elements_init</span><span class="pun">(</span><span class="pun">)</span><span class="pln"> </span><span class="pun">}</span><span class="pun">)</span><span class="pun">;</span><span class="pln">
+</span><span class="pln">	</span><span class="pun">}</span><span class="pln">
+</span><span class="pln">
+	</span><span class="lit">WRITE_EDITOR_DISPLAY_TO_CONSOLE:</span><span class="pln"> </span><span class="pun">{</span><span class="pln">
+</span><span class="pln">
+</span><span class="com">		# 1) Generate the editor display, store within display object 
+</span><span class="com">		#    under key &#39;display&#39; (confusing choice of variable names,  
+</span><span class="com">		#    I know).
+</span><span class="com">		# 2) Write editor display to display console.
+</span><span class="pln">
+		</span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;obj&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;display&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="typ">dsp_set</span><span class="pln"> 
+</span><span class="pln">		  </span><span class="pun">(</span><span class="pun">{</span><span class="pln"> </span><span class="str">&#39;dsp&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;obj&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;display&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="typ">generate_editor_display</span><span class="pun">(</span><span class="pun">)</span><span class="pln"> </span><span class="pun">}</span><span class="pun">)</span><span class="pun">;</span><span class="pln">
+</span><span class="pln">
+		</span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;obj&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;console&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="typ">w32cons_refresh_display</span><span class="pln"> 
+</span><span class="pln">		  </span><span class="pun">(</span><span class="pun">{</span><span class="pln"> </span><span class="str">&#39;dsp&#39;</span><span class="pln">      </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;obj&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;display&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;dsp&#39;</span><span class="pun">}</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">		     </span><span class="str">&#39;dsp_prev&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;obj&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;display&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;dsp_prev&#39;</span><span class="pun">}</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">		     </span><span class="str">&#39;dsp_xpad&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;obj&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;display&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;dsp_xpad&#39;</span><span class="pun">}</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">		     </span><span class="str">&#39;dsp_ypad&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;obj&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;display&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;dsp_ypad&#39;</span><span class="pun">}</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">		     </span><span class="str">&#39;d_width&#39;</span><span class="pln">  </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;obj&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;display&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;d_width&#39;</span><span class="pun">}</span><span class="pln"> </span><span class="pun">}</span><span class="pun">)</span><span class="pun">;</span><span class="pln">
+</span><span class="pln">
+</span><span class="com">		# 1) Colorize elements of the editor display.
+</span><span class="com">		# 2) Highlight the cursor within the editor display.
+</span><span class="pln">
+		</span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;obj&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;console&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="typ">colorize_display</span><span class="pln"> 
+</span><span class="pln">		  </span><span class="pun">(</span><span class="pun">{</span><span class="pln"> </span><span class="str">&#39;c_elements&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;obj&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;display&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="typ">active_c_elements</span><span class="pun">(</span><span class="pun">)</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">		     </span><span class="str">&#39;dsp_xpad&#39;</span><span class="pln">   </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;obj&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;display&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;dsp_xpad&#39;</span><span class="pun">}</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">		     </span><span class="str">&#39;dsp_ypad&#39;</span><span class="pln">   </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;obj&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;display&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;dsp_ypad&#39;</span><span class="pun">}</span><span class="pln"> </span><span class="pun">}</span><span class="pun">)</span><span class="pun">;</span><span class="pln">
+</span><span class="pln">
+		</span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;obj&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;cursor&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="typ">curs_display</span><span class="pln"> 
+</span><span class="pln">		  </span><span class="pun">(</span><span class="pun">{</span><span class="pln"> </span><span class="str">&#39;dsp_xpad&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;obj&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;display&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;dsp_xpad&#39;</span><span class="pun">}</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">		     </span><span class="str">&#39;dsp_ypad&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;obj&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;display&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;dsp_ypad&#39;</span><span class="pun">}</span><span class="pun">,</span><span class="pln"> 
+</span><span class="pln">		     </span><span class="str">&#39;force&#39;</span><span class="pln">    </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="atv">0</span><span class="pun">}</span><span class="pun">)</span><span class="pun">;</span><span class="pln">
+</span><span class="pln">	</span><span class="pun">}</span><span class="pln">
+</span><span class="pln">
+	</span><span class="lit">INSTALL_ERROR_MESSAGE_HANDLER:</span><span class="pln"> </span><span class="pun">{</span><span class="pln">
+</span><span class="pln">
+		</span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;obj&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;debug&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="typ">errmsg_handler</span><span class="pun">(</span><span class="pun">)</span><span class="pun">;</span><span class="pln">
+</span><span class="pln">	</span><span class="pun">}</span><span class="pln">
+</span><span class="pln">
+	</span><span class="lit">LOAD_CHARACTER_MAP_DATA_STRUCTURE:</span><span class="pln"> </span><span class="pun">{</span><span class="pln">
+</span><span class="pln">
+		</span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;obj&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;charmap&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="typ">chr_map_set</span><span class="pln"> 
+</span><span class="pln">		  </span><span class="pun">(</span><span class="pun">{</span><span class="pln"> </span><span class="str">&#39;chr_map&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;obj&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;charmap&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="typ">chr_map</span><span class="pun">(</span><span class="pun">)</span><span class="pln"> </span><span class="pun">}</span><span class="pun">)</span><span class="pun">;</span><span class="pln">
+</span><span class="pln">	</span><span class="pun">}</span><span class="pln">
+</span><span class="pln">
+	</span><span class="lit">PROCESS_EVENTS_IN_MAIN_EVENT_LOOP:</span><span class="pln"> </span><span class="pun">{</span><span class="pln">
+</span><span class="pln">
+</span><span class="com">		# 1) Register event handler callback subroutines.
+</span><span class="com">		# 2) Enter event loop.
+</span><span class="pln">
+		</span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;obj&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;event&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="typ">register_event_callbacks</span><span class="pun">(</span><span class="pun">)</span><span class="pun">;</span><span class="pln">
+</span><span class="pln">		</span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;obj&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;eventloop&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="typ">event_loop</span><span class="pun">(</span><span class="pun">)</span><span class="pun">;</span><span class="pln">
+</span><span class="pln">	</span><span class="pun">}</span><span class="pln">
+</span><span class="pln">
+	</span><span class="lit">CLEAN_UP_AND_RESTORE_DISPLAY_CONSOLE:</span><span class="pln"> </span><span class="pun">{</span><span class="pln">
+</span><span class="pln">
+		</span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;obj&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;console&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="typ">w32cons_cursor_tleft_dsp</span><span class="pun">(</span><span class="pun">)</span><span class="pun">;</span><span class="pln">
+</span><span class="pln">		</span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;obj&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;console&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="typ">w32cons_close</span><span class="pun">(</span><span class="pun">)</span><span class="pun">;</span><span class="pln">
+</span><span class="pln">	</span><span class="pun">}</span><span class="pln">
+</span><span class="pln">
+	</span><span class="kwd">return</span><span class="pln"> </span><span class="pun">(</span><span class="atv">1</span><span class="pun">)</span><span class="pun">;</span><span class="pln">
+</span><span class="pun">}</span><span class="pln">
+</span><span class="pln">
+</span><span class="lit">sub</span><span class="pln"> </span><span class="typ">display_help_msg</span><span class="pln"> </span><span class="pun">{</span><span class="pln">
+</span><span class="pln">
+	</span><span class="kwd">print</span><span class="pln"> 
+</span><span class="pln">	  </span><span class="str">&quot;--------------------------------------------------------------------------------- \n&quot;</span><span class="pln"> </span><span class="pun">.</span><span class="pln"> 
+</span><span class="pln">	  </span><span class="str">&quot; Command Line Options                  EXAMPLE:   ./ZHex.pl -f file.txt -v 3      \n&quot;</span><span class="pln"> </span><span class="pun">.</span><span class="pln"> 
+</span><span class="pln">	  </span><span class="str">&quot;--------------------------   -----   -------------------------------------------- \n&quot;</span><span class="pln"> </span><span class="pun">.</span><span class="pln"> 
+</span><span class="pln">	  </span><span class="str">&quot;  Option Name   Long Form    Short   Description                         Req/Opt  \n&quot;</span><span class="pln"> </span><span class="pun">.</span><span class="pln"> 
+</span><span class="pln">	  </span><span class="str">&quot;  -----------   ----------   -----   -----------                         -------- \n&quot;</span><span class="pln"> </span><span class="pun">.</span><span class="pln"> 
+</span><span class="pln">	  </span><span class="str">&quot;  FILENAME      --filename   -f      Filename                            REQUIRED \n&quot;</span><span class="pln"> </span><span class="pun">.</span><span class="pln"> 
+</span><span class="pln">	  </span><span class="str">&quot;  DEBUG INFO    --dbg        -v      Increase amount of info displayed   Optional \n&quot;</span><span class="pln"> </span><span class="pun">.</span><span class="pln"> 
+</span><span class="pln">	  </span><span class="str">&quot;  HELP  TEXT    --help       -?      Display help text (this page)       Optional \n&quot;</span><span class="pun">;</span><span class="pln">
+</span><span class="pun">}</span><span class="pln">
+</span><span class="pln">
+</span><span class="pln">
+</span><span class="kwd">END</span><span class="pln"> </span><span class="pun">{</span><span class="pln"> </span><span class="kwd">undef</span><span class="pun">;</span><span class="pln"> </span><span class="pun">}</span><span class="pln">
+</span><span class="atv">1</span><span class="pun">;</span><span class="pln">
+</span><span class="pln">
+</span><span class="pln">
+</span><span class="kwd">__END__</span><span class="pln">
+</span><span class="com">
+
+</span><span class="com">=head1 NAME
+
+ZHex - Zebra Hex Editor.
+
+=head1 VERSION
+
+Version 0.01
+
+=cut
+</span><span class="com">
+our $VERSION = &#39;0.01&#39;;
+
+
+</span><span class="com">=head1 SYNOPSIS
+
+Quick summary of what the module does.
+
+Perhaps a little code snippet.
+
+    use ZHex;
+
+    my $editorObj = ZHex-&gt;new();
+    ...
+
+=head1 EXPORT
+
+No functions are exported.
+
+=head1 SUBROUTINES/METHODS
+
+
+=head2 init
+Method init()...
+= cut
+
+=head2 init_config_main
+Method init_config_main()...
+= cut
+
+=head2 init_cli_opts_main
+Method init_cli_opts_main()...
+= cut
+
+=head2 init_objects_main
+Method init_objects_main()...
+= cut
+
+=head2 run
+Method run()...
+= cut
+
+=head2 display_help_msg
+Method display_help_msg()...
+= cut
+
+=head2 set_accessors_main
+Method set_accessors_main()...
+= cut
+
+
+=head1 AUTHOR
+
+Double Z, C&lt;&lt; &lt;zacharyz at gmail.com&gt; &gt;&gt;
+
+=head1 BUGS
+
+Please report any bugs or feature requests to C&lt;bug-ZHex at rt.cpan.org&gt;, or through
+the web interface at L&lt;http://rt.cpan.org/NoAuth/ReportBug.html?Queue=ZHex&gt;.  I will be notified, and then you&#39;ll
+automatically be notified of progress on your bug as I make changes.
+
+
+
+
+=head1 SUPPORT
+
+You can find documentation for this module with the perldoc command.
+
+    perldoc ZHex
+
+
+You can also look for information at:
+
+=over 4
+
+=item * RT: CPAN&#39;s request tracker (report bugs here)
+
+L&lt;http://rt.cpan.org/NoAuth/Bugs.html?Dist=ZHex&gt;
+
+=item * AnnoCPAN: Annotated CPAN documentation
+
+L&lt;http://annocpan.org/dist/ZHex&gt;
+
+=item * CPAN Ratings
+
+L&lt;http://cpanratings.perl.org/d/ZHex&gt;
+
+=item * Search CPAN
+
+L&lt;http://search.cpan.org/dist/ZHex/&gt;
+
+=back
+
+
+=head1 ACKNOWLEDGEMENTS
+
+
+=head1 LICENSE AND COPYRIGHT
+
+Copyright 2014 Double Z.
+
+This program is free software; you can redistribute it and/or modify it
+under the terms of the the Artistic License (2.0). You may obtain a
+copy of the full license at:
+
+L&lt;http://www.perlfoundation.org/artistic_license_2_0&gt;
+
+Any use, modification, and distribution of the Standard or Modified
+Versions is governed by this Artistic License. By using, modifying or
+distributing the Package, you accept this license. Do not use, modify,
+or distribute the Package, if you do not accept this license.
+
+If your Modified Version has been derived from a Modified Version made
+by someone other than you, you are nevertheless required to ensure that
+your Modified Version complies with the requirements of this license.
+
+This license does not grant you the right to use any trademark, service
+mark, tradename, or logo of the Copyright Holder.
+
+This license includes the non-exclusive, worldwide, free-of-charge
+patent license to make, have made, use, offer to sell, sell, import and
+otherwise transfer the Package with respect to any patent claims
+licensable by the Copyright Holder that are necessarily infringed by the
+Package. If you institute patent litigation (including a cross-claim or
+counterclaim) against any party alleging that the Package constitutes
+direct or contributory patent infringement, then this Artistic License
+to you shall terminate on the date that such litigation is filed.
+
+Disclaimer of Warranty: THE PACKAGE IS PROVIDED BY THE COPYRIGHT HOLDER
+AND CONTRIBUTORS &quot;AS IS&#39; AND WITHOUT ANY EXPRESS OR IMPLIED WARRANTIES.
+THE IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR
+PURPOSE, OR NON-INFRINGEMENT ARE DISCLAIMED TO THE EXTENT PERMITTED BY
+YOUR LOCAL LAW. UNLESS REQUIRED BY LAW, NO COPYRIGHT HOLDER OR
+CONTRIBUTOR WILL BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, OR
+CONSEQUENTIAL DAMAGES ARISING IN ANY WAY OUT OF THE USE OF THE PACKAGE,
+EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+
+=cut
+</span><span class="com">
+1;
+
+</span></pre></div>
+</body>
+</html>
+
