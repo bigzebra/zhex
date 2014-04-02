@@ -23,17 +23,15 @@ use Test::More tests => 4;
 #   insert_enter()
 #   insert_escape()
 #   insert_l_arrow()
-#   insert_mode()
 #   insert_r_arrow()
 #   quit()
-#   register_event_callbacks()
+#   register_evt_callbacks()
 #   search_backspace()
 #   search_box()
 #   search_char()
 #   search_enter()
 #   search_escape()
 #   search_l_arrow()
-#   search_mode()
 #   search_r_arrow()
 # Values exported: 
 #   <NONE>
@@ -48,19 +46,17 @@ my @objEventSubs =
    'insert_enter', 
    'insert_escape', 
    'insert_l_arrow', 
-   'insert_mode', 
    'insert_r_arrow', 
    'new', 
    'obj_init', 
    'quit', 
-   'register_event_callbacks', 
+   'register_evt_callbacks', 
    'search_backspace', 
    'search_box', 
    'search_char', 
    'search_enter', 
    'search_escape', 
    'search_l_arrow', 
-   'search_mode', 
    'search_r_arrow');
 
 can_ok ('ZHex::Event', 'new');

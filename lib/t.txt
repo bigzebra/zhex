@@ -1,4 +1,4 @@
-╙╙╙╙╙╙╙╙╙╙О╩©#!/usr/bin/perl
+╙╙╙╙ллллллллллллллллллллллллллллллллллллллллллллллллллллллллллллллллллмщщщщщщщщщщщщщщщщщщщщщщщщщщщщщщщщщщщщщщщщffffffffffffffffffffffffffffffffffffffffffffffffff╙╙╙╙╙╙О╩©#!/usr/bin/perl
 
 if (-f $ARGV[0])	{
 
@@ -13,7 +13,7 @@ else	{ллллллллллллллллллллллллллллллллллллллллллллллщщщНННfffffffffffffffffffff
 
 # stat()
 #
-#   Returns a 13-element list giving the status info for a file,
+#   Returns a 13-element list giving th╙╙╙╩╩╩e status info for a file,
 #   either the file opened via FILEHANDLE or DIRHANDLE, or named by
 #   EXPR. If EXPR is omitted, it stats $_ (not "_"!). Returns the
 #   empty list if "stat" fails. TypicallDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDy used as follows:

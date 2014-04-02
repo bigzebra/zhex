@@ -6,7 +6,10 @@ use 5.006;
 use strict;
 use warnings FATAL => 'all';
 
-use ZHex::Common qw(new obj_init $VERS);
+use ZHex::Common 
+  qw(new 
+     obj_init 
+     $VERS);
 
 BEGIN { require Exporter;
 	our $VERSION   = $VERS;
@@ -107,7 +110,7 @@ sub init {
 	$self->{'w32cons_attr_orig'}      = '';   # Original console attributes STDOUT [used by function Write()].
 	$self->{'w32cons_in_attr_orig'}   = '';   # Original console attributes STDIN  [used by function Write()].
 	$self->{'w32cons_title_orig'}     = '';   # Original display title
-	$self->{'w32cons_title_ZHex'} = '';   # Console window title (displayed in title bar).
+	$self->{'w32cons_title_zhex'}     = '';   # Console window title (displayed in title bar).
 	$self->{'w32cons_codep_in'}       = '';   # ...
 	$self->{'w32cons_codep_out'}      = '';   # ...
 	$self->{'w32cons_buf_cols'}       = '';   # (X/Col) Current size console buffer.
@@ -167,6 +170,44 @@ sub init {
 	# with foreground color).
 
 	$self->{'FOREGROUND_INTENSITY'} = FOREGROUND_INTENSITY;
+
+	return (1);
+}
+
+sub register_evt_callbacks {
+
+	my $self = shift;
+
+	my $objCharMap   = $self->{'obj'}->{'charmap'};
+	my $objEventLoop = $self->{'obj'}->{'eventloop'};
+
+	$objEventLoop->register_callback 
+	  ({'ctxt'   => 'DEFAULT', 
+	    'evt_nm' => 'CONSCURS_INVIS', 
+	    'evt_cb' => sub { $self->w32cons_cursor_invisible(); }, 
+	    'evt' =>  [ $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({'lname' => 'LATIN SMALL LETTER V'}) }) ] });
+
+	$objEventLoop->register_callback 
+	  ({'ctxt'   => 'DEFAULT', 
+	    'evt_nm' => 'CONSCURS_VIS', 
+	    'evt_cb' => sub { $self->w32cons_cursor_visible(); }, 
+	    'evt' =>  [ $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({'lname' => 'LATIN SMALL LETTER V'}) }) ] });
+
+	$objEventLoop->register_callback 
+	  ({'ctxt'   => 'DEFAULT', 
+	    'evt_nm' => 'L_MOUSE_BUTTON', 
+	    'evt_cb' => sub { $self->lmouse(); }, 
+	    'evt' =>  [ $objEventLoop->gen_evt_array 
+	                ({ '0' => 2,
+	                   '3' => 1 }) ] });
+
+	$objEventLoop->register_callback 
+	  ({'ctxt'   => 'DEFAULT', 
+	    'evt_nm' => 'R_MOUSE_BUTTON', 
+	    'evt_cb' => sub { $self->rmouse(); }, 
+	    'evt' =>  [ $objEventLoop->gen_evt_array 
+	                ({ '0' => 2,
+	                   '3' => 2 }) ] });
 
 	return (1);
 }
@@ -1221,6 +1262,10 @@ Method lmouse()...
 
 =head2 mouse_over
 Method mouse_over()...
+= cut
+
+=head2 register_evt_callbacks
+Method register_evt_callbacks()...
 = cut
 
 =head2 rmouse

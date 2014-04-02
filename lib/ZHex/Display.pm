@@ -6,7 +6,10 @@ use 5.006;
 use strict;
 use warnings FATAL => 'all';
 
-use ZHex::Common qw(new obj_init $VERS);
+use ZHex::Common 
+  qw(new 
+     obj_init 
+     $VERS);
 
 BEGIN { require Exporter;
 	our $VERSION   = $VERS;
@@ -44,6 +47,30 @@ sub init {
 
 	$self->{'dsp'}      = '';     # Set via member function dsp_set().
 	$self->{'dsp_prev'} = '';     # Set via member function dsp_prev_set().
+
+	return (1);
+}
+
+sub register_evt_callbacks {
+
+	my $self = shift;
+
+	my $objCharMap   = $self->{'obj'}->{'charmap'};
+	my $objEventLoop = $self->{'obj'}->{'eventloop'};
+
+	$objEventLoop->register_callback 
+	  ({'ctxt'   => 'DEFAULT', 
+	    'evt_nm' => 'DEBUG_OFF', 
+	    'evt_cb' => sub { $self->debug_off(); }, 
+	    'evt' =>  [ $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({'lname' => 'LATIN SMALL LETTER D'}) }) ]
+	   });
+
+	$objEventLoop->register_callback 
+	  ({'ctxt'   => 'DEFAULT', 
+	    'evt_nm' => 'DEBUG_ON', 
+	    'evt_cb' => sub { $self->debug_on(); }, 
+	    'evt' =>  [ $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({'lname' => 'LATIN CAPITAL LETTER D'}) }) ]
+	   });
 
 	return (1);
 }
@@ -1211,6 +1238,10 @@ Method init()...
 
 =head2 padding_set
 Method padding_set()...
+= cut
+
+=head2 register_evt_callbacks
+Method register_evt_callbacks()...
 = cut
 
 =head1 AUTHOR

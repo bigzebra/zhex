@@ -6,7 +6,10 @@ use 5.006;
 use strict;
 use warnings FATAL => 'all';
 
-use ZHex::Common qw(new obj_init $VERS);
+use ZHex::Common 
+  qw(new 
+     obj_init 
+     $VERS);
 
 BEGIN { require Exporter;
 	our $VERSION   = $VERS;
@@ -30,15 +33,166 @@ sub init {
 
 	# HAVE ACCESSOR(S):
 
-	$self->{'dsp_pos'}   =  '';   # The first character (byte number) appearing at top/left of hex editor display.
-	$self->{'sz_word'}   =  '';   # Size: width (in characters) of a word.
-	$self->{'sz_line'}   =  '';   # Size: width (in characters) of a line.
-	$self->{'sz_column'} =  '';   # Size: height (in lines) of a column.
+	$self->{'dsp_pos'}   = '';     # The first character (byte number) appearing at top/left of hex editor display.
+	$self->{'sz_word'}   = '';     # Size: width (in characters) of a word.
+	$self->{'sz_line'}   = '';     # Size: width (in characters) of a line.
+	$self->{'sz_column'} = '';     # Size: height (in lines) of a column.
+
+	$self->{'ctxt'} = 'DEFAULT';   # In DEFAULT context, keystrokes mostly cause events.
+	                               # In SEARCH  context, keystrokes are added to the search string until the ENTER key is pressed.
+	                               # In INSERT  context, keystrokes are added to the file being edited, until the ESCAPE key is pressed.
 
 	# NEED ACCESSOR(S):
 
 	$self->{'horiz_rule'} = '|';   # Word seperator: a vertical line used in display for readability.
 	$self->{'oob_char'}   = '-';   # Out-of-bounds character: displayed in place of non-displayable characters.
+
+	return (1);
+}
+
+sub register_evt_callbacks {
+
+	my $self = shift;
+
+	my $objCharMap   = $self->{'obj'}->{'charmap'};
+	my $objCursor    = $self->{'obj'}->{'cursor'};
+	my $objDisplay   = $self->{'obj'}->{'display'};
+	my $objEventLoop = $self->{'obj'}->{'eventloop'};
+	my $objFile      = $self->{'obj'}->{'file'};
+
+	$objEventLoop->register_callback 
+	  ({'ctxt'   => 'DEFAULT', 
+	    'evt_nm' => 'VSTRETCH', 
+	    'evt_cb' => sub { 
+			$self->vstretch 
+			  ({'max_columns' => $objDisplay->max_columns(), 
+			    'file_len'    => $objFile->file_len()});
+			$objCursor->set_sz_column 
+			  ({'sz_column' => $self->{'sz_column'}});
+			$objDisplay->adjust_display(); },
+	    'evt' =>  [ $objEventLoop->gen_evt_array 
+	                ({ '3' =>  38,     # 3
+			   '4' =>  72,     # 4
+			   '5' =>   0,     # 5
+			   '6' => 264 }),  # 6
+	                ] });
+
+	$objEventLoop->register_callback 
+	  ({'ctxt'   => 'DEFAULT', 
+	    'evt_nm' => 'VCOMPRESS', 
+	    'evt_cb' => sub { 
+			$self->vcompress();
+			$objCursor->set_sz_column 
+			  ({'sz_column' => $self->{'sz_column'}});
+			$objCursor->curs_adjust 
+			  ({'dsp_pos' => $self->{'dsp_pos'}});
+			$objDisplay->adjust_display(); },
+	    'evt' =>  [ $objEventLoop->gen_evt_array 
+	                ({ '3' =>  40,     # 3
+			   '4' =>  80,     # 4
+			   '5' =>   0,     # 5
+			   '6' => 264 })   # 6
+	                ] });
+
+	$objEventLoop->register_callback 
+	  ({'ctxt'   => 'DEFAULT', 
+	    'evt_nm' => 'SCROLL_UP_1LN', 
+	    'evt_cb' => sub { 
+			$self->scroll_up_1x_line(); 
+			$objCursor->curs_adjust 
+			  ({'dsp_pos' => $self->{'dsp_pos'}}); }, 
+	    'evt' =>  [ $objEventLoop->gen_evt_array 
+	                ({ '5' => $objCharMap->chr_map_ord_val ({'lname' => 'LATIN SMALL LETTER K'}) }), 
+	                $objEventLoop->gen_evt_array 
+	                ({ '0' => 2,         # 0
+	                   '3' => 7864320,   # 3
+			   '5' => 4 })       # 6
+	                ] });
+
+	$objEventLoop->register_callback 
+	  ({'ctxt'   => 'DEFAULT', 
+	    'evt_nm' => 'SCROLL_UP_1PG', 
+	    'evt_cb' => sub { 
+			$self->scroll_up_1x_page();
+			$objCursor->curs_adjust 
+			  ({'dsp_pos' => $self->{'dsp_pos'}}); }, 
+	    'evt' =>  [ $objEventLoop->gen_evt_array 
+	                ({ '5' => $objCharMap->chr_map_ord_val ({'lname' => 'LATIN CAPITAL LETTER J'}) }), 
+	                $objEventLoop->gen_evt_array 
+	                ({ '3' =>  33,     # 3
+			   '4' =>  73,     # 4
+			   '5' =>   0,     # 5
+			   '6' => 288 }),  # 6
+			$objEventLoop->gen_evt_array 
+	                ({ '3' =>  33,     # 3
+			   '4' =>  73,     # 4
+			   '5' =>   0,     # 5
+			   '6' => 256 })   # 6
+	                ] });
+
+	$objEventLoop->register_callback 
+	  ({'ctxt'   => 'DEFAULT', 
+	    'evt_nm' => 'SCROLL_DOWN_1LN', 
+	    'evt_cb' => sub { 
+			$self->scroll_down_1x_line
+			  ({'file_len' => $objFile->file_len()});
+			$objCursor->curs_adjust 
+			  ({'dsp_pos' => $self->{'dsp_pos'}}); },  
+	    'evt' =>  [ $objEventLoop->gen_evt_array 
+	                ({ '5' => $objCharMap->chr_map_ord_val ({'lname' => 'LATIN SMALL LETTER J'}) }), 
+	                $objEventLoop->gen_evt_array 
+	                ({ '0' => 2,          # 0
+			   '3' => -7864320,   # 3
+			   '5' => 4 }),       # 5
+	                ] });
+
+	$objEventLoop->register_callback 
+	  ({'ctxt'   => 'DEFAULT', 
+	    'evt_nm' => 'SCROLL_DOWN_1PG', 
+	    'evt_cb' => sub { 
+			$self->scroll_down_1x_page
+			  ({'file_len' => $objFile->file_len()});
+			$objCursor->curs_adjust 
+			  ({'dsp_pos' => $self->{'dsp_pos'}}); },
+	    'evt' =>  [ $objEventLoop->gen_evt_array 
+	                ({ '5' => $objCharMap->chr_map_ord_val ({'lname' => 'LATIN CAPITAL LETTER K'}) }), 
+	                $objEventLoop->gen_evt_array 
+	                ({ '5' => $objCharMap->chr_map_ord_val ({'lname' => 'SPACE'}) }), 
+	                $objEventLoop->gen_evt_array 
+	                ({ '3' =>  34,     # 3
+			   '4' =>  81,     # 4
+			   '5' =>   0,     # 5
+			   '6' => 288 }),  # 6
+			$objEventLoop->gen_evt_array 
+	                ({ '3' =>  34,     # 3
+			   '4' =>  81,     # 4
+			   '5' =>   0,     # 5
+			   '6' => 256 })   # 6
+	                ] });
+
+	$objEventLoop->register_callback 
+	  ({'ctxt'   => 'DEFAULT', 
+	    'evt_nm' => 'INSERT_MODE', 
+	    'evt_cb' => sub { $self->insert_mode(); },
+	    'evt' =>  [ $objEventLoop->gen_evt_array 
+	                ({ '5' => $objCharMap->chr_map_ord_val ({'lname' => 'LATIN SMALL LETTER I'}) }), 
+	                $objEventLoop->gen_evt_array 
+	                ({ '3' =>  45,     # 3
+			   '4' =>  82,     # 4
+			   '5' =>   0,     # 5
+			   '6' => 288 }),  # 6
+			$objEventLoop->gen_evt_array 
+	                ({ '3' =>  45,     # 3
+			   '4' =>  82,     # 4
+			   '5' =>   0,     # 5
+			   '6' => 256 })   # 6
+	                ] });
+
+	$objEventLoop->register_callback 
+	  ({'ctxt'   => 'DEFAULT', 
+	    'evt_nm' => 'SEARCH_MODE', 
+	    'evt_cb' => sub { $self->search_mode(); },
+	    'evt' =>  [ $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({'lname' => 'LATIN SMALL LETTER S'}) }) ] });
 
 	return (1);
 }
@@ -125,6 +279,25 @@ sub set_sz_column {
 		{ die "Call to set_sz_column() failed, value of key 'sz_column' must be numeric"; }
 
 	$self->{'sz_column'} = $arg->{'sz_column'};
+
+	return (1);
+}
+
+sub set_ctxt {
+
+	my $self = shift;
+	my $arg  = shift;
+
+	if (! defined $arg || 
+	      ! (ref ($arg) eq 'HASH')) 
+		{ die "Call to set_ctxt() failed, argument must be hash reference"; }
+
+	if (! exists  $arg->{'ctxt'} || 
+	    ! defined $arg->{'ctxt'} || 
+	             ($arg->{'ctxt'} eq '')) 
+		{ die "Call to set_ctxt() failed, value of key 'ctxt' may not be undef/empty"; }
+
+	$self->{'ctxt'} = $arg->{'ctxt'};
 
 	return (1);
 }
@@ -762,6 +935,8 @@ sub gen_sep {
 #   vstretch()			Stretch the editor display vertically.
 #   vcompress()                 Compress the editor display vertically.
 #   dsp_pos_adjust()		...
+#   insert_mode()		INSERT_MODE	Switch to 'INSERT' context.
+#   search_mode()		SEARCH_MODE	Switch to 'SEARCH' context.
 
 sub scroll_up_1x_line {
 
@@ -931,6 +1106,109 @@ sub dsp_pos_adjust {
 	return (1);
 }
 
+sub insert_mode {
+
+	my $self = shift;
+
+	my $objConsole   = $self->{'obj'}->{'console'};     # Used.
+	my $objCursor    = $self->{'obj'}->{'cursor'};      # Used.
+	my $objDisplay   = $self->{'obj'}->{'display'};     # Used.
+	my $objEditor    = $self->{'obj'}->{'editor'};      # Used.
+	my $objEventLoop = $self->{'obj'}->{'eventloop'};   # Used.
+
+	# Switch context to 'INSERT'.
+
+	$self->{'ctxt'} = 'INSERT';
+
+	# Change cursor context to 3 (insert mode).
+
+	if (! ($objCursor->set_curs_ctxt ({'curs_ctxt' => 3}))) 
+		{ die "Call to set_curs_ctxt w/ argument '3' returned w/ failure"; }
+
+	# Define variables used to manage the insert user interface.
+
+	if (! exists  $self->{'insert_str'} || 
+	    ! defined $self->{'insert_str'}) {
+
+		$self->{'insert_str'} = '';
+	}
+
+	if (! exists  $self->{'insert_pos'} || 
+	    ! defined $self->{'insert_pos'} || 
+	           ! ($self->{'insert_pos'} =~ /^\d+?$/)) {
+
+		$self->{'insert_pos'} = 0;
+	}
+
+	# Move Win32 console cursor to insert position.
+	# Make Win32 console cursor visible.
+
+	my ($xpos, $ypos) = 
+	  $objCursor->dsp_coord 
+	    ({ 'curs_pos' => $objCursor->{'curs_pos'}, 
+	       'dsp_pos'  => $self->{'dsp_pos'}, 
+	       'dsp_ypad' => $objDisplay->{'dsp_xpad'}, 
+	       'dsp_xpad' => $objDisplay->{'dsp_ypad'} });
+
+	$objConsole->w32cons_cursor_move 
+	  ({ 'xpos' => ($xpos + $objDisplay->{'dsp_xpad'}), 
+	     'ypos' => ($ypos + $objDisplay->{'dsp_ypad'}) });
+
+	$objConsole->w32cons_cursor_visible();
+
+	return (1);
+}
+
+sub search_mode {
+
+	my $self = shift;
+
+	my $objCursor    = $self->{'obj'}->{'cursor'};
+	my $objConsole   = $self->{'obj'}->{'console'};
+	my $objDisplay   = $self->{'obj'}->{'display'};
+	my $objEventLoop = $self->{'obj'}->{'eventloop'};
+
+	# Switch context to 'SEARCH'.
+
+	$self->{'ctxt'} = 'SEARCH';
+
+	# Draw search box over the top of the editor display.
+
+	$objDisplay->{'d_elements'}->{'search_box'}->{'enabled'} = 1;
+
+	# Define variables used to manage the search user interface.
+
+	if (! exists  $self->{'search_str'} || 
+	    ! defined $self->{'search_str'}) {
+
+		$self->{'search_str'} = '';
+	}
+
+	if (! exists  $self->{'search_pos'} || 
+	    ! defined $self->{'search_pos'} || 
+	           ! ($self->{'search_pos'} =~ /^\d+?$/)) {
+
+		$self->{'search_pos'} = 0;
+	}
+
+	# Store the value of 'curs_ctxt' so that it can be restored.
+	# Set cursor context to 3 (make it disappear while search box displayed).
+
+	$self->{'curs_ctxt_prev'} = $objCursor->{'curs_ctxt'};
+	$objCursor->{'curs_ctxt'} = 3;
+
+	# Move Win32 console cursor to beginning of text string position (within search box).
+	# Make Win32 console cursor visible.
+
+	$objConsole->w32cons_cursor_move 
+	  ({ 'xpos' => ($objDisplay->{'d_elements'}->{'search_box'}->{'e_xpos'} + 4), 
+	     'ypos' => ($objDisplay->{'d_elements'}->{'search_box'}->{'e_ypos'} + 3) });
+
+	$objConsole->w32cons_cursor_visible();
+
+	return (1);
+}
+
 
 END { undef; }
 1;
@@ -1017,6 +1295,14 @@ Method gen_sep()...
 Method init()...
 = cut
 
+=head2 insert_mode
+Method insert_mode()...
+= cut
+
+=head2 register_evt_callbacks
+Method register_evt_callbacks()...
+= cut
+
 =head2 scroll_down_1x_line
 Method scroll_down_1x_line()...
 = cut
@@ -1031,6 +1317,14 @@ Method scroll_up_1x_line()...
 
 =head2 scroll_up_1x_page
 Method scroll_up_1x_page()...
+= cut
+
+=head2 search_mode
+Method search_mode()...
+= cut
+
+=head2 set_ctxt
+Method set_ctxt()...
 = cut
 
 =head2 set_dsp_pos

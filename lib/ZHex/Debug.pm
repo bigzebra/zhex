@@ -6,7 +6,11 @@ use 5.006;
 use strict;
 use warnings FATAL => 'all';
 
-use ZHex::Common qw(new init obj_init $VERS);
+use ZHex::Common 
+  qw(new 
+     init 
+     obj_init 
+     $VERS);
 
 use constant DBG_LEVEL => 1;
 
@@ -338,7 +342,9 @@ sub dbg_count {
 
 	my $self = shift;
 
+	my $objEditor    = $self->{'obj'}->{'editor'};
 	my $objEventLoop = $self->{'obj'}->{'eventloop'};
+
 	$objEventLoop->{'ct_evt_total'}++;
 
 	# Display event counters debugging information: 
@@ -349,7 +355,7 @@ sub dbg_count {
 	my $pairs = 
 	  {'ttl_evnt  ' => sprintf ("%8.8s", $objEventLoop->{'ct_evt_total'}),
 	   'funcevnt  ' => sprintf ("%8.8s", $objEventLoop->{'ct_evt_functional'}), 
-	   'event ctxt' => sprintf ("%8.8s", $objEventLoop->{'CTXT'})};
+	   'event ctxt' => sprintf ("%8.8s", $objEditor->{'ctxt'})};
 
 	my $dbg = 
 	  $self->dbg_box 

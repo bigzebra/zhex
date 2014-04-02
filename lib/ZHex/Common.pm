@@ -6,9 +6,7 @@ use 5.006;
 use strict;
 use warnings FATAL => 'all';
 
-BEGIN {
-
-	use constant CURS_POS  => 0;
+BEGIN { use constant CURS_POS  => 0;
 	use constant CURS_CTXT => 0;
 	use constant DSP_POS   => 0;
 	use constant SZ_WORD   => 4;

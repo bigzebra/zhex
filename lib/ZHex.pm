@@ -94,7 +94,7 @@ sub init_config_main {
 	# ______________________________
 	# Member variables (EventLoop.pm).
 
-	$self->{'cfg'}->{'CTXT'} = 'DEFAULT';         # In DEFAULT context, keystrokes mostly cause events.
+	$self->{'cfg'}->{'ctxt'} = 'DEFAULT';         # In DEFAULT context, keystrokes mostly cause events.
 	                                              # In SEARCH  context, keystrokes are added to the search string until the ENTER key is pressed.
 	                                              # In INSERT  context, keystrokes are added to the file being edited, until the ESCAPE key is pressed.
 	$self->{'cfg'}->{'FLAG_QUIT'} = 0;            # Flag controls exit from main event loop.
@@ -171,6 +171,11 @@ sub set_accessors_main {
 
 	$self->{'obj'}->{'cursor'}->set_sz_column 
 	  ({ 'sz_column' => $self->{'cfg'}->{'sz_column'} });
+
+	# Set variables in Editor.pm.
+
+	$self->{'obj'}->{'editor'}->set_ctxt 
+	  ({ 'ctxt' => 'DEFAULT' });
 
 	return (1);
 }
@@ -444,15 +449,28 @@ sub run {
 	LOAD_CHARACTER_MAP_DATA_STRUCTURE: {
 
 		$self->{'obj'}->{'charmap'}->chr_map_set 
-		  ({ 'chr_map' => $self->{'obj'}->{'charmap'}->chr_map() });
+		  ({'chr_map' => $self->{'obj'}->{'charmap'}->chr_map()});
 	}
+
+	REGISTER_EVENT_HANDLERS: {
+
+		# Register event handler callback subroutines.
+
+		$self->{'obj'}->{'console'}->register_evt_callbacks();
+		$self->{'obj'}->{'cursor'}->register_evt_callbacks();
+		$self->{'obj'}->{'display'}->register_evt_callbacks();
+		$self->{'obj'}->{'editor'}->register_evt_callbacks();
+		$self->{'obj'}->{'event'}->register_evt_callbacks();
+		$self->{'obj'}->{'file'}->register_evt_callbacks();
+	}
+
+	# sleep (5);
+	# exit (0);
 
 	PROCESS_EVENTS_IN_MAIN_EVENT_LOOP: {
 
-		# 1) Register event handler callback subroutines.
-		# 2) Enter event loop.
+		# Enter main event loop.
 
-		$self->{'obj'}->{'event'}->register_event_callbacks();
 		$self->{'obj'}->{'eventloop'}->event_loop();
 	}
 

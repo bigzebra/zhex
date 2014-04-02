@@ -6,7 +6,10 @@ use 5.006;
 use strict;
 use warnings FATAL => 'all';
 
-use ZHex::Common qw(new obj_init $VERS);
+use ZHex::Common 
+  qw(new 
+     obj_init 
+     $VERS);
 
 use constant CURS_CTXT_LINE => 0;
 use constant CURS_CTXT_WORD => 1;
@@ -43,6 +46,174 @@ sub init {
 	$self->{'curs_ctxt'}       =  0;   # Context of cursor: 0/1/2 (Row/Column/Character).
 	$self->{'curs_coords'}     = [];   # Cursor coordinates.
 	$self->{'ct_display_curs'} =  0;
+
+	return (1);
+}
+
+sub register_evt_callbacks {
+
+	my $self = shift;
+
+	my $objCharMap   = $self->{'obj'}->{'charmap'};
+	my $objEditor    = $self->{'obj'}->{'editor'};
+	my $objEventLoop = $self->{'obj'}->{'eventloop'};
+	my $objFile      = $self->{'obj'}->{'file'};
+
+	$objEventLoop->register_callback 
+	  ({'ctxt'   => 'DEFAULT', 
+	    'evt_nm' => 'MOVE_BEG', 
+	    'evt_cb' => sub {
+			$self->set_curs_pos 
+			  ({'curs_pos' => 0});
+			$objEditor->set_dsp_pos 
+			  ({'dsp_pos' => 0}); }, 
+	     'evt' => [ $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({'lname' => 'CIRCUMFLEX ACCENT'}) }) ] });
+
+	$objEventLoop->register_callback 
+	  ({'ctxt'   => 'DEFAULT', 
+	    'evt_nm' => 'MOVE_END', 
+	    'evt_cb' => sub { 
+			$self->set_curs_ctxt 
+			  ({'curs_ctxt' => 2});
+			$self->set_curs_pos 
+			  ({'curs_pos' => ($objFile->file_len() - 1)});
+			$objEditor->dsp_pos_adjust 
+			  ({'curs_pos' => $self->{'curs_pos'} }); }, 
+	    'evt' =>  [ $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({'lname' => 'DOLLAR SIGN'}) }) ] });
+
+	$objEventLoop->register_callback 
+	  ({'ctxt'   => 'DEFAULT', 
+	    'evt_nm' => 'INCR_CURS_CTXT', 
+	    'evt_cb' => sub { $self->curs_ctxt_incr(); }, 
+	    'evt' =>  [ $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({'lname' => 'CARRIAGE RETURN (CR)'}) }) ] });
+
+	$objEventLoop->register_callback 
+	  ({'ctxt'   => 'DEFAULT', 
+	    'evt_nm' => 'DECR_CURS_CTXT', 
+	    'evt_cb' => sub { $self->curs_ctxt_decr(); }, 
+	    'evt' =>  [ $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({'lname' => 'ESCAPE'}) }) ] });
+
+	$objEventLoop->register_callback 
+	  ({'ctxt'   => 'DEFAULT', 
+	    'evt_nm' => 'MOVE_CURS_FORWARD', 
+	    'evt_cb' => sub { 
+			$self->curs_mv_fwd
+			  ({'file_len' => $objFile->file_len()});
+			$objEditor->dsp_pos_adjust 
+			  ({'curs_pos' => $self->{'curs_pos'}}); 
+	                }, 
+	    'evt' =>  [ $objEventLoop->gen_evt_array 
+	                ({ '3' =>  9,     # 3
+			   '4' => 15,     # 4
+			   '5' =>  9,     # 5
+			   '6' => 32 }),  # 6
+			$objEventLoop->gen_evt_array 
+	                ({ '3' =>  9,     # 3
+			   '4' => 15,     # 4
+			   '5' =>  9,     # 5
+			   '6' =>  0 })   # 6
+	                ] });
+
+	$objEventLoop->register_callback 
+	  ({'ctxt'   => 'DEFAULT', 
+	    'evt_nm' => 'MOVE_CURS_BACK', 
+	    'evt_cb' => sub { 
+			$self->curs_mv_back();
+			$objEditor->dsp_pos_adjust 
+			  ({'curs_pos' => $self->{'curs_pos'}}); }, 
+	    'evt' =>  [ $objEventLoop->gen_evt_array 
+	                ({ '3' =>  9,     # 3
+			   '4' => 15,     # 4
+			   '5' =>  9,     # 5
+			   '6' => 48 }),  # 6
+			$objEventLoop->gen_evt_array 
+	                ({ '3' =>  9,     # 3
+			   '4' => 15,     # 4
+			   '5' =>  9,     # 5
+			   '6' => 16 })   # 6
+	                ] });
+
+	$objEventLoop->register_callback 
+	  ({'ctxt'   => 'DEFAULT', 
+	    'evt_nm' => 'MOVE_CURS_UP', 
+	    'evt_cb' => sub { 
+			$self->curs_mv_up();
+			$objEditor->dsp_pos_adjust 
+			  ({'curs_pos' => $self->{'curs_pos'}}); }, 
+	    'evt' =>  [ $objEventLoop->gen_evt_array 
+	                ({ '3' =>  38,     # 3
+			   '4' =>  72,     # 4
+			   '5' =>   0,     # 5
+			   '6' => 288 }),  # 6
+			$objEventLoop->gen_evt_array 
+	                ({ '3' =>  38,     # 3
+			   '4' =>  72,     # 4
+			   '5' =>   0,     # 5
+			   '6' => 256 })   # 6
+	                ] });
+
+	$objEventLoop->register_callback 
+	  ({'ctxt'   => 'DEFAULT', 
+	    'evt_nm' => 'MOVE_CURS_DOWN', 
+	    'evt_cb' => sub { 
+	                $self->curs_mv_down
+			  ({'file_len' => $objFile->file_len()});
+			$objEditor->dsp_pos_adjust 
+			  ({'curs_pos' => $self->{'curs_pos'}}); }, 
+	    'evt' =>  [ $objEventLoop->gen_evt_array 
+	                ({ '3' =>  40,     # 3
+			   '4' =>  80,     # 4
+			   '5' =>   0,     # 5
+			   '6' => 256 }),  # 6
+			$objEventLoop->gen_evt_array 
+	                ({ '3' =>  40,     # 3
+			   '4' =>  80,     # 4
+			   '5' =>   0,     # 5
+			   '6' => 288 })   # 6
+	                ] });
+
+	$objEventLoop->register_callback 
+	  ({'ctxt'   => 'DEFAULT', 
+	    'evt_nm' => 'MOVE_CURS_LEFT', 
+	    'evt_cb' => sub { 
+			$self->curs_mv_left();
+			$objEditor->dsp_pos_adjust 
+			  ({'curs_pos' => $self->{'curs_pos'}}); }, 
+	    'evt' =>  [ $objEventLoop->gen_evt_array 
+	                ({ '5' => $objCharMap->chr_map_ord_val ({'lname' => 'LATIN SMALL LETTER H'}) }), 
+	                $objEventLoop->gen_evt_array 
+	                ({ '3' =>  37,     # 3
+			   '4' =>  75,     # 4
+			   '5' =>   0,     # 5
+			   '6' => 288 }),  # 6
+			$objEventLoop->gen_evt_array 
+	                ({ '3' =>  37,     # 3
+			   '4' =>  75,     # 4
+			   '5' =>   0,     # 5
+			   '6' => 256 })   # 6
+	                ] });
+
+	$objEventLoop->register_callback 
+	  ({'ctxt'   => 'DEFAULT', 
+	    'evt_nm' => 'MOVE_CURS_RIGHT', 
+	    'evt_cb' => sub { 
+			$self->curs_mv_right
+			  ({'file_len' => $objFile->file_len()});
+			$objEditor->dsp_pos_adjust 
+			  ({'curs_pos' => $self->{'curs_pos'}}); }, 
+	    'evt' =>  [ $objEventLoop->gen_evt_array 
+	                ({ '5' => $objCharMap->chr_map_ord_val ({'lname' => 'LATIN SMALL LETTER L'}) }), 
+	                $objEventLoop->gen_evt_array 
+	                ({ '3' =>  39,     # 3
+			   '4' =>  77,     # 4
+			   '5' =>   0,     # 5
+			   '6' => 288 }),  # 6
+			$objEventLoop->gen_evt_array 
+	                ({ '3' =>  39,     # 3
+			   '4' =>  77,     # 4
+			   '5' =>   0,     # 5
+			   '6' => 256 })   # 6
+	                ] });
 
 	return (1);
 }
@@ -86,7 +257,7 @@ sub set_curs_ctxt {
 
 	if (! exists  $arg->{'curs_ctxt'} || 
 	    ! defined $arg->{'curs_ctxt'} || 
-	           ! ($arg->{'curs_ctxt'} =~ /^[0123]$/)) 
+	           ! ($arg->{'curs_ctxt'} =~ /^\d$/)) 
 		{ die "Call to set_curs_ctxt() failed, value of key 'curs_ctxt' must be a digit 0, 1, 2, or 3"; }
 
 	$self->{'curs_ctxt'} = $arg->{'curs_ctxt'};
@@ -856,7 +1027,7 @@ sub curs_ctxt_incr {
 
 		# Switch context to 'INSERT'.
 
-		$objEventLoop->{'CTXT'} = 'INSERT';
+		$objEditor->{'ctxt'} = 'INSERT';
 	}
 
 	return (1);
@@ -1046,6 +1217,10 @@ Method dsp_coord()...
 
 =head2 init
 Method init()...
+= cut
+
+=head2 register_evt_callbacks
+Method register_evt_callbacks()...
 = cut
 
 =head1 AUTHOR

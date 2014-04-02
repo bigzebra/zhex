@@ -6,7 +6,10 @@ use 5.006;
 use strict;
 use warnings FATAL => 'all';
 
-use ZHex::Common qw(new obj_init $VERS);
+use ZHex::Common 
+  qw(new 
+     obj_init 
+     $VERS);
 
 use IO::File;
 use Fcntl qw(:DEFAULT :Fcompat);
@@ -57,6 +60,22 @@ sub init {
 	$self->{'fc'} = [];   # File contents: reference to array of strings (binmode raw).
 
 	$self->{'sz_read'} = 1024;   # Size: number of bytes to read from file w/ each call to read().
+
+	return (1);
+}
+
+sub register_evt_callbacks {
+
+	my $self = shift;
+
+	my $objCharMap   = $self->{'obj'}->{'charmap'};
+	my $objEventLoop = $self->{'obj'}->{'eventloop'};
+
+	$objEventLoop->register_callback 
+	  ({'ctxt'   => 'DEFAULT', 
+	    'evt_nm' => 'WRITE_DISK', 
+	    'evt_cb' => sub { $self->write_file ({'fn' => $self->{'fn'}}); },
+	    'evt' =>  [ $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({'lname' => 'LATIN SMALL LETTER W'}) }) ] });
 
 	return (1);
 }
@@ -338,6 +357,7 @@ sub insert_str {
 		{ die "Call to insert_str() failed, value associated w/ key 'str' was undef/empty string"; }
 
 	# From: http://www.perlmonks.org/?displaytype=print;node_id=836926;replies=1
+	#
 	#   print "Array isn't empty. Array Values:@array\n" if($array[0]);
 	#   print "Array isn't empty. Array Values:@array\n" if($#array >= 0);
 	#   print "Array isn't empty. Array Values:@array\n" if(@array);
@@ -349,9 +369,6 @@ sub insert_str {
 
 	my @str_bytes = 
 	  unpack ($unpack_str, $arg->{'str'});
-
-	# $self->{'obj'}->{'debug'}->errmsg ("str_bytes array contains '" . scalar (@str_bytes) . "' elements.");
-	# print "str_bytes array contains '" . scalar (@str_bytes) . "' elements.\n";
 
 	if ($#str_bytes >= 0 && 
 	    scalar (@str_bytes) > 0) {
@@ -480,6 +497,10 @@ Method insert_str()...
 
 =head2 read_file
 Method read_file()...
+= cut
+
+=head2 register_evt_callbacks
+Method register_evt_callbacks()...
 = cut
 
 =head2 set_file

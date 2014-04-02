@@ -6,7 +6,10 @@ use 5.006;
 use strict;
 use warnings FATAL => 'all';
 
-use ZHex::Common qw(new obj_init $VERS);
+use ZHex::Common 
+  qw(new 
+     obj_init 
+     $VERS);
 
 BEGIN { require Exporter;
 	our $VERSION   = $VERS;
@@ -26,14 +29,6 @@ sub init {
 
 	my $self = shift;
 
-	# Hash reference holds callback subroutines: registered as event 
-	# handlers via ZHex::EventLoop->register_callback() function.
-
-	$self->{'cb'} = {};
-	$self->{'cb'}->{'DEFAULT'} = {};   # DEFAULT context event handlers (callback subroutines).
-	$self->{'cb'}->{'INSERT'}  = {};   # INSERT  context event handlers (callback subroutines).
-	$self->{'cb'}->{'SEARCH'}  = {};   # SEARCH  context event handlers (callback subroutines).
-
 	$self->{'search_str'} = '';
 	$self->{'search_pos'} = 0;
 	$self->{'curs_ctxt_prev'} = 0;
@@ -48,10 +43,11 @@ sub init {
 #   ____				___________
 #   register_event_callbacks()		Define callback subroutines for named functions.
 
-sub register_event_callbacks {
+sub register_evt_callbacks {
 
 	my $self = shift;
 
+	my $objCharMap   = $self->{'obj'}->{'charmap'};
 	my $objConsole   = $self->{'obj'}->{'console'};
 	my $objDisplay   = $self->{'obj'}->{'display'};
 	my $objEditor    = $self->{'obj'}->{'editor'};
@@ -59,136 +55,41 @@ sub register_event_callbacks {
 	my $objFile      = $self->{'obj'}->{'file'};
 	my $objCursor    = $self->{'obj'}->{'cursor'};
 
-	# Development: Unicode character names that should be useful.
-	#
-	# _________			______
-	# Character			Action
-	# _________			______
-	# 'BACKSPACE'			Erase one character.
-	# 'LINE FEED (LF)'		Confirmation.
-	# 'CARRIAGE RETURN (CR)'	Confirmation.
-	# 'DOLLAR SIGN'			Skip to EOF (end of file).
+	$objEventLoop->register_callback 
+	  ({'ctxt'   => 'DEFAULT', 
+	    'evt_nm' => 'QUIT', 
+	    'evt_cb' => sub { $self->quit(); },
+	    'evt' =>  [ $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({'lname' => 'LATIN SMALL LETTER Q'}) }) ] });
 
-	# _____________________________________________________________________________________________________
-	# EVENT DRIVEN FUNCTION TABLE: TABLE OF WRAPPER FUNCTIONS PROVIDING UNIFORM NAMES/API TO EVENT HANDLERS
-	#   'DEFAULT' Context Functions:
-	# _______ _______________   ___________________ _____________________ ____________________                       _________________ 
-	# CONTEXT FUNCTION NAME     KEYBOARD MAPPING    |CHAR|VKCD|VSCD|CTRL| FUNCTION DESCRIPTION                       INTERNAL FUNCTION 
-	# _______ _______________   ___________________ |____|____|____|____| ____________________                       _________________ 
-	# DEFAULT QUIT              [q] Key (Low Case)  |113 |  - |  - |  - | Quit                                       quit() 
-	# DEFAULT CONSCURS_INVIS    SMALL LETTER V      |... |  - |  - |  - | Make (console cursor) invisible            w32cons_cursor_invisible() 
-	# DEFAULT CONSCURS_VIS      CAPITAL LETTER V    |... |  - |  - |  - | Make (console cursor) visible              w32cons_cursor_visible() 
-	# DEFAULT INSERT_MODE       [i] Key (Low Case)  |105 |  - |  - |  - | Insert (Begin Edit At Cursor)              insert_mode()
-	# DEFAULT INSERT_MODE       [INSERT] Key        |  0 | 45 | 82 |288 | Insert                                     insert_mode() 
-	# DEFAULT INSERT_MODE       [INSERT] Key        |  0 | 45 | 82 |256 | Insert                                     insert_mode() 
-	# DEFAULT WRITE_DISK        [w] Key (Low Case)  |119 |  - |  - |  - | Write  (Write Changes to Disk)             ZHex::File->write_file()
-	# DEFAULT SEARCH_MODE       [s] Key (Low Case)  |115 |  - |  - |  - | Search (Enter String  to Search For)       search_mode()
-# >	# DEFAULT JUMP_TO_LINE      [L] Key (Upp Case)  |... |  - |  - |  - | Line Number (Jump To)                      *** NOT IMPLEMENTED *** 
-# >	# DEFAULT COPY_REGION       [CTRL][C]           |  ? |  ? |  ? |  ? | Copy Highlighted/Selected Region           *** NOT IMPLEMENTED *** 
-# >	# DEFAULT CUT_REGION        [CTRL][X]           |  ? |  ? |  ? |  ? | Cut  Highlighted/Selected Region           *** NOT IMPLEMENTED *** 
-# >	# DEFAULT PASTE_BUFFER      [CTRL][V]           |  ? |  ? |  ? |  ? | Paste Contents Of Buffer To Cursor Pos     *** NOT IMPLEMENTED *** 
-# >	# DEFAULT UNDO_LAST         [CTRL][Z]           |  ? |  ? |  ? |  ? | Undo Last Operation (Copy/Cut/Paste)       *** NOT IMPLEMENTED *** 
-	# DEFAULT INCR_CURS_CTXT    [ENTER]  Key        | 13 |  - |  - |  - | Increse  Cursor Context/Begin Editing      curs_ctxt_incr() 
-	# DEFAULT DECR_CURS_CTXT    [ESCAPE] Key        | 27 |  - |  - |  - | Decrease Cursor Context/Stop  Editing      curs_ctxt_decr() 
-	# DEFAULT SCROLL_UP_1LN     [k] Key (Low Case)  |107 |  - |  - |  - | Scroll Up x 1 Line                         scroll_down_1x_line() 
-	# DEFAULT SCROLL_UP_1PG     [K] Key (Upp Case)  | 75 |  - |  - |  - | Scroll Up x 1 Page                         scroll_down_1x_page() 
-	# DEFAULT SCROLL_UP_1PG     [PgUp] Key          |  0 | 33 | 73 |288 | Scroll Up x 1 Page                         scroll_down_1x_page() 
-	# DEFAULT SCROLL_UP_1PG     [PgUp] Key          |  0 | 33 | 73 |256 | Scroll Up x 1 Page                         scroll_down_1x_page() 
-	# DEFAULT SCROLL_DOWN_1LN   [j] Key (Low Case)  |106 |  - |  - |  - | Scroll Down  x 1 Line                      scroll_down_1x_line() 
-	# DEFAULT SCROLL_DOWN_1PG   [J] Key (Upp Case)  | 74 |  - |  - |  - | Scroll Down x 1 Page                       scroll_down_1x_page() 
-	# DEFAULT SCROLL_DOWN_1PG   [PgDn]  Key         |  0 | 34 | 81 |288 | Scroll Down x 1 Page                       scroll_down_1x_page() 
-	# DEFAULT SCROLL_DOWN_1PG   [PgDn]  Key         |  0 | 34 | 81 |256 | Scroll Down x 1 Page                       scroll_down_1x_page() 
-	# DEFAULT SCROLL_DOWN_1PG   [SPACE] Key         | 32 |  - |  - |  - | Scroll Down x 1 Page                       scroll_down_1x_page() 
-	# DEFAULT MOVE_CURS_BACK    [SHIFT][TAB] Keys   |  9 | 15 |  9 | 48 | Move Cursor BACK    x 1 Word/Char          curs_mv_back() 
-	# DEFAULT MOVE_CURS_FORWARD [TAB] Key           |  9 | 15 |  9 | 32 | Move Cursor FORWARD x 1 Word/Char          curs_mv_fwd() 
-	# DEFAULT MOVE_CURS_FORWARD [TAB] Key           |  9 | 15 |  9 |  0 | Move Cursor FORWARD x 1 Word/Char          curs_mv_fwd() 
-	# DEFAULT MOVE_CURS_UP      [UP] Arrow Key      |  0 | 38 | 72 |288 | Move Cursor UP   x 1 Line                  curs_mv_up() 
-	# DEFAULT MOVE_CURS_UP      [UP] Arrow Key      |  0 | 38 | 72 |256 | Move Cursor UP   x 1 Line                  curs_mv_up() 
-	# DEFAULT MOVE_CURS_DOWN    [DOWN] Arrow Key    |  0 | 40 | 80 |288 | Move Cursor DOWN x 1 Line                  curs_mv_down() 
-	# DEFAULT MOVE_CURS_DOWN    [DOWN] Arrow Key    |  0 | 40 | 80 |256 | Move Cursor DOWN x 1 Line                  curs_mv_down() 
-	# DEFAULT MOVE_CURS_LEFT    [h] Key (Low Case)  |104 |  - |  - |  - | Move Cursor LEFT  x 1 Word/Char            curs_mv_left() 
-	# DEFAULT MOVE_CURS_LEFT    [LEFT] Arrow Key    |  0 | 37 | 75 |288 | Move Cursor LEFT  x 1 Word/Char            curs_mv_left() 
-	# DEFAULT MOVE_CURS_LEFT    [LEFT] Arrow Key    |  0 | 37 | 75 |256 | Move Cursor LEFT  x 1 Word/Char            curs_mv_left() 
-	# DEFAULT MOVE_CURS_RIGHT   [l] Key (Low Case)  |108 |  - |  - |  - | Move Cursor RIGHT x 1 Word/Char            curs_mv_right() 
-	# DEFAULT MOVE_CURS_RIGHT   [RIGHT] Arrow Key   |  0 | 39 | 77 |288 | Move Cursor RIGHT x 1 Word/Char            curs_mv_right() 
-	# DEFAULT MOVE_CURS_RIGHT   [RIGHT] Arrow Key   |  0 | 39 | 77 |256 | Move Cursor RIGHT x 1 Word/Char            curs_mv_right() 
-	# DEFAULT L_MOUSE_BUTTON    LEFT  Mouse Button  |  ? |  ? |  ? |  ? | Highlight line/word/byte at mouse pointer  lmouse() 
-	# DEFAULT R_MOUSE_BUTTON    RIGHT Mouse Button  |  ? |  ? |  ? |  ? | ???                                        rmouse() 
-	# DEFAULT DEBUG_OFF         [d] Key (Low Case)  | // | // | // | // | Disable display of debugging information   debug_on()
-	# DEFAULT DEBUG_ON          [D] Key (Upp Case)  | // | // | // | // | Enable  display of debugging information   debug_off()
-	# DEFAULT MOVE_BEG          [SHIFT][6] Keys: ^  | // | // | // | // | Move cursor to first byte                  move_to_beginning() 
-	# DEFAULT MOVE_END          [SHIFT][4] Keys: $  | // | // | // | // | Move cursor to last byte                   move_to_end() 
-	# DEFAULT VSTRETCH          [CTRL][UP] Arrow key|  0 | 38 | 72 | 264| Stretch the editor display verically       vstretch()
-	# DEFAULT VCOMPRESS         [CTRL][DN] Arrow key|  0 | 40 | 80 | 264| Compress the editor display vertcially     vcompress()
+	$objEventLoop->register_callback 
+	  ({'ctxt'   => 'DEFAULT', 
+	    'evt_nm' => 'JUMP_TO_LINE', 
+	    'evt_cb' => sub { return (0); },
+	    'evt' =>  [ $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({'lname' => 'LATIN CAPITAL LETTER J'}) }) ] });
 
-	foreach my $evt_reg 
-	( [ 'DEFAULT', 'QUIT',              sub { $self->quit(); } ],
-	  [ 'DEFAULT', 'CONSCURS_INVIS',    sub { $objConsole->w32cons_cursor_invisible(); } ],
-	  [ 'DEFAULT', 'CONSCURS_VIS',      sub { $objConsole->w32cons_cursor_visible(); } ],
-	  [ 'DEFAULT', 'INSERT_MODE',       sub { $self->insert_mode(); } ],
-	  [ 'DEFAULT', 'WRITE_DISK',        sub { $objFile->write_file ({'fn' => $objFile->{'fn'}}); } ],
-	  [ 'DEFAULT', 'SEARCH_MODE',       sub { $self->search_mode(); } ],
+	$objEventLoop->register_callback 
+	  ({'ctxt'   => 'DEFAULT', 
+	    'evt_nm' => 'COPY_REGION', 
+	    'evt_cb' => sub { return (0); },
+	    'evt' =>  [ $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({'lname' => 'LATIN CAPITAL LETTER Z'}) }) ] });   # <--- Change to CTRL-C
 
-	  [ 'DEFAULT', 'JUMP_TO_LINE',      sub { return (0); } ],   # <--- NOT IMPLEMENTED
-	  [ 'DEFAULT', 'COPY_REGION',       sub { return (0); } ],   # <--- NOT IMPLEMENTED
-	  [ 'DEFAULT', 'CUT_REGION',        sub { return (0); } ],   # <--- NOT IMPLEMENTED
-	  [ 'DEFAULT', 'PASTE_BUFFER',      sub { return (0); } ],   # <--- NOT IMPLEMENTED
-	  [ 'DEFAULT', 'UNDO_LAST',         sub { return (0); } ],   # <--- NOT IMPLEMENTED
+	$objEventLoop->register_callback 
+	  ({'ctxt'   => 'DEFAULT', 
+	    'evt_nm' => 'CUT_REGION', 
+	    'evt_cb' => sub { return (0); },
+	    'evt' =>  [ $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({'lname' => 'LATIN CAPITAL LETTER Z'}) }) ] });   # <--- Change to CTRL-X
 
-	  [ 'DEFAULT', 'SCROLL_UP_1LN',     sub { $objEditor->scroll_up_1x_line(); 
-	                                          $objCursor->curs_adjust 
-	                                            ({ 'dsp_pos' => $objEditor->{'dsp_pos'} }); } ],
-	  [ 'DEFAULT', 'SCROLL_UP_1PG',     sub { $objEditor->scroll_up_1x_page();
-	                                          $objCursor->curs_adjust 
-	                                            ({ 'dsp_pos' => $objEditor->{'dsp_pos'} }); } ],
-	  [ 'DEFAULT', 'SCROLL_DOWN_1LN',   sub { $objEditor->scroll_down_1x_line({ 'file_len' => $objFile->file_len() });
-	                                          $objCursor->curs_adjust 
-	                                            ({ 'dsp_pos' => $objEditor->{'dsp_pos'} }); } ],
-	  [ 'DEFAULT', 'SCROLL_DOWN_1PG',   sub { $objEditor->scroll_down_1x_page({ 'file_len' => $objFile->file_len() });
-	                                          $objCursor->curs_adjust 
-	                                            ({ 'dsp_pos' => $objEditor->{'dsp_pos'} }); } ],
-	  [ 'DEFAULT', 'INCR_CURS_CTXT',    sub { $objCursor->curs_ctxt_incr(); } ],
-	  [ 'DEFAULT', 'DECR_CURS_CTXT',    sub { $objCursor->curs_ctxt_decr(); } ],
-	  [ 'DEFAULT', 'MOVE_CURS_FORWARD', sub { $objCursor->curs_mv_fwd({ 'file_len' => $objFile->file_len() });
-	                                          $objEditor->dsp_pos_adjust 
-	                                            ({ 'curs_pos' => $objCursor->{'curs_pos'} }); } ],
-	  [ 'DEFAULT', 'MOVE_CURS_BACK',    sub { $objCursor->curs_mv_back();
-	                                          $objEditor->dsp_pos_adjust 
-	                                            ({ 'curs_pos' => $objCursor->{'curs_pos'} }); } ],
-	  [ 'DEFAULT', 'MOVE_CURS_UP',      sub { $objCursor->curs_mv_up();
-	                                          $objEditor->dsp_pos_adjust 
-	                                            ({ 'curs_pos' => $objCursor->{'curs_pos'} }); } ],
-	  [ 'DEFAULT', 'MOVE_CURS_DOWN',    sub { $objCursor->curs_mv_down({ 'file_len' => $objFile->file_len() });
-	                                          $objEditor->dsp_pos_adjust 
-	                                            ({ 'curs_pos' => $objCursor->{'curs_pos'} }); } ],
-	  [ 'DEFAULT', 'MOVE_CURS_LEFT',    sub { $objCursor->curs_mv_left();
-	                                          $objEditor->dsp_pos_adjust 
-	                                            ({ 'curs_pos' => $objCursor->{'curs_pos'} }); } ],
-	  [ 'DEFAULT', 'MOVE_CURS_RIGHT',   sub { $objCursor->curs_mv_right({ 'file_len' => $objFile->file_len() });
-	                                          $objEditor->dsp_pos_adjust 
-	                                            ({ 'curs_pos' => $objCursor->{'curs_pos'} }); } ],
-	  [ 'DEFAULT', 'L_MOUSE_BUTTON',    sub { $objConsole->lmouse(); } ],
-	  [ 'DEFAULT', 'R_MOUSE_BUTTON',    sub { $objConsole->rmouse(); } ],
-	  [ 'DEFAULT', 'DEBUG_OFF',         sub { $objDisplay->debug_off(); } ],
-	  [ 'DEFAULT', 'DEBUG_ON',          sub { $objDisplay->debug_on(); } ],
-	  [ 'DEFAULT', 'MOVE_BEG',          sub { $objCursor->set_curs_pos ({ 'curs_pos' => 0 });
-	                                          $objEditor->set_dsp_pos ({ 'dsp_pos' => 0 });
-	                                        } ],
-	  [ 'DEFAULT', 'MOVE_END',          sub { $objCursor->set_curs_ctxt ({ 'curs_ctxt' => 2 });
-	                                          $objCursor->set_curs_pos ({ 'curs_pos' => ($objFile->file_len() - 1) });
-	                                          $objEditor->dsp_pos_adjust 
-	                                            ({ 'curs_pos' => $objCursor->{'curs_pos'} }); 
-	                                        } ],
-	  [ 'DEFAULT', 'VSTRETCH',          sub { $objEditor->vstretch 
-	                                            ({ 'max_columns' => $objDisplay->max_columns(), 
-	                                               'file_len'    => $objFile->file_len() });
-	                                          $objCursor->set_sz_column ({ 'sz_column' => $objEditor->{'sz_column'} });
-	                                          $objDisplay->adjust_display(); } ],
-	  [ 'DEFAULT', 'VCOMPRESS',         sub { $objEditor->vcompress();
-	                                          $objCursor->set_sz_column ({ 'sz_column' => $objEditor->{'sz_column'} });
-	                                          $objCursor->curs_adjust 
-	                                            ({ 'dsp_pos' => $objEditor->{'dsp_pos'} });
-	                                          $objDisplay->adjust_display(); } ],
+	$objEventLoop->register_callback 
+	  ({'ctxt'   => 'DEFAULT', 
+	    'evt_nm' => 'PASTE_BUFFER', 
+	    'evt_cb' => sub { return (0); },
+	    'evt' =>  [ $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({'lname' => 'LATIN CAPITAL LETTER Z'}) }) ] });   # <--- Change to CTRL-V
+
+	$objEventLoop->register_callback 
+	  ({'ctxt'   => 'DEFAULT', 
+	    'evt_nm' => 'UNDO_LAST', 
+	    'evt_cb' => sub { return (0); },
+	    'evt' =>  [ $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({'lname' => 'LATIN CAPITAL LETTER Z'}) }) ] });   # <--- Change to CTRL-Z
 
 	# _____________________________________________________________________________________________________
 	# EVENT DRIVEN FUNCTION TABLE: TABLE OF WRAPPER FUNCTIONS PROVIDING UNIFORM NAMES/API TO EVENT HANDLERS
@@ -203,12 +104,149 @@ sub register_event_callbacks {
 	# INSERT_L_ARROW    [LEFT ARROW] Key    |    |    |    |    | Move Cursor To The Left One Character      insert_l_arrow()
 	# INSERT_R_ARROW    [RIGHT ARROW] Key   |    |    |    |    | Move Cursor To The Right One Character     insert_r_arrow()
 
-	  [ 'INSERT', 'INSERT_BACKSPACEINSERT', sub { $self->insert_backspace(); } ],
-	  [ 'INSERT', 'INSERT_CHAR',            sub { $self->insert_char(); } ],
-	  [ 'INSERT', 'INSERT_ENTER',           sub { $self->insert_enter(); } ],
-	  [ 'INSERT', 'INSERT_ESCAPE',          sub { $self->insert_escape(); } ],
-	  [ 'INSERT', 'INSERT_L_ARROW',         sub { $self->insert_l_arrow(); } ],
-	  [ 'INSERT', 'INSERT_R_ARROW',         sub { $self->insert_r_arrow(); } ],
+	$objEventLoop->register_callback 
+	  ({'ctxt'   => 'INSERT', 
+	    'evt_nm' => 'INSERT_ESCAPE', 
+	    'evt_cb' => sub { $self->insert_escape(); },
+	    'evt' =>  [ $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({'lname' => 'ESCAPE'}) }) ] });
+
+	$objEventLoop->register_callback 
+	  ({'ctxt'   => 'INSERT', 
+	    'evt_nm' => 'INSERT_BACKSPACE', 
+	    'evt_cb' => sub { $self->insert_backspace(); },
+	    'evt' =>  [ $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({'lname' => 'BACKSPACE'}) }) ] });
+
+	$objEventLoop->register_callback 
+	  ({'ctxt'   => 'INSERT', 
+	    'evt_nm' => 'INSERT_ENTER', 
+	    'evt_cb' => sub { $self->insert_enter(); },
+	    'evt' =>  [ $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({'lname' => 'CARRIAGE RETURN (CR)'}) }) ] });
+
+	$objEventLoop->register_callback 
+	  ({'ctxt'   => 'INSERT', 
+	    'evt_nm' => 'INSERT_L_ARROW', 
+	    'evt_cb' => sub { $self->insert_l_arrow(); },
+	    'evt' =>  [ $objEventLoop->gen_evt_array ({ '3' => 37, 
+	                                        '4' => 75, 
+	                                        '5' => 0, 
+	                                        '6' => 288 }), 
+	                $objEventLoop->gen_evt_array ({ '3' => 37, 
+	                                        '4' => 75, 
+	                                        '5' => 0, 
+	                                        '6' => 256 }) ] });
+
+	$objEventLoop->register_callback 
+	  ({'ctxt'   => 'INSERT', 
+	    'evt_nm' => 'INSERT_R_ARROW', 
+	    'evt_cb' => sub { $self->insert_r_arrow(); },
+	    'evt' =>  [ $objEventLoop->gen_evt_array ({ '3' => 39, 
+	                                        '4' => 77, 
+	                                        '5' => 0, 
+	                                        '6' => 288 }), 
+	                $objEventLoop->gen_evt_array ({ '3' => 39, 
+	                                        '4' => 77, 
+	                                        '5' => 0, 
+	                                        '6' => 256 }) ] });
+
+	$objEventLoop->register_callback 
+	  ({'ctxt'   => 'INSERT', 
+	    'evt_nm' => 'INSERT_CHAR', 
+	    'evt_cb' => sub { $self->insert_char(); },
+	    'evt' =>  [ $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'SPACE' }) }),
+	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'EXCLAMATION MARK' }) }),
+	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'QUOTATION MARK' }) }),
+	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'NUMBER SIGN' }) }),
+	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'DOLLAR SIGN' }) }),
+	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'PERCENT SIGN' }) }),
+	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'AMPERSAND' }) }),
+	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'APOSTROPHE' }) }),
+	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LEFT PARENTHESIS' }) }),
+	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'RIGHT PARENTHESIS' }) }),
+	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'ASTERISK' }) }),
+	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'PLUS SIGN' }) }),
+	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'COMMA' }) }),
+	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'HYPHEN-MINUS' }) }),
+	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'FULL STOP' }) }),
+	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'SOLIDUS' }) }),
+	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'DIGIT ZERO' }) }),
+	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'DIGIT ONE' }) }),
+	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'DIGIT TWO' }) }),
+	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'DIGIT THREE' }) }),
+	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'DIGIT FOUR' }) }),
+	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'DIGIT FIVE' }) }),
+	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'DIGIT SIX' }) }),
+	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'DIGIT SEVEN' }) }),
+	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'DIGIT EIGHT' }) }),
+	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'DIGIT NINE' }) }),
+	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'COLON' }) }),
+	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'SEMICOLON' }) }),
+	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LESS-THAN SIGN' }) }),
+	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'EQUALS SIGN' }) }),
+	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'GREATER-THAN SIGN' }) }),
+	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'QUESTION MARK' }) }),
+	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'COMMERCIAL AT' }) }),
+	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN CAPITAL LETTER A' }) }),
+	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN CAPITAL LETTER B' }) }),
+	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN CAPITAL LETTER C' }) }),
+	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN CAPITAL LETTER D' }) }),
+	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN CAPITAL LETTER E' }) }),
+	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN CAPITAL LETTER F' }) }),
+	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN CAPITAL LETTER G' }) }),
+	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN CAPITAL LETTER H' }) }),
+	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN CAPITAL LETTER I' }) }),
+	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN CAPITAL LETTER J' }) }),
+	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN CAPITAL LETTER K' }) }),
+	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN CAPITAL LETTER L' }) }),
+	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN CAPITAL LETTER M' }) }),
+	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN CAPITAL LETTER N' }) }),
+	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN CAPITAL LETTER O' }) }),
+	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN CAPITAL LETTER P' }) }),
+	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN CAPITAL LETTER Q' }) }),
+	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN CAPITAL LETTER R' }) }),
+	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN CAPITAL LETTER S' }) }),
+	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN CAPITAL LETTER T' }) }),
+	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN CAPITAL LETTER U' }) }),
+	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN CAPITAL LETTER V' }) }),
+	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN CAPITAL LETTER W' }) }),
+	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN CAPITAL LETTER X' }) }),
+	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN CAPITAL LETTER Y' }) }),
+	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN CAPITAL LETTER Z' }) }),
+	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LEFT SQUARE BRACKET' }) }),
+	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'REVERSE SOLIDUS' }) }),
+	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'RIGHT SQUARE BRACKET' }) }),
+	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'CIRCUMFLEX ACCENT' }) }),
+	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LOW LINE' }) }),
+	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'GRAVE ACCENT' }) }),
+	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN SMALL LETTER A' }) }),
+	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN SMALL LETTER B' }) }),
+	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN SMALL LETTER C' }) }),
+	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN SMALL LETTER D' }) }),
+	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN SMALL LETTER E' }) }),
+	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN SMALL LETTER F' }) }),
+	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN SMALL LETTER G' }) }),
+	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN SMALL LETTER H' }) }),
+	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN SMALL LETTER I' }) }),
+	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN SMALL LETTER J' }) }),
+	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN SMALL LETTER K' }) }),
+	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN SMALL LETTER L' }) }),
+	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN SMALL LETTER M' }) }),
+	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN SMALL LETTER N' }) }),
+	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN SMALL LETTER O' }) }),
+	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN SMALL LETTER P' }) }),
+	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN SMALL LETTER Q' }) }),
+	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN SMALL LETTER R' }) }),
+	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN SMALL LETTER S' }) }),
+	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN SMALL LETTER T' }) }),
+	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN SMALL LETTER U' }) }),
+	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN SMALL LETTER V' }) }),
+	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN SMALL LETTER W' }) }),
+	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN SMALL LETTER X' }) }),
+	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN SMALL LETTER Y' }) }),
+	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN SMALL LETTER Z' }) }),
+	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LEFT CURLY BRACKET' }) }),
+	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'VERTICAL LINE' }) }),
+	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'RIGHT CURLY BRACKET' }) }),
+	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'TILDE' }) }) ] });
 
 	# _____________________________________________________________________________________________________
 	# EVENT DRIVEN FUNCTION TABLE: TABLE OF WRAPPER FUNCTIONS PROVIDING UNIFORM NAMES/API TO EVENT HANDLERS
@@ -223,18 +261,149 @@ sub register_event_callbacks {
 	# SEARCH_L_ARROW    [LEFT ARROW] Key    | 27 |  - |  - |  - | ...                                        search_l_arrow()
 	# SEARCH_R_ARROW    [RIGHT ARROW] Key   | 27 |  - |  - |  - | ...                                        search_r_arrow()
 
-	  [ 'SEARCH', 'SEARCH_BACKSPACE', sub { $self->search_backspace(); } ],
-	  [ 'SEARCH', 'SEARCH_CHAR',      sub { $self->search_char(); } ],
-	  [ 'SEARCH', 'SEARCH_ENTER',     sub { $self->search_enter(); } ],
-	  [ 'SEARCH', 'SEARCH_ESCAPE',    sub { $self->search_escape(); } ],
-	  [ 'SEARCH', 'SEARCH_L_ARROW',   sub { $self->search_l_arrow(); } ],
-	  [ 'SEARCH', 'SEARCH_R_ARROW',   sub { $self->search_r_arrow(); } ] ) {
+	$objEventLoop->register_callback 
+	  ({'ctxt'   => 'SEARCH', 
+	    'evt_nm' => 'SEARCH_BACKSPACE', 
+	    'evt_cb' => sub { $self->search_backspace(); },
+	    'evt' =>  [ $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({'lname' => 'BACKSPACE'}) }) ] });
 
-		# print $evt_reg->[0] . "\t" . $evt_reg->[1] . "\t" . $evt_reg->[2] . "\n";
+	$objEventLoop->register_callback 
+	  ({'ctxt'   => 'SEARCH', 
+	    'evt_nm' => 'SEARCH_ENTER', 
+	    'evt_cb' => sub { $self->search_enter(); },
+	    'evt' =>  [ $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({'lname' => 'CARRIAGE RETURN (CR)'}) }) ] });
 
-		$objEventLoop->register_callback ({ 'ctxt' => $evt_reg->[0], 'evt_nm' => $evt_reg->[1], 'evt_cb' => $evt_reg->[2] });
+	$objEventLoop->register_callback 
+	  ({'ctxt'   => 'SEARCH', 
+	    'evt_nm' => 'SEARCH_ESCAPE', 
+	    'evt_cb' => sub { $self->search_escape(); },
+	    'evt' =>  [ $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({'lname' => 'ESCAPE'}) }) ] });
 
-	}
+	$objEventLoop->register_callback 
+	  ({'ctxt'   => 'SEARCH', 
+	    'evt_nm' => 'SEARCH_L_ARROW', 
+	    'evt_cb' => sub { $self->search_l_arrow(); },
+	    'evt' =>  [ $objEventLoop->gen_evt_array ({ '3' => 37, 
+	                                        '4' => 75, 
+	                                        '5' => 0, 
+	                                        '6' => 288 }), 
+	                $objEventLoop->gen_evt_array ({ '3' => 37, 
+	                                        '4' => 75, 
+	                                        '5' => 0, 
+	                                        '6' => 256 }) ] });
+
+	$objEventLoop->register_callback 
+	  ({'ctxt'   => 'SEARCH', 
+	    'evt_nm' => 'SEARCH_R_ARROW', 
+	    'evt_cb' => sub { $self->search_r_arrow(); },
+	    'evt' =>  [ $objEventLoop->gen_evt_array ({ '3' => 39, 
+	                                        '4' => 77, 
+	                                        '5' => 0, 
+	                                        '6' => 288 }), 
+	                $objEventLoop->gen_evt_array ({ '3' => 39, 
+	                                        '4' => 77, 
+	                                        '5' => 0, 
+	                                        '6' => 256 }) ] });
+
+	$objEventLoop->register_callback 
+	  ({'ctxt'   => 'SEARCH', 
+	    'evt_nm' => 'SEARCH_CHAR', 
+	    'evt_cb' => sub { $self->search_char(); },
+	    'evt' =>  [ $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'SPACE' }) }),
+	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'EXCLAMATION MARK' }) }),
+	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'QUOTATION MARK' }) }),
+	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'NUMBER SIGN' }) }),
+	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'DOLLAR SIGN' }) }),
+	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'PERCENT SIGN' }) }),
+	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'AMPERSAND' }) }),
+	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'APOSTROPHE' }) }),
+	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LEFT PARENTHESIS' }) }),
+	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'RIGHT PARENTHESIS' }) }),
+	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'ASTERISK' }) }),
+	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'PLUS SIGN' }) }),
+	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'COMMA' }) }),
+	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'HYPHEN-MINUS' }) }),
+	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'FULL STOP' }) }),
+	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'SOLIDUS' }) }),
+	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'DIGIT ZERO' }) }),
+	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'DIGIT ONE' }) }),
+	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'DIGIT TWO' }) }),
+	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'DIGIT THREE' }) }),
+	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'DIGIT FOUR' }) }),
+	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'DIGIT FIVE' }) }),
+	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'DIGIT SIX' }) }),
+	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'DIGIT SEVEN' }) }),
+	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'DIGIT EIGHT' }) }),
+	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'DIGIT NINE' }) }),
+	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'COLON' }) }),
+	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'SEMICOLON' }) }),
+	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LESS-THAN SIGN' }) }),
+	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'EQUALS SIGN' }) }),
+	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'GREATER-THAN SIGN' }) }),
+	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'QUESTION MARK' }) }),
+	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'COMMERCIAL AT' }) }),
+	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN CAPITAL LETTER A' }) }),
+	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN CAPITAL LETTER B' }) }),
+	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN CAPITAL LETTER C' }) }),
+	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN CAPITAL LETTER D' }) }),
+	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN CAPITAL LETTER E' }) }),
+	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN CAPITAL LETTER F' }) }),
+	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN CAPITAL LETTER G' }) }),
+	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN CAPITAL LETTER H' }) }),
+	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN CAPITAL LETTER I' }) }),
+	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN CAPITAL LETTER J' }) }),
+	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN CAPITAL LETTER K' }) }),
+	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN CAPITAL LETTER L' }) }),
+	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN CAPITAL LETTER M' }) }),
+	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN CAPITAL LETTER N' }) }),
+	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN CAPITAL LETTER O' }) }),
+	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN CAPITAL LETTER P' }) }),
+	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN CAPITAL LETTER Q' }) }),
+	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN CAPITAL LETTER R' }) }),
+	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN CAPITAL LETTER S' }) }),
+	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN CAPITAL LETTER T' }) }),
+	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN CAPITAL LETTER U' }) }),
+	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN CAPITAL LETTER V' }) }),
+	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN CAPITAL LETTER W' }) }),
+	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN CAPITAL LETTER X' }) }),
+	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN CAPITAL LETTER Y' }) }),
+	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN CAPITAL LETTER Z' }) }),
+	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LEFT SQUARE BRACKET' }) }),
+	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'REVERSE SOLIDUS' }) }),
+	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'RIGHT SQUARE BRACKET' }) }),
+	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'CIRCUMFLEX ACCENT' }) }),
+	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LOW LINE' }) }),
+	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'GRAVE ACCENT' }) }),
+	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN SMALL LETTER A' }) }),
+	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN SMALL LETTER B' }) }),
+	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN SMALL LETTER C' }) }),
+	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN SMALL LETTER D' }) }),
+	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN SMALL LETTER E' }) }),
+	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN SMALL LETTER F' }) }),
+	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN SMALL LETTER G' }) }),
+	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN SMALL LETTER H' }) }),
+	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN SMALL LETTER I' }) }),
+	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN SMALL LETTER J' }) }),
+	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN SMALL LETTER K' }) }),
+	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN SMALL LETTER L' }) }),
+	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN SMALL LETTER M' }) }),
+	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN SMALL LETTER N' }) }),
+	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN SMALL LETTER O' }) }),
+	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN SMALL LETTER P' }) }),
+	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN SMALL LETTER Q' }) }),
+	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN SMALL LETTER R' }) }),
+	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN SMALL LETTER S' }) }),
+	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN SMALL LETTER T' }) }),
+	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN SMALL LETTER U' }) }),
+	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN SMALL LETTER V' }) }),
+	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN SMALL LETTER W' }) }),
+	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN SMALL LETTER X' }) }),
+	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN SMALL LETTER Y' }) }),
+	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN SMALL LETTER Z' }) }),
+	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LEFT CURLY BRACKET' }) }),
+	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'VERTICAL LINE' }) }),
+	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'RIGHT CURLY BRACKET' }) }),
+	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'TILDE' }) }) ] });
 
 	return (1);
 }
@@ -244,116 +413,7 @@ sub register_event_callbacks {
 #   ____			__________	___________
 #   NAME			Event Name	DESCRIPTION
 #   ____			__________	___________
-#   insert_mode()		INSERT_MODE	Switch to 'INSERT' context.
-#   search_mode()		SEARCH_MODE	Switch to 'SEARCH' context.
-#   move_to_beginning()		MOVE_BEG	Move to first byte of file.
-#   move_to_end()		MOVE_END	Move to last  byte of file.
 #   quit()			QUIT		Break out of event_loop(), clean up, exit().
-#   vstretch()			VSTRETCH	Stretch the editor display vertically.
-#   vcompress()                 VCOMPRESS       Compress the editor display vertically.
-
-sub insert_mode {
-
-	my $self = shift;
-
-	my $objConsole   = $self->{'obj'}->{'console'};     # Used.
-	my $objCursor    = $self->{'obj'}->{'cursor'};      # Used.
-	my $objDisplay   = $self->{'obj'}->{'display'};     # Used.
-	my $objEditor    = $self->{'obj'}->{'editor'};      # Used.
-	my $objEventLoop = $self->{'obj'}->{'eventloop'};   # Used.
-
-	# Switch context to 'INSERT'.
-
-	$objEventLoop->{'CTXT'} = 'INSERT';
-
-	# Change cursor context to 3 (insert mode).
-
-	if (! ($objCursor->{'curs_ctxt'} == 3)) 
-		{ $objCursor->{'curs_ctxt'} = 3; }
-
-	# Define variables used to manage the insert user interface.
-
-	if (! exists  $self->{'insert_str'} || 
-	    ! defined $self->{'insert_str'}) {
-
-		$self->{'insert_str'} = '';
-	}
-
-	if (! exists  $self->{'insert_pos'} || 
-	    ! defined $self->{'insert_pos'} || 
-	           ! ($self->{'insert_pos'} =~ /^\d+?$/)) {
-
-		$self->{'insert_pos'} = 0;
-	}
-
-	# Move Win32 console cursor to insert position.
-	# Make Win32 console cursor visible.
-
-	my ($xpos, $ypos) = 
-	  $objCursor->dsp_coord 
-	    ({ 'curs_pos' => $objCursor->{'curs_pos'}, 
-	       'dsp_pos'  => $objEditor->{'dsp_pos'}, 
-	       'dsp_ypad' => $objDisplay->{'dsp_xpad'}, 
-	       'dsp_xpad' => $objDisplay->{'dsp_ypad'} });
-
-	$objConsole->w32cons_cursor_move 
-	  ({ 'xpos' => ($xpos + $objDisplay->{'dsp_xpad'}), 
-	     'ypos' => ($ypos + $objDisplay->{'dsp_ypad'}) });
-
-	$objConsole->w32cons_cursor_visible();
-
-	return (1);
-}
-
-sub search_mode {
-
-	my $self = shift;
-
-	my $objCursor    = $self->{'obj'}->{'cursor'};
-	my $objConsole   = $self->{'obj'}->{'console'};
-	my $objDisplay   = $self->{'obj'}->{'display'};
-	my $objEventLoop = $self->{'obj'}->{'eventloop'};
-
-	# Switch context to 'SEARCH'.
-
-	$objEventLoop->{'CTXT'} = 'SEARCH';
-
-	# Draw search box over the top of the editor display.
-
-	$objDisplay->{'d_elements'}->{'search_box'}->{'enabled'} = 1;
-
-	# Define variables used to manage the search user interface.
-
-	if (! exists  $self->{'search_str'} || 
-	    ! defined $self->{'search_str'}) {
-
-		$self->{'search_str'} = '';
-	}
-
-	if (! exists  $self->{'search_pos'} || 
-	    ! defined $self->{'search_pos'} || 
-	           ! ($self->{'search_pos'} =~ /^\d+?$/)) {
-
-		$self->{'search_pos'} = 0;
-	}
-
-	# Store the value of 'curs_ctxt' so that it can be restored.
-	# Set cursor context to 3 (make it disappear while search box displayed).
-
-	$self->{'curs_ctxt_prev'} = $objCursor->{'curs_ctxt'};
-	$objCursor->{'curs_ctxt'} = 3;
-
-	# Move Win32 console cursor to beginning of text string position (within search box).
-	# Make Win32 console cursor visible.
-
-	$objConsole->w32cons_cursor_move 
-	  ({ 'xpos' => ($objDisplay->{'d_elements'}->{'search_box'}->{'e_xpos'} + 4), 
-	     'ypos' => ($objDisplay->{'d_elements'}->{'search_box'}->{'e_ypos'} + 3) });
-
-	$objConsole->w32cons_cursor_visible();
-
-	return (1);
-}
 
 sub quit {
 
@@ -490,11 +550,12 @@ sub insert_enter {
 	my $objConsole   = $self->{'obj'}->{'console'};
 	my $objCursor    = $self->{'obj'}->{'cursor'};
 	my $objDisplay   = $self->{'obj'}->{'display'};
+	my $objEditor    = $self->{'obj'}->{'editor'};
 	my $objEventLoop = $self->{'obj'}->{'eventloop'};
 
 	# Switch context to 'DEFAULT'.
 
-	$objEventLoop->{'CTXT'} = 'DEFAULT';
+	$objEditor->{'ctxt'} = 'DEFAULT';
 
 	# Change cursor context to 2 (byte mode).
 
@@ -516,11 +577,12 @@ sub insert_escape {
 
 	my $objConsole   = $self->{'obj'}->{'console'};
 	my $objCursor    = $self->{'obj'}->{'cursor'};
+	my $objEditor    = $self->{'obj'}->{'editor'};
 	my $objEventLoop = $self->{'obj'}->{'eventloop'};
 
 	# Switch context to 'DEFAULT'.
 
-	$objEventLoop->{'CTXT'} = 'DEFAULT';
+	$objEditor->{'ctxt'} = 'DEFAULT';
 
 	# Change cursor context to 2 (byte mode).
 
@@ -744,7 +806,7 @@ sub search_enter {
 
 	# Switch context to 'DEFAULT'.
 
-	$objEventLoop->{'CTXT'} = 'DEFAULT';
+	$objEditor->{'ctxt'} = 'DEFAULT';
 
 	# Disable search box display.
 
@@ -771,11 +833,12 @@ sub search_escape {
 	my $objConsole   = $self->{'obj'}->{'console'};
 	my $objCursor    = $self->{'obj'}->{'cursor'};
 	my $objDisplay   = $self->{'obj'}->{'display'};
+	my $objEditor    = $self->{'obj'}->{'editor'};
 	my $objEventLoop = $self->{'obj'}->{'eventloop'};
 
 	# Switch context to 'DEFAULT'.
 
-	$objEventLoop->{'CTXT'} = 'DEFAULT';
+	$objEditor->{'ctxt'} = 'DEFAULT';
 
 	# Restore cursor context to previous value (or 2: byte mode).
 
@@ -963,10 +1026,6 @@ Method insert_escape()...
 Method insert_l_arrow()...
 = cut
 
-=head2 insert_mode
-Method insert_mode()...
-= cut
-
 =head2 insert_r_arrow
 Method insert_r_arrow()...
 = cut
@@ -983,8 +1042,8 @@ Method move_to_end()...
 Method quit()...
 = cut
 
-=head2 register_event_callbacks
-Method register_event_callbacks()...
+=head2 register_evt_callbacks
+Method register_evt_callbacks()...
 = cut
 
 =head2 search_backspace
