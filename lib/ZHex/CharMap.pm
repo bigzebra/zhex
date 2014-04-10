@@ -6,7 +6,10 @@ use 5.006;
 use strict;
 use warnings FATAL => 'all';
 
-use ZHex::Common qw(new obj_init $VERS);
+use ZHex::Common 
+  qw(new 
+     obj_init 
+     $VERS);
 
 BEGIN { require Exporter;
 	our $VERSION   = $VERS;
@@ -38,7 +41,7 @@ sub init {
 #   _____________	___________
 #   chr_map_set()	...
 #   chr_map_hex_val()	...
-#   chr_map_ord_val()	...
+#   chr_map_ord_val()	...   <--- Memoized...
 #   chr_map()		...
 
 sub chr_map_set {

@@ -9,7 +9,10 @@ use warnings FATAL => 'all';
 use ZHex::Common 
   qw(new 
      obj_init 
-     $VERS);
+     $VERS 
+     EDT_CTXT_DEFAULT 
+     EDT_CTXT_INSERT 
+     EDT_CTXT_SEARCH);
 
 BEGIN { require Exporter;
 	our $VERSION   = $VERS;
@@ -33,929 +36,393 @@ sub init {
 	$self->{'search_pos'} = 0;
 	$self->{'curs_ctxt_prev'} = 0;
 
-	return (1);
-}
+	# Event callback subroutine references.
 
-# Functions: Event Handling Functions.
-#
-#   ____				___________
-#   NAME				DESCRIPTION
-#   ____				___________
-#   register_event_callbacks()		Define callback subroutines for named functions.
+	$self->{'cb'} = {};
+	$self->{'cb'}->{EDT_CTXT_DEFAULT} = {};
+	$self->{'cb'}->{EDT_CTXT_INSERT}  = {};
+	$self->{'cb'}->{EDT_CTXT_SEARCH}  = {};
 
-sub register_evt_callbacks {
+	# Event signatures: map @evt array (returned by Win32::Console) to "event name".
 
-	my $self = shift;
-
-	my $objCharMap   = $self->{'obj'}->{'charmap'};
-	my $objConsole   = $self->{'obj'}->{'console'};
-	my $objDisplay   = $self->{'obj'}->{'display'};
-	my $objEditor    = $self->{'obj'}->{'editor'};
-	my $objEventLoop = $self->{'obj'}->{'eventloop'};
-	my $objFile      = $self->{'obj'}->{'file'};
-	my $objCursor    = $self->{'obj'}->{'cursor'};
-
-	$objEventLoop->register_callback 
-	  ({'ctxt'   => 'DEFAULT', 
-	    'evt_nm' => 'QUIT', 
-	    'evt_cb' => sub { $self->quit(); },
-	    'evt' =>  [ $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({'lname' => 'LATIN SMALL LETTER Q'}) }) ] });
-
-	$objEventLoop->register_callback 
-	  ({'ctxt'   => 'DEFAULT', 
-	    'evt_nm' => 'JUMP_TO_LINE', 
-	    'evt_cb' => sub { return (0); },
-	    'evt' =>  [ $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({'lname' => 'LATIN CAPITAL LETTER J'}) }) ] });
-
-	$objEventLoop->register_callback 
-	  ({'ctxt'   => 'DEFAULT', 
-	    'evt_nm' => 'COPY_REGION', 
-	    'evt_cb' => sub { return (0); },
-	    'evt' =>  [ $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({'lname' => 'LATIN CAPITAL LETTER Z'}) }) ] });   # <--- Change to CTRL-C
-
-	$objEventLoop->register_callback 
-	  ({'ctxt'   => 'DEFAULT', 
-	    'evt_nm' => 'CUT_REGION', 
-	    'evt_cb' => sub { return (0); },
-	    'evt' =>  [ $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({'lname' => 'LATIN CAPITAL LETTER Z'}) }) ] });   # <--- Change to CTRL-X
-
-	$objEventLoop->register_callback 
-	  ({'ctxt'   => 'DEFAULT', 
-	    'evt_nm' => 'PASTE_BUFFER', 
-	    'evt_cb' => sub { return (0); },
-	    'evt' =>  [ $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({'lname' => 'LATIN CAPITAL LETTER Z'}) }) ] });   # <--- Change to CTRL-V
-
-	$objEventLoop->register_callback 
-	  ({'ctxt'   => 'DEFAULT', 
-	    'evt_nm' => 'UNDO_LAST', 
-	    'evt_cb' => sub { return (0); },
-	    'evt' =>  [ $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({'lname' => 'LATIN CAPITAL LETTER Z'}) }) ] });   # <--- Change to CTRL-Z
-
-	# _____________________________________________________________________________________________________
-	# EVENT DRIVEN FUNCTION TABLE: TABLE OF WRAPPER FUNCTIONS PROVIDING UNIFORM NAMES/API TO EVENT HANDLERS
-	#   'INSERT' Context Functions:
-	# _______________   ___________________ _____________________ ____________________                       _________________ 
-	# FUNCTION NAME     KEYBOARD MAPPING    |CHAR|VKCD|VSCD|CTRL| FUNCTION DESCRIPTION                       INTERNAL FUNCTION 
-	# _______________   ___________________ |____|____|____|____| ____________________                       _________________ 
-	# INSERT_ESCAPE     [ESCAPE] Key        | 27 |  - |  - |  - | Decrease Cursor Context/Stop  Editing      insert_escape() 
-	# INSERT_BACKSPACE  [BACKSPACE] Key     |    |    |    |    | Delete Character Left Of Cursor            insert_backspace()
-	# INSERT_CHAR       <ANY KEY>           |    |    |    |    | Insert Character At Cursor                 insert_char()
-	# INSERT_ENTER      [ENTER] Key         |    |    |    |    | Finish Inserting Character(s)              insert_enter()
-	# INSERT_L_ARROW    [LEFT ARROW] Key    |    |    |    |    | Move Cursor To The Left One Character      insert_l_arrow()
-	# INSERT_R_ARROW    [RIGHT ARROW] Key   |    |    |    |    | Move Cursor To The Right One Character     insert_r_arrow()
-
-	$objEventLoop->register_callback 
-	  ({'ctxt'   => 'INSERT', 
-	    'evt_nm' => 'INSERT_ESCAPE', 
-	    'evt_cb' => sub { $self->insert_escape(); },
-	    'evt' =>  [ $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({'lname' => 'ESCAPE'}) }) ] });
-
-	$objEventLoop->register_callback 
-	  ({'ctxt'   => 'INSERT', 
-	    'evt_nm' => 'INSERT_BACKSPACE', 
-	    'evt_cb' => sub { $self->insert_backspace(); },
-	    'evt' =>  [ $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({'lname' => 'BACKSPACE'}) }) ] });
-
-	$objEventLoop->register_callback 
-	  ({'ctxt'   => 'INSERT', 
-	    'evt_nm' => 'INSERT_ENTER', 
-	    'evt_cb' => sub { $self->insert_enter(); },
-	    'evt' =>  [ $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({'lname' => 'CARRIAGE RETURN (CR)'}) }) ] });
-
-	$objEventLoop->register_callback 
-	  ({'ctxt'   => 'INSERT', 
-	    'evt_nm' => 'INSERT_L_ARROW', 
-	    'evt_cb' => sub { $self->insert_l_arrow(); },
-	    'evt' =>  [ $objEventLoop->gen_evt_array ({ '3' => 37, 
-	                                        '4' => 75, 
-	                                        '5' => 0, 
-	                                        '6' => 288 }), 
-	                $objEventLoop->gen_evt_array ({ '3' => 37, 
-	                                        '4' => 75, 
-	                                        '5' => 0, 
-	                                        '6' => 256 }) ] });
-
-	$objEventLoop->register_callback 
-	  ({'ctxt'   => 'INSERT', 
-	    'evt_nm' => 'INSERT_R_ARROW', 
-	    'evt_cb' => sub { $self->insert_r_arrow(); },
-	    'evt' =>  [ $objEventLoop->gen_evt_array ({ '3' => 39, 
-	                                        '4' => 77, 
-	                                        '5' => 0, 
-	                                        '6' => 288 }), 
-	                $objEventLoop->gen_evt_array ({ '3' => 39, 
-	                                        '4' => 77, 
-	                                        '5' => 0, 
-	                                        '6' => 256 }) ] });
-
-	$objEventLoop->register_callback 
-	  ({'ctxt'   => 'INSERT', 
-	    'evt_nm' => 'INSERT_CHAR', 
-	    'evt_cb' => sub { $self->insert_char(); },
-	    'evt' =>  [ $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'SPACE' }) }),
-	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'EXCLAMATION MARK' }) }),
-	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'QUOTATION MARK' }) }),
-	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'NUMBER SIGN' }) }),
-	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'DOLLAR SIGN' }) }),
-	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'PERCENT SIGN' }) }),
-	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'AMPERSAND' }) }),
-	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'APOSTROPHE' }) }),
-	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LEFT PARENTHESIS' }) }),
-	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'RIGHT PARENTHESIS' }) }),
-	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'ASTERISK' }) }),
-	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'PLUS SIGN' }) }),
-	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'COMMA' }) }),
-	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'HYPHEN-MINUS' }) }),
-	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'FULL STOP' }) }),
-	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'SOLIDUS' }) }),
-	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'DIGIT ZERO' }) }),
-	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'DIGIT ONE' }) }),
-	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'DIGIT TWO' }) }),
-	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'DIGIT THREE' }) }),
-	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'DIGIT FOUR' }) }),
-	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'DIGIT FIVE' }) }),
-	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'DIGIT SIX' }) }),
-	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'DIGIT SEVEN' }) }),
-	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'DIGIT EIGHT' }) }),
-	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'DIGIT NINE' }) }),
-	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'COLON' }) }),
-	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'SEMICOLON' }) }),
-	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LESS-THAN SIGN' }) }),
-	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'EQUALS SIGN' }) }),
-	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'GREATER-THAN SIGN' }) }),
-	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'QUESTION MARK' }) }),
-	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'COMMERCIAL AT' }) }),
-	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN CAPITAL LETTER A' }) }),
-	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN CAPITAL LETTER B' }) }),
-	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN CAPITAL LETTER C' }) }),
-	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN CAPITAL LETTER D' }) }),
-	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN CAPITAL LETTER E' }) }),
-	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN CAPITAL LETTER F' }) }),
-	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN CAPITAL LETTER G' }) }),
-	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN CAPITAL LETTER H' }) }),
-	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN CAPITAL LETTER I' }) }),
-	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN CAPITAL LETTER J' }) }),
-	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN CAPITAL LETTER K' }) }),
-	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN CAPITAL LETTER L' }) }),
-	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN CAPITAL LETTER M' }) }),
-	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN CAPITAL LETTER N' }) }),
-	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN CAPITAL LETTER O' }) }),
-	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN CAPITAL LETTER P' }) }),
-	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN CAPITAL LETTER Q' }) }),
-	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN CAPITAL LETTER R' }) }),
-	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN CAPITAL LETTER S' }) }),
-	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN CAPITAL LETTER T' }) }),
-	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN CAPITAL LETTER U' }) }),
-	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN CAPITAL LETTER V' }) }),
-	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN CAPITAL LETTER W' }) }),
-	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN CAPITAL LETTER X' }) }),
-	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN CAPITAL LETTER Y' }) }),
-	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN CAPITAL LETTER Z' }) }),
-	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LEFT SQUARE BRACKET' }) }),
-	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'REVERSE SOLIDUS' }) }),
-	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'RIGHT SQUARE BRACKET' }) }),
-	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'CIRCUMFLEX ACCENT' }) }),
-	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LOW LINE' }) }),
-	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'GRAVE ACCENT' }) }),
-	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN SMALL LETTER A' }) }),
-	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN SMALL LETTER B' }) }),
-	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN SMALL LETTER C' }) }),
-	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN SMALL LETTER D' }) }),
-	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN SMALL LETTER E' }) }),
-	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN SMALL LETTER F' }) }),
-	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN SMALL LETTER G' }) }),
-	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN SMALL LETTER H' }) }),
-	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN SMALL LETTER I' }) }),
-	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN SMALL LETTER J' }) }),
-	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN SMALL LETTER K' }) }),
-	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN SMALL LETTER L' }) }),
-	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN SMALL LETTER M' }) }),
-	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN SMALL LETTER N' }) }),
-	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN SMALL LETTER O' }) }),
-	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN SMALL LETTER P' }) }),
-	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN SMALL LETTER Q' }) }),
-	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN SMALL LETTER R' }) }),
-	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN SMALL LETTER S' }) }),
-	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN SMALL LETTER T' }) }),
-	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN SMALL LETTER U' }) }),
-	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN SMALL LETTER V' }) }),
-	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN SMALL LETTER W' }) }),
-	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN SMALL LETTER X' }) }),
-	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN SMALL LETTER Y' }) }),
-	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN SMALL LETTER Z' }) }),
-	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LEFT CURLY BRACKET' }) }),
-	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'VERTICAL LINE' }) }),
-	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'RIGHT CURLY BRACKET' }) }),
-	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'TILDE' }) }) ] });
-
-	# _____________________________________________________________________________________________________
-	# EVENT DRIVEN FUNCTION TABLE: TABLE OF WRAPPER FUNCTIONS PROVIDING UNIFORM NAMES/API TO EVENT HANDLERS
-	#   'SEARCH' Context Functions
-	# _______________   ___________________ _____________________ ____________________                       _________________ 
-	# FUNCTION NAME     KEYBOARD MAPPING    |CHAR|VKCD|VSCD|CTRL| FUNCTION DESCRIPTION                       INTERNAL FUNCTION 
-	# _______________   ___________________ |____|____|____|____| ____________________                       _________________ 
-	# SEARCH_BACKSPACE  [BACKSPACE] Key     | 27 |  - |  - |  - | ...                                        search_backspace()
-	# SEARCH_CHAR       <ANY KEY>           | 27 |  - |  - |  - | ...                                        search_char()
-	# SEARCH_ENTER      [ENTER] Key         | 27 |  - |  - |  - | ...                                        search_enter()
-	# SEARCH_ESCAPE     [ESCAPE] Key        | 27 |  - |  - |  - | Decrease Cursor Context/Stop  Editing      search_escape() 
-	# SEARCH_L_ARROW    [LEFT ARROW] Key    | 27 |  - |  - |  - | ...                                        search_l_arrow()
-	# SEARCH_R_ARROW    [RIGHT ARROW] Key   | 27 |  - |  - |  - | ...                                        search_r_arrow()
-
-	$objEventLoop->register_callback 
-	  ({'ctxt'   => 'SEARCH', 
-	    'evt_nm' => 'SEARCH_BACKSPACE', 
-	    'evt_cb' => sub { $self->search_backspace(); },
-	    'evt' =>  [ $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({'lname' => 'BACKSPACE'}) }) ] });
-
-	$objEventLoop->register_callback 
-	  ({'ctxt'   => 'SEARCH', 
-	    'evt_nm' => 'SEARCH_ENTER', 
-	    'evt_cb' => sub { $self->search_enter(); },
-	    'evt' =>  [ $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({'lname' => 'CARRIAGE RETURN (CR)'}) }) ] });
-
-	$objEventLoop->register_callback 
-	  ({'ctxt'   => 'SEARCH', 
-	    'evt_nm' => 'SEARCH_ESCAPE', 
-	    'evt_cb' => sub { $self->search_escape(); },
-	    'evt' =>  [ $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({'lname' => 'ESCAPE'}) }) ] });
-
-	$objEventLoop->register_callback 
-	  ({'ctxt'   => 'SEARCH', 
-	    'evt_nm' => 'SEARCH_L_ARROW', 
-	    'evt_cb' => sub { $self->search_l_arrow(); },
-	    'evt' =>  [ $objEventLoop->gen_evt_array ({ '3' => 37, 
-	                                        '4' => 75, 
-	                                        '5' => 0, 
-	                                        '6' => 288 }), 
-	                $objEventLoop->gen_evt_array ({ '3' => 37, 
-	                                        '4' => 75, 
-	                                        '5' => 0, 
-	                                        '6' => 256 }) ] });
-
-	$objEventLoop->register_callback 
-	  ({'ctxt'   => 'SEARCH', 
-	    'evt_nm' => 'SEARCH_R_ARROW', 
-	    'evt_cb' => sub { $self->search_r_arrow(); },
-	    'evt' =>  [ $objEventLoop->gen_evt_array ({ '3' => 39, 
-	                                        '4' => 77, 
-	                                        '5' => 0, 
-	                                        '6' => 288 }), 
-	                $objEventLoop->gen_evt_array ({ '3' => 39, 
-	                                        '4' => 77, 
-	                                        '5' => 0, 
-	                                        '6' => 256 }) ] });
-
-	$objEventLoop->register_callback 
-	  ({'ctxt'   => 'SEARCH', 
-	    'evt_nm' => 'SEARCH_CHAR', 
-	    'evt_cb' => sub { $self->search_char(); },
-	    'evt' =>  [ $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'SPACE' }) }),
-	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'EXCLAMATION MARK' }) }),
-	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'QUOTATION MARK' }) }),
-	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'NUMBER SIGN' }) }),
-	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'DOLLAR SIGN' }) }),
-	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'PERCENT SIGN' }) }),
-	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'AMPERSAND' }) }),
-	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'APOSTROPHE' }) }),
-	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LEFT PARENTHESIS' }) }),
-	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'RIGHT PARENTHESIS' }) }),
-	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'ASTERISK' }) }),
-	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'PLUS SIGN' }) }),
-	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'COMMA' }) }),
-	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'HYPHEN-MINUS' }) }),
-	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'FULL STOP' }) }),
-	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'SOLIDUS' }) }),
-	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'DIGIT ZERO' }) }),
-	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'DIGIT ONE' }) }),
-	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'DIGIT TWO' }) }),
-	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'DIGIT THREE' }) }),
-	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'DIGIT FOUR' }) }),
-	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'DIGIT FIVE' }) }),
-	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'DIGIT SIX' }) }),
-	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'DIGIT SEVEN' }) }),
-	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'DIGIT EIGHT' }) }),
-	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'DIGIT NINE' }) }),
-	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'COLON' }) }),
-	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'SEMICOLON' }) }),
-	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LESS-THAN SIGN' }) }),
-	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'EQUALS SIGN' }) }),
-	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'GREATER-THAN SIGN' }) }),
-	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'QUESTION MARK' }) }),
-	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'COMMERCIAL AT' }) }),
-	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN CAPITAL LETTER A' }) }),
-	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN CAPITAL LETTER B' }) }),
-	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN CAPITAL LETTER C' }) }),
-	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN CAPITAL LETTER D' }) }),
-	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN CAPITAL LETTER E' }) }),
-	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN CAPITAL LETTER F' }) }),
-	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN CAPITAL LETTER G' }) }),
-	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN CAPITAL LETTER H' }) }),
-	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN CAPITAL LETTER I' }) }),
-	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN CAPITAL LETTER J' }) }),
-	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN CAPITAL LETTER K' }) }),
-	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN CAPITAL LETTER L' }) }),
-	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN CAPITAL LETTER M' }) }),
-	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN CAPITAL LETTER N' }) }),
-	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN CAPITAL LETTER O' }) }),
-	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN CAPITAL LETTER P' }) }),
-	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN CAPITAL LETTER Q' }) }),
-	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN CAPITAL LETTER R' }) }),
-	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN CAPITAL LETTER S' }) }),
-	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN CAPITAL LETTER T' }) }),
-	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN CAPITAL LETTER U' }) }),
-	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN CAPITAL LETTER V' }) }),
-	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN CAPITAL LETTER W' }) }),
-	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN CAPITAL LETTER X' }) }),
-	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN CAPITAL LETTER Y' }) }),
-	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN CAPITAL LETTER Z' }) }),
-	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LEFT SQUARE BRACKET' }) }),
-	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'REVERSE SOLIDUS' }) }),
-	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'RIGHT SQUARE BRACKET' }) }),
-	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'CIRCUMFLEX ACCENT' }) }),
-	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LOW LINE' }) }),
-	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'GRAVE ACCENT' }) }),
-	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN SMALL LETTER A' }) }),
-	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN SMALL LETTER B' }) }),
-	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN SMALL LETTER C' }) }),
-	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN SMALL LETTER D' }) }),
-	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN SMALL LETTER E' }) }),
-	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN SMALL LETTER F' }) }),
-	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN SMALL LETTER G' }) }),
-	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN SMALL LETTER H' }) }),
-	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN SMALL LETTER I' }) }),
-	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN SMALL LETTER J' }) }),
-	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN SMALL LETTER K' }) }),
-	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN SMALL LETTER L' }) }),
-	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN SMALL LETTER M' }) }),
-	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN SMALL LETTER N' }) }),
-	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN SMALL LETTER O' }) }),
-	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN SMALL LETTER P' }) }),
-	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN SMALL LETTER Q' }) }),
-	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN SMALL LETTER R' }) }),
-	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN SMALL LETTER S' }) }),
-	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN SMALL LETTER T' }) }),
-	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN SMALL LETTER U' }) }),
-	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN SMALL LETTER V' }) }),
-	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN SMALL LETTER W' }) }),
-	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN SMALL LETTER X' }) }),
-	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN SMALL LETTER Y' }) }),
-	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LATIN SMALL LETTER Z' }) }),
-	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'LEFT CURLY BRACKET' }) }),
-	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'VERTICAL LINE' }) }),
-	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'RIGHT CURLY BRACKET' }) }),
-	                $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'TILDE' }) }) ] });
+	$self->{'evt_sig'} = {};
+	$self->{'evt_sig'}->{EDT_CTXT_DEFAULT} = {};
+	$self->{'evt_sig'}->{EDT_CTXT_INSERT}  = {};
+	$self->{'evt_sig'}->{EDT_CTXT_SEARCH}  = {};
 
 	return (1);
 }
 
-# Functions: 'DEFAULT' context event handlers.
-#
-#   ____			__________	___________
-#   NAME			Event Name	DESCRIPTION
-#   ____			__________	___________
-#   quit()			QUIT		Break out of event_loop(), clean up, exit().
+# ______________________________________________________________________________
 
-sub quit {
-
-	my $self = shift;
-
-	my $objEventLoop = $self->{'obj'}->{'eventloop'};
-
-	$objEventLoop->{'FLAG_QUIT'} = 1;
-
-	return (1);
-}
-
-# Functions: 'INSERT' context event handlers.
+# Functions: That used to live in EventLoop.pm.
 #
 #   ____			___________
 #   NAME			DESCRIPTION
 #   ____			___________
-#   insert_backspace()		Delete character to the left of the cursor.
-#   insert_char()		Insert character at the cursor position.
-#   insert_enter()		Begin search using the search string specified by user.
-#   insert_escape()		Cancel search operation, switch context to 'DEFAULT'.
-#   insert_l_arrow()		Move the cursor to the left within the text string inside the search box.
-#   insert_r_arrow()		Move the cursor to the right within the text string inside the search box.
+#   register_callback()		Register callback subroutine to handle event under certain context.
+#   register_evt_sig()		Register event signature (unique values of evt array that identify different keystrokes).
+#   gen_evt_array()		...
+#   evt_map()			...
+#   evt_dispatch()		...
 
-sub insert_backspace {
+sub register_callback {
 
 	my $self = shift;
+	my $arg  = shift;
 
-	my $objConsole = $self->{'obj'}->{'console'};
+	if (! defined $arg || 
+	      ! (ref ($arg) eq 'HASH')) 
+		{ die "Call to register_callback() failed, argument must be hash reference"; }
 
-	if (exists  $self->{'insert_str'} && 
-	    defined $self->{'insert_str'} && 
-	          ! $self->{'insert_str'} eq '') {
+	if (! exists  $arg->{'edt_ctxt'} || 
+	    ! defined $arg->{'edt_ctxt'} || 
+	             ($arg->{'edt_ctxt'} eq '')) 
+		{ die "Call to register_callback() failed, value associated w/ key 'edt_ctxt' was undef/empty string"; }
 
-		$self->{'insert_str'} =~ s/.$//;   # Remove last character from string.
-		$self->{'insert_pos'}--;
+	if (! exists  $arg->{'evt_nm'} || 
+	    ! defined $arg->{'evt_nm'} || 
+	             ($arg->{'evt_nm'} eq '')) 
+		{ die "Call to register_callback() failed, value associated w/ key 'evt_nm' was undef/empty string"; }
 
-		$objConsole->w32cons_cursor_move
-		  ({ 'xpos' => ($objConsole->{'w32cons_curs_xpos'} - 1), 
-		     'ypos' =>  $objConsole->{'w32cons_curs_ypos'} });
+	if (! exists  $arg->{'evt_cb'} || 
+	    ! defined $arg->{'evt_cb'} || 
+	      ! (ref ($arg->{'evt_cb'}) eq 'CODE')) 
+		{ die "Call to register_callback() failed, value associated w/ key 'evt_cb' must be code reference"; }
+
+	if (! exists  $arg->{'evt'} || 
+	    ! defined $arg->{'evt'} || 
+	      ! (ref ($arg->{'evt'}) eq 'ARRAY')) 
+		{ die "Call to register_callback() failed, value associated w/ key 'evt' must be array reference"; }   # <--- Change back to die...
+
+	# Store callback in callback hash: $self->{'cb'}.
+
+	$self->{'cb'}->{ $arg->{'edt_ctxt'} }->{ $arg->{'evt_nm'} } = $arg->{'evt_cb'};
+
+	foreach my $evt_sig (@{ $arg->{'evt'} }) {
+
+		# Store event signature in [wherever it gets stored].
+
+		$self->register_evt_sig 
+		  ({ 'edt_ctxt' => $arg->{'edt_ctxt'}, 
+		     'evt_nm'   => $arg->{'evt_nm'}, 
+		     'evt'      => $evt_sig });
 	}
+
+	# $self->{'obj'}->{'debug'}->errmsg ("Registered callback for '" . $arg->{'evt_nm'} . "' (context='" . $arg->{'edt_ctxt'} . "'.\n");
+	# warn ("Registered callback for '" . $arg->{'evt_nm'} . "' (context='" . $arg->{'edt_ctxt'} . "').");
 
 	return (1);
 }
 
-sub insert_char {
+sub register_evt_sig {
 
 	my $self = shift;
+	my $arg  = shift;
 
-	my $objConsole   = $self->{'obj'}->{'console'};
-	my $objCursor    = $self->{'obj'}->{'cursor'};
-	my $objDebug     = $self->{'obj'}->{'debug'};
-	my $objDisplay   = $self->{'obj'}->{'display'};
-	my $objEditor    = $self->{'obj'}->{'editor'};
-	my $objEventLoop = $self->{'obj'}->{'eventloop'};
-	my $objFile      = $self->{'obj'}->{'file'};
+	if (! defined $arg || 
+	      ! (ref ($arg) eq 'HASH')) 
+		{ die "Call to register_evt_sig() failed, argument must be hash reference"; }
 
-	my $char = chr ($objEventLoop->{'evt'}->[5]);
+	if (! exists  $arg->{'edt_ctxt'} || 
+	    ! defined $arg->{'edt_ctxt'} || 
+	             ($arg->{'edt_ctxt'} eq '')) 
+		{ die "Call to register_evt_sig() failed, value associated w/ key 'edt_ctxt' must not be undef/empty"; }
 
-	# If inserting in hex mode, make sure character is: 1 - 9 or A - F.
+	if (! exists  $arg->{'evt_nm'} || 
+	    ! defined $arg->{'evt_nm'} || 
+	             ($arg->{'evt_nm'} eq '')) 
+		{ die "Call to register_evt_sig() failed, value associated w/ key 'evt_nm' must not be undef/empty"; }
 
-	if (! ($char =~ /^[1234567890abcdefABCDEF]$/)) {
+	if (! exists  $arg->{'evt'} || 
+	    ! defined $arg->{'evt'} || 
+	             ($arg->{'evt'} eq '') || 
+	      ! (ref ($arg->{'evt'}) eq 'ARRAY')) 
+		{ die "Call to register_evt_sig() failed, value associated w/ key 'evt' must be array ref"; }
 
-		$objDebug->errmsg ("Bad value for char: '" . $char . "'.");
+	# Register a set of callback matching criteria.
+
+	if (! exists  $self->{'evt_sig'} ||
+	    ! defined $self->{'evt_sig'} || 
+	      ! (ref ($self->{'evt_sig'}) eq 'HASH')) {
+
+		$self->{'evt_sig'} = {};
+	}
+
+	if (! exists  $self->{'evt_sig'}->{ $arg->{'edt_ctxt'} } || 
+	    ! defined $self->{'evt_sig'}->{ $arg->{'edt_ctxt'} } || 
+	      ! (ref ($self->{'evt_sig'}->{ $arg->{'edt_ctxt'} }) eq 'HASH')) {
+
+		$self->{'evt_sig'}->{ $arg->{'edt_ctxt'} } = {};
+	}
+
+	if (! (exists  $self->{'evt_sig'}->{ $arg->{'edt_ctxt'} }->{ $arg->{'evt_nm'} }) || 
+	    ! (defined $self->{'evt_sig'}->{ $arg->{'edt_ctxt'} }->{ $arg->{'evt_nm'} }) || 
+	       ! (ref ($self->{'evt_sig'}->{ $arg->{'edt_ctxt'} }->{ $arg->{'evt_nm'} }) eq 'ARRAY')) { 
+
+		$self->{'evt_sig'}->{ $arg->{'edt_ctxt'} }->{ $arg->{'evt_nm'} } = [];
+	}
+
+	push @{ $self->{'evt_sig'}->{ $arg->{'edt_ctxt'} }->{ $arg->{'evt_nm'} } }, 
+	     $arg->{'evt'};
+
+	# $self->{'obj'}->{'debug'}->errmsg ("Registered event signature for '" . $arg->{'evt_nm'} . "'.\n");
+	# warn ("Registered event signature for '" . $arg->{'evt_nm'} . "' (context='" . $arg->{'edt_ctxt'} . "'.");
+
+	# warn 
+	#   ("evt0='" . $arg->{'evt'}->[0] . "', " . 
+	#    "evt1='" . $arg->{'evt'}->[1] . "', " . 
+	#    "evt2='" . $arg->{'evt'}->[2] . "', " . 
+	#    "evt3='" . $arg->{'evt'}->[3] . "', " . 
+	#    "evt4='" . $arg->{'evt'}->[4] . "', " . 
+	#    "evt5='" . $arg->{'evt'}->[5] . "', " . 
+	#    "evt6='" . $arg->{'evt'}->[6] . "'.");
+
+	return (1);
+}
+
+sub gen_evt_array {
+
+	my $self = shift;
+	my $arg  = shift;
+
+	if (! defined $arg || 
+	      ! (ref ($arg) eq 'HASH')) 
+		{ die "Call to gen_evt_array() failed, argument must be hash reference"; }
+
+	my $evt_array = [];
+
+	if (exists  $arg->{'0'} && 
+	    defined $arg->{'0'} && 
+	         ! ($arg->{'0'} eq '')) 
+		{ $evt_array->[0] = $arg->{'0'}; }
+	   else { $evt_array->[0] = ''; }
+
+	if (exists  $arg->{'1'} && 
+	    defined $arg->{'1'} && 
+	         ! ($arg->{'1'} eq '')) 
+		{ $evt_array->[1] = $arg->{'1'}; }
+	   else { $evt_array->[1] = ''; }
+
+	if (exists  $arg->{'2'} && 
+	    defined $arg->{'2'} && 
+	         ! ($arg->{'2'} eq '')) 
+		{ $evt_array->[2] = $arg->{'2'}; }
+	   else { $evt_array->[2] = ''; }
+
+	if (exists  $arg->{'3'} && 
+	    defined $arg->{'3'} && 
+	         ! ($arg->{'3'} eq '')) 
+		{ $evt_array->[3] = $arg->{'3'}; }
+	   else { $evt_array->[3] = ''; }
+
+	if (exists  $arg->{'4'} && 
+	    defined $arg->{'4'} && 
+	         ! ($arg->{'4'} eq '')) 
+		{ $evt_array->[4] = $arg->{'4'}; }
+	   else { $evt_array->[4] = ''; }
+
+	if (exists  $arg->{'5'} && 
+	    defined $arg->{'5'} && 
+	         ! ($arg->{'5'} eq '')) 
+		{ $evt_array->[5] = $arg->{'5'}; }
+	   else { $evt_array->[5] = ''; }
+
+	if (exists  $arg->{'6'} && 
+	    defined $arg->{'6'} && 
+	         ! ($arg->{'6'} eq '')) 
+		{ $evt_array->[6] = $arg->{'6'}; }
+	   else { $evt_array->[6] = ''; }
+
+	return ($evt_array);
+}
+
+sub evt_map {
+
+	my $self = shift;
+	my $arg  = shift;
+
+	if (! defined $arg || 
+	      ! (ref ($arg) eq 'HASH')) 
+		{ die "Call to evt_map() failed, argument must be hash reference"; }
+
+	if (! exists  $arg->{'edt_ctxt'} || 
+	    ! defined $arg->{'edt_ctxt'} || 
+	             ($arg->{'edt_ctxt'} eq '')) 
+		{ die "Call to evt_map() failed, value associated w/ key 'edt_ctxt' was undef or empty string"; }
+
+	if (! exists  $arg->{'evt'} || 
+	    ! defined $arg->{'evt'} || 
+	             ($arg->{'evt'} eq '') || 
+	      ! (ref ($arg->{'evt'}) eq 'ARRAY')) 
+		{ die "Call to evt_map() failed, value associated w/ key 'evt' must be array ref"; }
+
+	my $objCharMap = $self->{'obj'}->{'charmap'};
+	my $objDebug   = $self->{'obj'}->{'debug'};
+
+	# EVT Array Idx	Element Name		Values
+	# _____________	____________		______
+	# $evt->[0]	Event Type		1 == Keyboard Event
+	# $evt->[1]	Key   Down		1 == Key Pressed
+	# $evt->[2]	???			-
+	# $evt->[3]	Virtual Keycode		-
+	# $evt->[4]	Virtual Scancode	-
+	# $evt->[5]	???			-
+	# $evt->[6]	?Control Key Status?	-
+
+	my $evt = $arg->{'evt'};
+
+	# Eliminate non-interesting events.
+
+	if (exists $evt->[0] && ($evt->[0] == 2) &&   # Event_Type: 2 (indicates mouse event).
+	    exists $evt->[3] && 
+	       ( (($evt->[3] ==  1) ||                # Button_State:        1 (indicates left  mouse button).
+	          ($evt->[3] ==  2)) ||               # Button_State:        2 (indicates right mouse button).
+	       ( (($evt->[3] ==  7864320) ||          # Button_State:  7864320 (indicates mouse wheel roll upward).
+	          ($evt->[3] == -7864320)) &&         # Button_State: -7864320 (indicates mouse wheel roll downward).
+	  (defined $evt->[5] && ($evt->[5] == 4)) ) )) {
+
+		# Mouse button pressed, may be an event in this context, pass through...
+
+		undef;
+	}
+	elsif (defined $evt->[0] && ($evt->[0] == 2) &&              # Event_Type:    2 (indicates 'mouse' event).
+	       defined $evt->[1] && ($evt->[1] =~ /^\d\d?\d?$/) &&   # X Coordinate:  One to three digits.
+	       defined $evt->[2] && ($evt->[2] =~ /^\d\d?\d?$/) &&   # Y Coordinate:  One to three digits.
+	       defined $evt->[3] && ($evt->[3] == 0) &&              # Button state:  0 (indicates no mouse button was clicked).
+	       defined $evt->[5] && ($evt->[5] == 1)) {              # Event flags:   1 (???).
+
+		# Mouse movement, not an "event" in this context, return 'undef' to caller.
+
+		return (undef);
+	}
+	elsif (defined $evt->[0] && ($evt->[0] == 1) &&   # Event_Type: 1 (keyboard event)
+	       defined $evt->[1] && ($evt->[1] == 1)) {   # Key_Down:   1 (key pressed)
+
+		# Keyboard key pressed, may be an "event" in this context, pass through...
+
+		undef;
+	}
+	else {
+
+		# Unmatched event, return 'undef' to caller.
+
 		return (undef);
 	}
 
-	# If inserting in hex mode, check to see if the first character 
-	# (of a two character string) was already entered.
+	# ______________________________________________________
+	# CONTEXT BASED BRANCH DECISION TABLE
+	# ______________________________________________________
+	#
+	#   Possible values of 'edt_ctxt':
+	#
+	#     __________		___________
+	#     CTXT Value		Description
+	#     __________		___________
+	#     EDT_CTXT_DEFAULT		Default behavior, begins at start. Keystrokes cause events within editor display like scrolling.
+	#     EDT_CTXT_INSERT		Insert a string of characters at a given position within file.
+	#     EDT_CTXT_SEARCH		Search for a string of characters within file.
 
-	if (! exists  $self->{'first_hex_char'} || 
-	    ! defined $self->{'first_hex_char'} || 
-	           ! ($self->{'first_hex_char'} =~ /^[1234567890abcdefABCDEF]$/)) {
+	my $func = '';
 
-		$self->{'first_hex_char'} = $char;
+	foreach my $func_nm (keys %{ $self->{'evt_sig'}->{ $arg->{'edt_ctxt'} } }) {
 
-		my ($xpos, $ypos) = 
-		  $objCursor->dsp_coord 
-		    ({ 'curs_pos' => $objCursor->{'curs_pos'}, 
-		       'dsp_pos'  => $objEditor->{'dsp_pos'}, 
-		       'dsp_ypad' => $objDisplay->{'dsp_xpad'}, 
-		       'dsp_xpad' => $objDisplay->{'dsp_ypad'} });
+		foreach my $func_evt (@{ $self->{'evt_sig'}->{ $arg->{'edt_ctxt'} }->{ $func_nm } }) {
 
-		$xpos++;
-		$objConsole->w32cons_cursor_move 
-		  ({ 'xpos' => ($xpos + $objDisplay->{'dsp_xpad'}), 
-		     'ypos' => ($ypos + $objDisplay->{'dsp_ypad'}) });
+			if ( ( ($func_evt->[0] eq '') || (! ($func_evt->[0] eq '') && ($func_evt->[0] eq $evt->[0]) ) ) && 
+			     ( ($func_evt->[1] eq '') || (! ($func_evt->[1] eq '') && ($func_evt->[1] eq $evt->[1]) ) ) && 
+			     ( ($func_evt->[2] eq '') || (! ($func_evt->[2] eq '') && ($func_evt->[2] eq $evt->[2]) ) ) && 
+			     ( ($func_evt->[3] eq '') || (! ($func_evt->[3] eq '') && ($func_evt->[3] eq $evt->[3]) ) ) && 
+			     ( ($func_evt->[4] eq '') || (! ($func_evt->[4] eq '') && ($func_evt->[4] eq $evt->[4]) ) ) && 
+			     ( ($func_evt->[5] eq '') || (! ($func_evt->[5] eq '') && ($func_evt->[5] eq $evt->[5]) ) ) && 
+			     ( ($func_evt->[6] eq '') || (! ($func_evt->[6] eq '') && ($func_evt->[6] eq $evt->[6]) ) ) ) {
+
+				$func = $func_nm;
+
+				# $self->{'obj'}->{'debug'}->errmsg ("FUNCTION MATCHED '" . $func_nm . "'.");
+			}
+			# else {
+			# 
+			# 	for (my $idx = 0; $idx < 6; $idx++) {
+			# 
+			# 		if (! exists  $func_evt->[$idx] || 
+			# 		    ! defined $func_evt->[$idx]) {
+			# 
+			# 			$func_evt->[$idx] = "<undef>";
+			# 		}
+			# 
+			# 		if (! exists  $evt->[$idx] || 
+			# 		    ! defined $evt->[$idx]) {
+			# 
+			# 			$evt->[$idx] = "<undef>";
+			# 		}
+			# 
+			# 		$objDebug->errmsg 
+			# 		  (sprintf ("Event array field " . $idx . ": %10.10s %10.10s", $func_evt->[$idx], $evt->[$idx]));
+			# 	}
+			# }
+		}
+	}
+
+	# $objDebug->errmsg ("at bottom, edt_ctxt=" . $arg->{'edt_ctxt'} . ".");
+
+	if (! defined $func || 
+	             ($func eq '')) 
+	     { return (undef); }
+	else { return ($func); }
+}
+
+sub evt_dispatch {
+
+	my $self = shift;
+	my $arg  = shift;
+
+	if (! defined $arg || 
+	      ! (ref ($arg) eq 'HASH')) 
+		{ die "Call to evt_dispatch() failed, argument must be hash reference"; }
+
+	if (! exists  $arg->{'evt_nm'} || 
+	    ! defined $arg->{'evt_nm'} || 
+	             ($arg->{'evt_nm'} eq '')) 
+		{ die "Call to evt_dispatch() failed, value associated w/ key 'evt_nm' must be array ref"; }
+
+	if (! exists  $arg->{'edt_ctxt'} || 
+	    ! defined $arg->{'edt_ctxt'} || 
+	             ($arg->{'edt_ctxt'} eq '')) 
+		{ die "Call to evt_dispatch() failed, value associated w/ key 'edt_ctxt' was undef or empty string"; }
+
+	if (! exists  $arg->{'evt'} || 
+	    ! defined $arg->{'evt'} || 
+	             ($arg->{'evt'} eq '') || 
+	      ! (ref ($arg->{'evt'}) eq 'ARRAY')) 
+		{ die "Call to evt_dispatch() failed, value associated w/ key 'evt' must be array ref"; }
+
+	my $objCharMap = $self->{'obj'}->{'charmap'};
+	my $objDebug   = $self->{'obj'}->{'debug'};
+	my $objEditor  = $self->{'obj'}->{'editor'};
+
+	if (exists  $self->{'cb'} && 
+	    defined $self->{'cb'} && 
+	      (ref ($self->{'cb'}) eq 'HASH') && 
+	    exists  $self->{'cb'}->{ $arg->{'edt_ctxt'} } && 
+	    defined $self->{'cb'}->{ $arg->{'edt_ctxt'} } && 
+	      (ref ($self->{'cb'}->{ $arg->{'edt_ctxt'} }) eq 'HASH') && 
+	    exists  $self->{'cb'}->{ $arg->{'edt_ctxt'} }->{ $arg->{'evt_nm'} }  && 
+	    defined $self->{'cb'}->{ $arg->{'edt_ctxt'} }->{ $arg->{'evt_nm'} }  && 
+	      (ref ($self->{'cb'}->{ $arg->{'edt_ctxt'} }->{ $arg->{'evt_nm'} }) eq 'CODE')) {
+
+		# Call the subroutine associated with this event (callback routine).
+
+		$self->{'cb'}->{ $arg->{'edt_ctxt'} }->{ $arg->{'evt_nm'} }->();
+		return (1);
 	}
 	else {
 
-		my $ord  = hex ($self->{'first_hex_char'} . $char);
-		my $byte = chr ($ord);
-
-		$self->{'first_hex_char'} = undef;
-
-		# Insert character into place in file (at cursor position).
-
-		my $rv = 
-		  $objFile->insert_str 
-		    ({ 'pos' => $objCursor->{'curs_pos'}, 
-		       'str' => $byte });
-
-		if (defined $rv && 
-			    $rv == 1) 
-		     { $objDebug->errmsg ("Call to insert_str() returned w/ success."); } 
-		else { $objDebug->errmsg ("Call to insert_str() returned w/ failure.");
-		       return (undef); }
-
-		# Update editor cursor position.
-
-		$objCursor->{'curs_pos'}++;
-
-		# Update Win32 Console cursor position.
-
-		my ($xpos, $ypos) = 
-		  $objCursor->dsp_coord 
-		    ({ 'curs_pos' => $objCursor->{'curs_pos'}, 
-		       'dsp_pos'  => $objEditor->{'dsp_pos'}, 
-		       'dsp_ypad' => $objDisplay->{'dsp_xpad'}, 
-		       'dsp_xpad' => $objDisplay->{'dsp_ypad'} });
-
-		$objConsole->w32cons_cursor_move 
-		  ({ 'xpos' => ($xpos + $objDisplay->{'dsp_xpad'}), 
-		     'ypos' => ($ypos + $objDisplay->{'dsp_ypad'}) });
+		return (0);
 	}
-
-	return (1);
 }
 
-sub insert_enter {
-
-	my $self = shift;
-
-	my $objConsole   = $self->{'obj'}->{'console'};
-	my $objCursor    = $self->{'obj'}->{'cursor'};
-	my $objDisplay   = $self->{'obj'}->{'display'};
-	my $objEditor    = $self->{'obj'}->{'editor'};
-	my $objEventLoop = $self->{'obj'}->{'eventloop'};
-
-	# Switch context to 'DEFAULT'.
-
-	$objEditor->{'ctxt'} = 'DEFAULT';
-
-	# Change cursor context to 2 (byte mode).
-
-	if (! ($objCursor->{'curs_ctxt'} == 2)) 
-		{ $objCursor->{'curs_ctxt'} = 2; }
-
-	# Set Win32 console cursor to invisible.
-	# Move Win32 console cursor to top/left corner of display console.
-
-	$objConsole->w32cons_cursor_invisible();
-	$objConsole->w32cons_cursor_tleft_dsp();
-
-	return (1);
-}
-
-sub insert_escape {
-
-	my $self = shift;
-
-	my $objConsole   = $self->{'obj'}->{'console'};
-	my $objCursor    = $self->{'obj'}->{'cursor'};
-	my $objEditor    = $self->{'obj'}->{'editor'};
-	my $objEventLoop = $self->{'obj'}->{'eventloop'};
-
-	# Switch context to 'DEFAULT'.
-
-	$objEditor->{'ctxt'} = 'DEFAULT';
-
-	# Change cursor context to 2 (byte mode).
-
-	if (! ($objCursor->{'curs_ctxt'} == 2)) 
-		{ $objCursor->{'curs_ctxt'} = 2; }
-
-	# Set Win32 console cursor to invisible.
-	# Move Win32 console cursor to top/left corner of display console.
-
-	$objConsole->w32cons_cursor_invisible();
-	$objConsole->w32cons_cursor_tleft_dsp();
-
-	return (1);
-}
-
-sub insert_l_arrow {
-
-	my $self = shift;
-
-	my $objConsole   = $self->{'obj'}->{'console'};
-	my $objCursor    = $self->{'obj'}->{'cursor'};
-	my $objEventLoop = $self->{'obj'}->{'eventloop'};
-
-	# ...
-
-	return (1);
-}
-
-sub insert_r_arrow {
-
-	my $self = shift;
-
-	my $objConsole   = $self->{'obj'}->{'console'};
-	my $objCursor    = $self->{'obj'}->{'cursor'};
-	my $objEventLoop = $self->{'obj'}->{'eventloop'};
-
-	# ...
-
-	return (1);
-}
-
-# Functions: 'SEARCH' context event handlers.
-#
-#   ____			___________
-#   NAME			DESCRIPTION
-#   ____			___________
-#   search_backspace()
-#   search_char()
-#   search_enter()
-#   search_escape()
-#   search_l_arrow()
-#   search_r_arrow()
-
-sub search_backspace {
-
-	my $self = shift;
-
-	my $objConsole   = $self->{'obj'}->{'console'};
-	my $objCursor    = $self->{'obj'}->{'cursor'};
-	my $objEventLoop = $self->{'obj'}->{'eventloop'};
-
-	if (exists  $self->{'search_str'} && 
-	    defined $self->{'search_str'} && 
-	         ! ($self->{'search_str'} eq '') && 
-	    exists  $self->{'search_pos'} && 
-	    defined $self->{'search_pos'} && 
-	           ($self->{'search_pos'} > 0)) {
-
-		if ($self->{'search_pos'} < length ($self->{'search_str'})) {
-
-			substr $self->{'search_str'}, ($self->{'search_pos'} - 1), 1, '';
-		}
-		else {
-
-			$self->{'search_str'} =~ s/.$//;   # Remove last character from string.
-		}
-
-		$self->{'search_pos'}--;
-
-		# Update position of Win32 console cursor.
-
-		$objConsole->w32cons_cursor_move
-		  ({ 'xpos' => ($objConsole->{'w32cons_curs_xpos'} - 1), 
-		     'ypos' =>  $objConsole->{'w32cons_curs_ypos'} });
-	}
-
-	return (1);
-}
-
-sub search_char {
-
-	my $self = shift;
-
-	my $objConsole   = $self->{'obj'}->{'console'};
-	my $objCursor    = $self->{'obj'}->{'cursor'};
-	my $objEventLoop = $self->{'obj'}->{'eventloop'};
-
-	my $char = chr ($objEventLoop->{'evt'}->[5]);
-
-	if (exists  $self->{'search_str'} && 
-	    defined $self->{'search_str'} && 
-	         ! ($self->{'search_str'} eq '') && 
-	    exists  $self->{'search_pos'} && 
-	    defined $self->{'search_pos'} && 
-	           ($self->{'search_pos'} =~ /^\d+?$/) && 
-	           ($self->{'search_pos'} < (length ($self->{'search_str'})))) {
-
-		substr $self->{'search_str'}, $self->{'search_pos'}, 0, $char;
-	}
-	else {
-
-		$self->{'search_str'} .= $char;
-	}
-
-	$self->{'search_pos'}++;
-
-	# Update position of Win32 console cursor.
-
-	$objConsole->w32cons_cursor_move 
-	  ({ 'xpos' => ($objConsole->{'w32cons_curs_xpos'} + 1), 
-	     'ypos' =>  $objConsole->{'w32cons_curs_ypos'} });
-
-	return (1);
-}
-
-sub search_enter {
-
-	my $self = shift;
-
-	my $objConsole   = $self->{'obj'}->{'console'};
-	my $objCursor    = $self->{'obj'}->{'cursor'};
-	my $objDebug     = $self->{'obj'}->{'debug'};
-	my $objDisplay   = $self->{'obj'}->{'display'};
-	my $objEditor    = $self->{'obj'}->{'editor'};
-	my $objEventLoop = $self->{'obj'}->{'eventloop'};
-	my $objFile      = $self->{'obj'}->{'file'};
-
-	if (exists  $self->{'search_str'} && 
-	    defined $self->{'search_str'} && 
-	         ! ($self->{'search_str'} eq '')) {
-
-		# index STR, SUBSTR, POSITION
-		# index STR, SUBSTR
-		#   The index function searches for one string within another, but
-		#   without the wildcard-like behavior of a full regular-expression
-		#   pattern match. It returns the position of the first occurrence
-		#   of SUBSTR in STR at or after POSITION. If POSITION is omitted,
-		#   starts searching from the beginning of the string. POSITION
-		#   before the beginning of the string or after its end is treated
-		#   as if it were the beginning or the end, respectively. POSITION
-		#   and the return value are based at zero. If the substring is not
-		#   found, "index" returns -1.
-
-		$objDebug->errmsg 
-		  ("Call to function file_bytes() returned w/ '" . 
-		   scalar (@{ $objFile->file_bytes 
-		                ({ 'ofs' => $objCursor->{'curs_pos'}, 
-		                   'len' => (($objFile->file_len() - 1) - $objCursor->{'curs_pos'}) }) }) . "' bytes.");
-
-		# Search for user specified string within file.
-
-		my $rv = 
-		  index ((join '', @{ $objFile->file_bytes 
-		                        ({ 'ofs' => $objCursor->{'curs_pos'}, 
-		                           'len' => (($objFile->file_len() - 1) - $objCursor->{'curs_pos'}) }) }), 
-		         $self->{'search_str'}, 
-		         1);
-
-		if ($rv > 0) {
-
-			# Move cursor to the beginning position where string was matched.
-
-			$objCursor->{'curs_pos'} = ($objCursor->{'curs_pos'} + $rv);
-
-			# Set cursor context to '2' (byte context).
-
-			$objCursor->{'curs_ctxt'} = 2;
-
-			# If cursor is positioned beyond the editor display, 
-			# move the editor display so that cursor is in view.
-
-			while ($objEditor->{'dsp_pos'} < 
-			         ($objCursor->{'curs_pos'} - 
-			            (($objEditor->{'sz_line'} * $objEditor->{'sz_column'}) -
-			                length ($self->{'search_str'})))) {
-
-				$objEditor->{'dsp_pos'} += $objEditor->{'sz_line'};
-			}
-		}
-		else {
-
-			# Restore cursor context to previous value (or byte mode).
-
-			if (exists  $self->{'curs_ctxt_prev'} && 
-			    defined $self->{'curs_ctxt_prev'} && 
-				   ($self->{'curs_ctxt_prev'} =~ /^[012]$/)) {
-
-				$objCursor->{'curs_ctxt'} = $self->{'curs_ctxt_prev'};
-			}
-			elsif (! ($objCursor->{'curs_ctxt'} =~ /^[012]$/)) {
-
-				$objCursor->{'curs_ctxt'} = 2;
-			}
-		}
-	}
-	else {
-
-		# Restore cursor context to previous value (or byte mode).
-
-		if (exists  $self->{'curs_ctxt_prev'} && 
-		    defined $self->{'curs_ctxt_prev'} && 
-			   ($self->{'curs_ctxt_prev'} =~ /^[012]$/)) {
-
-			$objCursor->{'curs_ctxt'} = $self->{'curs_ctxt_prev'};
-		}
-		elsif (! ($objCursor->{'curs_ctxt'} =~ /^[012]$/)) {
-
-			$objCursor->{'curs_ctxt'} = 2;
-		}
-	}
-
-	# Switch context to 'DEFAULT'.
-
-	$objEditor->{'ctxt'} = 'DEFAULT';
-
-	# Disable search box display.
-
-	$objDisplay->{'d_elements'}->{'search_box'}->{'enabled'} = 0;
-
-	# Set Win32 console cursor to invisible.
-	# Move Win32 console cursor to top/left corner of display console.
-
-	$objConsole->w32cons_cursor_invisible();
-	$objConsole->w32cons_cursor_tleft_dsp();
-
-	# Erase variables used to manage search user interface.
-
-	$self->{'search_str'} = '';
-	$self->{'search_pos'} = 0;
-
-	return (1);
-}
-
-sub search_escape {
-
-	my $self = shift;
-
-	my $objConsole   = $self->{'obj'}->{'console'};
-	my $objCursor    = $self->{'obj'}->{'cursor'};
-	my $objDisplay   = $self->{'obj'}->{'display'};
-	my $objEditor    = $self->{'obj'}->{'editor'};
-	my $objEventLoop = $self->{'obj'}->{'eventloop'};
-
-	# Switch context to 'DEFAULT'.
-
-	$objEditor->{'ctxt'} = 'DEFAULT';
-
-	# Restore cursor context to previous value (or 2: byte mode).
-
-	if (exists  $self->{'curs_ctxt_prev'} && 
-	    defined $self->{'curs_ctxt_prev'} && 
-	           ($self->{'curs_ctxt_prev'} =~ /^[012]$/)) {
-
-		$objCursor->{'curs_ctxt'} = $self->{'curs_ctxt_prev'};
-	}
-	elsif (! ($objCursor->{'curs_ctxt'} =~ /^[012]$/)) {
-
-		$objCursor->{'curs_ctxt'} = 2;
-	}
-
-	# Disable search box display.
-
-	$objDisplay->{'d_elements'}->{'search_box'}->{'enabled'} = 0;
-
-	# Set Win32 console cursor to invisible.
-	# Move Win32 console cursor to top/left corner of display console.
-
-	$objConsole->w32cons_cursor_invisible();
-	$objConsole->w32cons_cursor_tleft_dsp();
-
-	# Erase variables used to manage search user interface.
-
-	$self->{'search_str'} = '';
-	$self->{'search_pos'} = 0;
-
-	return (1);
-}
-
-sub search_l_arrow {
-
-	my $self = shift;
-
-	my $objConsole = $self->{'obj'}->{'console'};
-
-	if (exists  $self->{'search_str'} && 
-	    defined $self->{'search_str'} && 
-	          ! $self->{'search_str'} eq '' && 
-	    exists  $self->{'search_pos'} && 
-	    defined $self->{'search_pos'} && 
-	            $self->{'search_pos'} =~ /^\d+?$/ && 
-	            $self->{'search_pos'} > 0) {
-
-		$self->{'search_pos'}--;
-
-		# Update position of Win32 console cursor.
-
-		$objConsole->w32cons_cursor_move
-		  ({ 'xpos' => ($objConsole->{'w32cons_curs_xpos'} - 1), 
-		     'ypos' =>  $objConsole->{'w32cons_curs_ypos'} });
-	}
-
-	return (1);
-}
-
-sub search_r_arrow {
-
-	my $self = shift;
-
-	my $objConsole = $self->{'obj'}->{'console'};
-
-	if (exists  $self->{'search_str'} && 
-	    defined $self->{'search_str'} && 
-	          ! $self->{'search_str'} eq '' && 
-	    exists  $self->{'search_pos'} && 
-	    defined $self->{'search_pos'} && 
-	            $self->{'search_pos'} =~ /^\d+?$/ && 
-	            $self->{'search_pos'} < (length ($self->{'search_str'}))) {
-
-		$self->{'search_pos'}++;
-
-		# Update position of Win32 console cursor.
-
-		$objConsole->w32cons_cursor_move
-		  ({ 'xpos' => ($objConsole->{'w32cons_curs_xpos'} + 1), 
-		     'ypos' =>  $objConsole->{'w32cons_curs_ypos'} });
-	}
-
-	return (1);
-}
-
-# Functions: Display element routines.
-#
-#   ____		___________
-#   NAME		DESCRIPTION
-#   ____		___________
-#   search_box()	Return a "search box" formatted for display console.
-
-sub search_box {
-
-	my $self = shift;
-
-	# Display box 140 chars wide x 12 chars tall.
-
-	my @search_box = 
-	  ( '_' x 140, 
-	    '|' . (' ' x 138) . '|', 
-	    '_' x 140 );
-
-	# If search string already defined, add it to the search box display.
-
-	if (exists  $self->{'search_str'} && 
-	    defined $self->{'search_str'} && 
-	          ! $self->{'search_str'} eq '') {
-
-		my $replaced_str = 
-		  substr $search_box[1], 
-		         2, 
-		         length ($self->{'search_str'}), 
-		         $self->{'search_str'};
-	}
-
-	return (\@search_box);
-}
+# ______________________________________________________________________________
 
 
 END { undef; }
@@ -994,96 +461,28 @@ No functions are exported.
 
 =head1 SUBROUTINES/METHODS
 
-=head2 debug_off
-Method debug_off()...
-= cut
-
-=head2 debug_on
-Method debug_on()...
-= cut
-
 =head2 init
 Method init()...
 = cut
 
-=head2 insert_backspace
-Method insert_backspace()...
+=head2 register_callback
+Method register_callback()...
 = cut
 
-=head2 insert_char
-Method insert_char()...
+=head2 register_evt_sig
+Method register_evt_sig()...
 = cut
 
-=head2 insert_enter
-Method insert_enter()...
+=head2 gen_evt_array
+Method gen_evt_array()...
 = cut
 
-=head2 insert_escape
-Method insert_escape()...
+=head2 evt_map
+Method evt_map()...
 = cut
 
-=head2 insert_l_arrow
-Method insert_l_arrow()...
-= cut
-
-=head2 insert_r_arrow
-Method insert_r_arrow()...
-= cut
-
-=head2 move_to_beginning
-Method move_to_beginning()...
-= cut
-
-=head2 move_to_end
-Method move_to_end()...
-= cut
-
-=head2 quit
-Method quit()...
-= cut
-
-=head2 register_evt_callbacks
-Method register_evt_callbacks()...
-= cut
-
-=head2 search_backspace
-Method search_backspace()...
-= cut
-
-=head2 search_box
-Method search_box()...
-= cut
-
-=head2 search_char
-Method search_char()...
-= cut
-
-=head2 search_enter
-Method search_enter()...
-= cut
-
-=head2 search_escape
-Method search_escape()...
-= cut
-
-=head2 search_l_arrow
-Method search_l_arrow()...
-= cut
-
-=head2 search_mode
-Method search_mode()...
-= cut
-
-=head2 search_r_arrow
-Method search_r_arrow()...
-= cut
-
-=head2 vstretch
-Method vstretch()...
-= cut
-
-=head2 vcompress
-Method vcompress()...
+=head2 evt_dispatch
+Method evt_dispatch()...
 = cut
 
 =head1 AUTHOR

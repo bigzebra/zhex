@@ -90,23 +90,33 @@ sub dbg_box {
 sub dbg_mouse_evt {
 
 	my $self = shift;
+	my $arg  = shift;
+
+	if (! defined $arg || 
+	      ! (ref ($arg) eq 'HASH')) 
+		{ die "Call to dbg_mouse_evt() failed, argument must be hash reference"; }
+
+	if (! exists  $arg->{'evt'} || 
+	    ! defined $arg->{'evt'} || 
+	             ($arg->{'evt'} eq '') || 
+	      ! (ref ($arg->{'evt'}) eq 'ARRAY')) 
+		{ die "Call to dbg_mouse_evt() failed, value associated w/ key 'evt' must be array ref"; }
 
 	my $objEventLoop = $self->{'obj'}->{'eventloop'};
-	my $evt = $objEventLoop->{'evt'};
 
 	# Display mouse event debugging information: 
 	#   Character block area (17 chars wide x 10 chars high).
 
-	if (! defined $evt->[0]               || 
-	    !        ($evt->[0] ==  2)        ||   # Event Type: 2 (mouse event)
-	    ! defined $evt->[3]               ||
-	    !       (($evt->[3] ==  0)        ||   # Button State:  0 (no    mouse button)
-	             ($evt->[3] ==  1)        ||   # Button State:  1 (left  mouse button)
-	             ($evt->[3] ==  2)        ||   # Button State:  2 (right mouse button)
-	           ((($evt->[3] ==  7864320)  ||   # Button State:  7864320 (mouse wheel roll upward)
-                     ($evt->[3] == -7864320)) &&   # Button State: -7864320 (mouse wheel roll downward)
-	      defined $evt->[5]               && 
-	             ($evt->[5] ==  4)))) {
+	if (! defined $arg->{'evt'}->[0]               || 
+	    !        ($arg->{'evt'}->[0] ==  2)        ||   # Event Type: 2 (mouse event)
+	    ! defined $arg->{'evt'}->[3]               ||
+	    !       (($arg->{'evt'}->[3] ==  0)        ||   # Button State:  0 (no    mouse button)
+	             ($arg->{'evt'}->[3] ==  1)        ||   # Button State:  1 (left  mouse button)
+	             ($arg->{'evt'}->[3] ==  2)        ||   # Button State:  2 (right mouse button)
+	           ((($arg->{'evt'}->[3] ==  7864320)  ||   # Button State:  7864320 (mouse wheel roll upward)
+                     ($arg->{'evt'}->[3] == -7864320)) &&   # Button State: -7864320 (mouse wheel roll downward)
+	      defined $arg->{'evt'}->[5]               && 
+	             ($arg->{'evt'}->[5] ==  4)))) {
 
 		return (undef);
 	}
@@ -120,22 +130,22 @@ sub dbg_mouse_evt {
 	#         coordinate in console display characters.
 
 	my $chg_state;
-	if (defined $evt->[1] && 
-	           ($evt->[1] == $objEventLoop->{'mouse_over_x'}) && 
-	    defined $evt->[2] && 
-	           ($evt->[2] == $objEventLoop->{'mouse_over_y'})) 
+	if (defined $arg->{'evt'}->[1] && 
+	           ($arg->{'evt'}->[1] == $objEventLoop->{'mouse_over_x'}) && 
+	    defined $arg->{'evt'}->[2] && 
+	           ($arg->{'evt'}->[2] == $objEventLoop->{'mouse_over_y'})) 
 	     { $chg_state = 'Same'; }      # X,Y Changed? NO:  Mouse hasn't moved enough to change the X,Y coordinates.
 	else { $chg_state = 'Changed'; }   # X,Y Changed? YES: Mouse moved enough to change one (or both) X,Y values.
 
 	my $title = 'MOUSE_EVENT_DEBUG';
 
 	my $pairs = 
-	  {'EvntType' => sprintf("%8.8s", eval { defined $evt->[0] ? $evt->[0] : '<empty>'; }), 
-	   'MousPosX' => sprintf("%8.8s", eval { defined $evt->[1] ? $evt->[1] : '<empty>'; }), 
-	   'MousPosY' => sprintf("%8.8s", eval { defined $evt->[2] ? $evt->[2] : '<empty>'; }), 
-	   'BtnState' => sprintf("%8.8s", eval { defined $evt->[3] ? $evt->[3] : '<empty>'; }), 
-	   'CtlrKeyS' => sprintf("%8.8s", eval { defined $evt->[4] ? $evt->[4] : '<empty>'; }), 
-	   'EvntFlag' => sprintf("%8.8s", eval { defined $evt->[5] ? $evt->[5] : '<empty>'; }), 
+	  {'EvntType' => sprintf("%8.8s", eval { defined $arg->{'evt'}->[0] ? $arg->{'evt'}->[0] : '<empty>'; }), 
+	   'MousPosX' => sprintf("%8.8s", eval { defined $arg->{'evt'}->[1] ? $arg->{'evt'}->[1] : '<empty>'; }), 
+	   'MousPosY' => sprintf("%8.8s", eval { defined $arg->{'evt'}->[2] ? $arg->{'evt'}->[2] : '<empty>'; }), 
+	   'BtnState' => sprintf("%8.8s", eval { defined $arg->{'evt'}->[3] ? $arg->{'evt'}->[3] : '<empty>'; }), 
+	   'CtlrKeyS' => sprintf("%8.8s", eval { defined $arg->{'evt'}->[4] ? $arg->{'evt'}->[4] : '<empty>'; }), 
+	   'EvntFlag' => sprintf("%8.8s", eval { defined $arg->{'evt'}->[5] ? $arg->{'evt'}->[5] : '<empty>'; }), 
 	   'ChangeXY' => sprintf("%8.8s", $chg_state), 
 	   'MousChar' => sprintf("%8.8s", $objEventLoop->{'mouse_over_char'}), 
 	   'PrevChar' => sprintf("%8.8s", $objEventLoop->{'mouse_over_char'})};
@@ -151,17 +161,25 @@ sub dbg_mouse_evt {
 sub dbg_keybd_evt {
 
 	my $self = shift;
+	my $arg  = shift;
 
-	my $objEventLoop = $self->{'obj'}->{'eventloop'};
-	my $evt = $objEventLoop->{'evt'};
+	if (! defined $arg || 
+	      ! (ref ($arg) eq 'HASH')) 
+		{ die "Call to dbg_keybd_evt() failed, argument must be hash reference"; }
+
+	if (! exists  $arg->{'evt'} || 
+	    ! defined $arg->{'evt'} || 
+	             ($arg->{'evt'} eq '') || 
+	      ! (ref ($arg->{'evt'}) eq 'ARRAY')) 
+		{ die "Call to dbg_keybd_evt() failed, value associated w/ key 'evt' must be array ref"; }
 
 	# Display keyboard event debugging information: 
 	#   Character block area (17 chars wide x 8 chars high).
 
-	if (! defined $evt->[0]       || 
-	    ! defined $evt->[1]       || 
-	           ! ($evt->[0] == 1) ||   # Event_Type: 1 (keyboard event).
-	           ! ($evt->[1] == 1)) {   # Key_Down:   1 (key pressed).
+	if (! defined $arg->{'evt'}->[0]       || 
+	    ! defined $arg->{'evt'}->[1]       || 
+	           ! ($arg->{'evt'}->[0] == 1) ||   # Event_Type: 1 (keyboard event).
+	           ! ($arg->{'evt'}->[1] == 1)) {   # Key_Down:   1 (key pressed).
 
 		return (undef);
 	}
@@ -169,13 +187,13 @@ sub dbg_keybd_evt {
 	my $title = 'KEYBOARD_EVNT_DBG';
 
 	my $pairs = 
-	  {'EvntType' => sprintf("%8.8s", eval { defined $evt->[0] ? $evt->[0] : '<empty>'; }), 
-	   'KeyDown?' => sprintf("%8.8s", eval { defined $evt->[1] ? $evt->[1] : '<empty>'; }), 
-	   'RptCount' => sprintf("%8.8s", eval { defined $evt->[2] ? $evt->[2] : '<empty>'; }), 
-	   'VirKCode' => sprintf("%8.8s", eval { defined $evt->[3] ? $evt->[3] : '<empty>'; }), 
-	   'VirSCode' => sprintf("%8.8s", eval { defined $evt->[4] ? $evt->[4] : '<empty>'; }), 
-	   'CharCode' => sprintf("%8.8s", eval { defined $evt->[5] ? $evt->[5] : '<empty>'; }), 
-	   'CtrlKeyS' => sprintf("%8.8s", eval { defined $evt->[6] ? $evt->[6] : '<empty>'; })};
+	  {'EvntType' => sprintf("%8.8s", eval { defined $arg->{'evt'}->[0] ? $arg->{'evt'}->[0] : '<empty>'; }), 
+	   'KeyDown?' => sprintf("%8.8s", eval { defined $arg->{'evt'}->[1] ? $arg->{'evt'}->[1] : '<empty>'; }), 
+	   'RptCount' => sprintf("%8.8s", eval { defined $arg->{'evt'}->[2] ? $arg->{'evt'}->[2] : '<empty>'; }), 
+	   'VirKCode' => sprintf("%8.8s", eval { defined $arg->{'evt'}->[3] ? $arg->{'evt'}->[3] : '<empty>'; }), 
+	   'VirSCode' => sprintf("%8.8s", eval { defined $arg->{'evt'}->[4] ? $arg->{'evt'}->[4] : '<empty>'; }), 
+	   'CharCode' => sprintf("%8.8s", eval { defined $arg->{'evt'}->[5] ? $arg->{'evt'}->[5] : '<empty>'; }), 
+	   'CtrlKeyS' => sprintf("%8.8s", eval { defined $arg->{'evt'}->[6] ? $arg->{'evt'}->[6] : '<empty>'; })};
 
 	my $dbg = 
 	  $self->dbg_box 
@@ -188,16 +206,24 @@ sub dbg_keybd_evt {
 sub dbg_unmatched_evt {
 
 	my $self = shift;
+	my $arg  = shift;
 
-	my $objEventLoop = $self->{'obj'}->{'eventloop'};
-	my $evt = $objEventLoop->{'evt'};
+	if (! defined $arg || 
+	      ! (ref ($arg) eq 'HASH')) 
+		{ die "Call to dbg_unmatched_evt() failed, argument must be hash reference"; }
+
+	if (! exists  $arg->{'evt'} || 
+	    ! defined $arg->{'evt'} || 
+	             ($arg->{'evt'} eq '') || 
+	      ! (ref ($arg->{'evt'}) eq 'ARRAY')) 
+		{ die "Call to dbg_unmatched_evt() failed, value associated w/ key 'evt' must be array ref"; }
 
 	# Display unmatched event debug info: 
 	#   Character block area (17 chars wide x 8 chars high).
 
 	my @lbl;
-	if (defined $evt->[0] && 
-	            $evt->[0] == 1) {
+	if (defined $arg->{'evt'}->[0] && 
+	            $arg->{'evt'}->[0] == 1) {
 
 		@lbl = 
 		  ('EvntType',    # 1
@@ -208,8 +234,8 @@ sub dbg_unmatched_evt {
 		   'CharCode',    # 6
 		   'CtrlKeyS');   # 7
 	}
-	elsif (defined $evt->[0] && 
-	               $evt->[0] == 2) {
+	elsif (defined $arg->{'evt'}->[0] && 
+	               $arg->{'evt'}->[0] == 2) {
 
 		@lbl = 
 		  ('EvntType',    # 1
@@ -235,13 +261,13 @@ sub dbg_unmatched_evt {
 	my $title = 'UNMATCHED_EVT_DBG';
 
 	my $pairs = 
-	  {$lbl[0] => sprintf("%8.8s", eval { defined $evt->[0] ? $evt->[0] : '<empty>'; }), 
-	   $lbl[1] => sprintf("%8.8s", eval { defined $evt->[1] ? $evt->[1] : '<empty>'; }), 
-	   $lbl[2] => sprintf("%8.8s", eval { defined $evt->[2] ? $evt->[2] : '<empty>'; }), 
-	   $lbl[3] => sprintf("%8.8s", eval { defined $evt->[3] ? $evt->[3] : '<empty>'; }), 
-	   $lbl[4] => sprintf("%8.8s", eval { defined $evt->[4] ? $evt->[4] : '<empty>'; }), 
-	   $lbl[5] => sprintf("%8.8s", eval { defined $evt->[5] ? $evt->[5] : '<empty>'; }),
-	   $lbl[6] => sprintf("%8.8s", eval { defined $evt->[6] ? $evt->[6] : '<empty>'; })};
+	  {$lbl[0] => sprintf("%8.8s", eval { defined $arg->{'evt'}->[0] ? $arg->{'evt'}->[0] : '<empty>'; }), 
+	   $lbl[1] => sprintf("%8.8s", eval { defined $arg->{'evt'}->[1] ? $arg->{'evt'}->[1] : '<empty>'; }), 
+	   $lbl[2] => sprintf("%8.8s", eval { defined $arg->{'evt'}->[2] ? $arg->{'evt'}->[2] : '<empty>'; }), 
+	   $lbl[3] => sprintf("%8.8s", eval { defined $arg->{'evt'}->[3] ? $arg->{'evt'}->[3] : '<empty>'; }), 
+	   $lbl[4] => sprintf("%8.8s", eval { defined $arg->{'evt'}->[4] ? $arg->{'evt'}->[4] : '<empty>'; }), 
+	   $lbl[5] => sprintf("%8.8s", eval { defined $arg->{'evt'}->[5] ? $arg->{'evt'}->[5] : '<empty>'; }),
+	   $lbl[6] => sprintf("%8.8s", eval { defined $arg->{'evt'}->[6] ? $arg->{'evt'}->[6] : '<empty>'; })};
 
 	my $dbg = 
 	  $self->dbg_box 
@@ -264,14 +290,14 @@ sub dbg_curs {
 	my $curs_edge_status = '';
 	if ($objCursor->{'curs_ctxt'} =~ /^[012]$/) {
 
-		if (($objCursor->{'curs_pos'} >= $objEditor->{'dsp_pos'}) && 
-		    ($objCursor->{'curs_pos'} < ($objEditor->{'dsp_pos'} + $objEditor->{'sz_line'}))) 
+		if (($objCursor->{'curs_pos'} >= $objEditor->{'edt_pos'}) && 
+		    ($objCursor->{'curs_pos'} < ($objEditor->{'edt_pos'} + $objEditor->{'sz_line'}))) 
 			{ $curs_edge_status = 'TOP'; }
 		elsif ( ($objCursor->{'curs_pos'} >= 
-		          ($objEditor->{'dsp_pos'} + 
+		          ($objEditor->{'edt_pos'} + 
 		             ($objEditor->{'sz_line'} * $objEditor->{'sz_column'}) - $objEditor->{'sz_line'})) && 
 		        ($objCursor->{'curs_pos'} < 
-		           ($objEditor->{'dsp_pos'} + 
+		           ($objEditor->{'edt_pos'} + 
 		              ($objEditor->{'sz_line'} * $objEditor->{'sz_column'}))) ) 
 			{ $curs_edge_status = 'BOTTOM'; }
 		else    { $curs_edge_status = 'MIDDLE'; }
@@ -318,7 +344,7 @@ sub dbg_display {
 	my $title = 'DISPLAY_POSITION_DEBUG';
 
 	my $pairs = 
-	  {'DisplayPosition ' => sprintf ("%8.8s", $objEditor->{'dsp_pos'}), 
+	  {'DisplayPosition ' => sprintf ("%8.8s", $objEditor->{'edt_pos'}), 
 	   'TotalFileLines  ' => sprintf ("%8.8s", $lines), 
 	   'DisplayLowestPos' => sprintf ("%8.8s", $dsp_pos_lowest), 
 	   'FileSize        ' => sprintf ("%8.8s", $objFile->file_len()), 
@@ -355,7 +381,7 @@ sub dbg_count {
 	my $pairs = 
 	  {'ttl_evnt  ' => sprintf ("%8.8s", $objEventLoop->{'ct_evt_total'}),
 	   'funcevnt  ' => sprintf ("%8.8s", $objEventLoop->{'ct_evt_functional'}), 
-	   'event ctxt' => sprintf ("%8.8s", $objEditor->{'ctxt'})};
+	   'event ctxt' => sprintf ("%8.8s", $objEditor->{'edt_ctxt'})};
 
 	my $dbg = 
 	  $self->dbg_box 

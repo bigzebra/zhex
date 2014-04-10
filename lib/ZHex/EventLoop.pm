@@ -9,7 +9,10 @@ use warnings FATAL => 'all';
 use ZHex::Common 
   qw(new 
      obj_init 
-     $VERS);
+     $VERS 
+     EDT_CTXT_DEFAULT 
+     EDT_CTXT_INSERT 
+     EDT_CTXT_SEARCH);
 
 BEGIN { require Exporter;
 	our $VERSION   = $VERS;
@@ -31,8 +34,6 @@ sub init {
 
 	my $self = shift;
 
-	                                     # Event loop context: depending upon the state of the 'ctxt' 
-	                                     # variable, keystrokes have different meanings.
 	$self->{'FLAG_QUIT'} = 0;            # Flag controls exit from main event loop.
 	$self->{'mouse_over_char'}   = '';   # Mouse handling: position, character, attributes.
 	$self->{'mouse_over_attr'}   = '';   # Mouse handling: position, character, attributes.
@@ -44,16 +45,6 @@ sub init {
 	$self->{'ct_evt_functional'} = 0;    # Counters: ...
 	$self->{'evt_history'} = [];         # Event history (makes 'undo' possible).
 
-	$self->{'cb'} = {};                  # Event callback subroutine references.
-	$self->{'cb'}->{'DEFAULT'} = {};
-	$self->{'cb'}->{'INSERT'}  = {};
-	$self->{'cb'}->{'SEARCH'}  = {};
-
-	$self->{'evt_sig'} = {};
-	$self->{'evt_sig'}->{'DEFAULT'} = {};
-	$self->{'evt_sig'}->{'INSERT'}  = {};
-	$self->{'evt_sig'}->{'SEARCH'}  = {};
-
 	return (1);
 }
 
@@ -62,179 +53,156 @@ sub init {
 #   ____			___________
 #   NAME			DESCRIPTION
 #   ____			___________
-#   register_callback()		Register callback subroutine to handle event under certain context.
-#   register_evt_sig()		Register event signature (unique values of evt array that identify different keystrokes).
-#   gen_evt_array()		...
-#   event_loop()		...
-#   read_evt()			Read/filter event information from console input buffer, return relevant events to caller.
-#   evt_map()			...
+#   evt_read()			Read/filter event information from console input buffer, return relevant events to caller.
+#   evt_filter()		...
+#   evt_mouse()			...
+#   evt_loop()			...
 
-sub register_callback {
+sub evt_read {
 
 	my $self = shift;
 	my $arg  = shift;
 
 	if (! defined $arg || 
 	      ! (ref ($arg) eq 'HASH')) 
-		{ die "Call to register_callback() failed, argument must be hash reference"; }
+		{ die "Call to evt_read() failed, argument must be hash reference"; }
 
-	if (! exists  $arg->{'ctxt'} || 
-	    ! defined $arg->{'ctxt'} || 
-	             ($arg->{'ctxt'} eq '')) 
-		{ die "Call to register_callback() failed, value associated w/ key 'ctxt' was undef/empty string"; }
+	if (! exists  $arg->{'evt_stack'} || 
+	    ! defined $arg->{'evt_stack'} || 
+	             ($arg->{'evt_stack'} eq '') || 
+	      ! (ref ($arg->{'evt_stack'}) eq 'ARRAY')) 
+		{ die "Call to evt_read() failed, value associated w/ key 'evt_stack' must be array ref"; }
 
-	if (! exists  $arg->{'evt_nm'} || 
-	    ! defined $arg->{'evt_nm'} || 
-	             ($arg->{'evt_nm'} eq '')) 
-		{ die "Call to register_callback() failed, value associated w/ key 'evt_nm' was undef/empty string"; }
+	my $objConsole = $self->{'obj'}->{'console'};
 
-	if (! exists  $arg->{'evt_cb'} || 
-	    ! defined $arg->{'evt_cb'} || 
-	      ! (ref ($arg->{'evt_cb'}) eq 'CODE')) 
-		{ die "Call to register_callback() failed, value associated w/ key 'evt_cb' must be code reference"; }
+	# Function: GetEvents() 
+	#   Returns the number of unread input events in the console's 
+	#   input buffer (or "undef" on errors). 
 
-	if (! exists  $arg->{'evt'} || 
-	    ! defined $arg->{'evt'} || 
-	      ! (ref ($arg->{'evt'}) eq 'ARRAY')) 
-		{ die "Call to register_callback() failed, value associated w/ key 'evt' must be array reference"; }   # <--- Change back to die...
+	CONSOLE_EVENT: 
+	  while (my $rv = $objConsole->{'CONS_IN'}->GetEvents()) {
 
-	# Store callback in callback hash: $self->{'cb'}.
+		# Function: Input() 
+		#   Reads an event from the input buffer. Returns a list of values 
+		#   related to the type of event returned. The two event types are 
+		#   keyboard and mouse. This method will return "undef" on errors. 
 
-	$self->{'cb'}->{ $arg->{'ctxt'} }->{ $arg->{'evt_nm'} } = $arg->{'evt_cb'};
+		my $evt = [];
+		@{ $evt } = $objConsole->{'CONS_IN'}->Input();
 
-	foreach my $evt_sig (@{ $arg->{'evt'} }) {
+		# Check for mouse pointer movement events/superflous events.
 
-		# Store event signature in wherever it gets stored.
+		if ($self->evt_filter ({'evt' => $evt})) {
 
-		$self->register_evt_sig 
-		  ({ 'ctxt'   => $arg->{'ctxt'}, 
-		     'evt_nm' => $arg->{'evt_nm'}, 
-		     'evt'    => $evt_sig });
+			# Back to the top, skipping the 'push' statement below.
+
+			next CONSOLE_EVENT;
+		}
+		elsif ($self->evt_mouse ({'evt' => $evt})) {
+
+			# Back to the top, skipping the 'push' statement below.
+
+			next CONSOLE_EVENT;
+		}
+
+		# Add event to list of events (returned to caller).
+
+		push @{ $arg->{'evt_stack'} }, $evt;
 	}
 
-	# $self->{'obj'}->{'debug'}->errmsg ("Registered callback for '" . $arg->{'evt_nm'} . "' (context='" . $arg->{'ctxt'} . "'.\n");
-	# warn ("Registered callback for '" . $arg->{'evt_nm'} . "' (context='" . $arg->{'ctxt'} . "').");
-
-	return (1);
+	if (scalar (@{ $arg->{'evt_stack'} }) > 0) 
+	     { return (1); }
+	else { return (undef); }
 }
 
-sub register_evt_sig {
+sub evt_filter {
 
 	my $self = shift;
 	my $arg  = shift;
 
 	if (! defined $arg || 
 	      ! (ref ($arg) eq 'HASH')) 
-		{ die "Call to register_evt_sig() failed, argument must be hash reference"; }
-
-	if (! exists  $arg->{'ctxt'} || 
-	    ! defined $arg->{'ctxt'} || 
-	             ($arg->{'ctxt'} eq '')) 
-		{ die "Call to register_evt_sig() failed, value associated w/ key 'ctxt' must not be undef/empty"; }
-
-	if (! exists  $arg->{'evt_nm'} || 
-	    ! defined $arg->{'evt_nm'} || 
-	             ($arg->{'evt_nm'} eq '')) 
-		{ die "Call to register_evt_sig() failed, value associated w/ key 'evt_nm' must not be undef/empty"; }
+		{ die "Call to evt_mouse() failed, argument must be hash reference"; }
 
 	if (! exists  $arg->{'evt'} || 
 	    ! defined $arg->{'evt'} || 
 	             ($arg->{'evt'} eq '') || 
 	      ! (ref ($arg->{'evt'}) eq 'ARRAY')) 
-		{ die "Call to register_evt_sig() failed, value associated w/ key 'evt' must be array ref"; }
+		{ die "Call to evt_filter() failed, value associated w/ key 'evt' must be array ref"; }
 
-	# Register a set of callback matching criteria.
+	# Check for keyboard "key up" events:
+	#   These events cloud the debugging display, filter them from event stream.
 
-	if (exists  $self->{'evt_sig'} && 
-	    defined $self->{'evt_sig'} && 
-	      (ref ($self->{'evt_sig'}) eq 'HASH') && 
-	    exists  $self->{'evt_sig'}->{ $arg->{'ctxt'} } && 
-	    defined $self->{'evt_sig'}->{ $arg->{'ctxt'} } && 
-	      (ref ($self->{'evt_sig'}->{ $arg->{'ctxt'} }) eq 'HASH')) {
+	if (defined $arg->{'evt'}->[0] && ($arg->{'evt'}->[0] == 1) &&   # Event_Type: 1 (keyboard event)
+	    defined $arg->{'evt'}->[1] && ($arg->{'evt'}->[1] == 0)) {   # Key_Down:   1 (key pressed)
 
-		if (! (exists  $self->{'evt_sig'}->{ $arg->{'ctxt'} }->{ $arg->{'evt_nm'} }) || 
-		    ! (defined $self->{'evt_sig'}->{ $arg->{'ctxt'} }->{ $arg->{'evt_nm'} }) || 
-		       ! (ref ($self->{'evt_sig'}->{ $arg->{'ctxt'} }->{ $arg->{'evt_nm'} }) eq 'ARRAY')) { 
-
-			$self->{'evt_sig'}->{ $arg->{'ctxt'} }->{ $arg->{'evt_nm'} } = [];
-		}
-
-		push @{ $self->{'evt_sig'}->{ $arg->{'ctxt'} }->{ $arg->{'evt_nm'} } }, 
-		     $arg->{'evt'};
+		return (1);
 	}
 
-	# $self->{'obj'}->{'debug'}->errmsg ("Registered event signature for '" . $arg->{'evt_nm'} . "'.\n");
-	# warn ("Registered event signature for '" . $arg->{'evt_nm'} . "' (context='" . $arg->{'ctxt'} . "'.");
-
-	# warn 
-	#   ("evt0='" . $arg->{'evt'}->[0] . "', " . 
-	#    "evt1='" . $arg->{'evt'}->[1] . "', " . 
-	#    "evt2='" . $arg->{'evt'}->[2] . "', " . 
-	#    "evt3='" . $arg->{'evt'}->[3] . "', " . 
-	#    "evt4='" . $arg->{'evt'}->[4] . "', " . 
-	#    "evt5='" . $arg->{'evt'}->[5] . "', " . 
-	#    "evt6='" . $arg->{'evt'}->[6] . "'.");
-
-	return (1);
+	return (0);
 }
 
-sub gen_evt_array {
+sub evt_mouse {
 
 	my $self = shift;
 	my $arg  = shift;
 
 	if (! defined $arg || 
 	      ! (ref ($arg) eq 'HASH')) 
-		{ die "Call to gen_evt_array() failed, argument must be hash reference"; }
+		{ die "Call to evt_mouse() failed, argument must be hash reference"; }
 
-	my $evt_array = [];
+	if (! exists  $arg->{'evt'} || 
+	    ! defined $arg->{'evt'} || 
+	             ($arg->{'evt'} eq '') || 
+	      ! (ref ($arg->{'evt'}) eq 'ARRAY')) 
+		{ die "Call to evt_mouse() failed, value associated w/ key 'evt' must be array ref"; }
 
-	if (exists  $arg->{'0'} && 
-	    defined $arg->{'0'} && 
-	         ! ($arg->{'0'} eq '')) 
-		{ $evt_array->[0] = $arg->{'0'}; }
-	   else { $evt_array->[0] = ''; }
+	my $objConsole = $self->{'obj'}->{'console'};
+	my $objMouse   = $self->{'obj'}->{'mouse'};
 
-	if (exists  $arg->{'1'} && 
-	    defined $arg->{'1'} && 
-	         ! ($arg->{'1'} eq '')) 
-		{ $evt_array->[1] = $arg->{'1'}; }
-	   else { $evt_array->[1] = ''; }
+	# Check for mouse pointer movement events:
+	#   These events must be handled out-of-band (immediately).
 
-	if (exists  $arg->{'2'} && 
-	    defined $arg->{'2'} && 
-	         ! ($arg->{'2'} eq '')) 
-		{ $evt_array->[2] = $arg->{'2'}; }
-	   else { $evt_array->[2] = ''; }
+	if (defined $arg->{'evt'}->[0] && ($arg->{'evt'}->[0] == 2) &&              # Event_Type:    2 (indicates 'mouse' event).
+	    defined $arg->{'evt'}->[1] && ($arg->{'evt'}->[1] =~ /^\d\d?\d?$/) &&   # X Coordinate:  One to three digits.
+	    defined $arg->{'evt'}->[2] && ($arg->{'evt'}->[2] =~ /^\d\d?\d?$/) &&   # Y Coordinate:  One to three digits.
+	    defined $arg->{'evt'}->[3] && ($arg->{'evt'}->[3] == 0) &&              # Button state:  0 (indicates no mouse button was clicked).
+	    defined $arg->{'evt'}->[5] && ($arg->{'evt'}->[5] == 1)) {              # Event flags:   1 (???).
 
-	if (exists  $arg->{'3'} && 
-	    defined $arg->{'3'} && 
-	         ! ($arg->{'3'} eq '')) 
-		{ $evt_array->[3] = $arg->{'3'}; }
-	   else { $evt_array->[3] = ''; }
+		# Check to see if mouse pointer has moved enough to change either the X or Y coordinate.
 
-	if (exists  $arg->{'4'} && 
-	    defined $arg->{'4'} && 
-	         ! ($arg->{'4'} eq '')) 
-		{ $evt_array->[4] = $arg->{'4'}; }
-	   else { $evt_array->[4] = ''; }
+		if (($arg->{'evt'}->[1] eq $self->{'mouse_over_x'}) && 
+		    ($arg->{'evt'}->[2] eq $self->{'mouse_over_y'})) {
 
-	if (exists  $arg->{'5'} && 
-	    defined $arg->{'5'} && 
-	         ! ($arg->{'5'} eq '')) 
-		{ $evt_array->[5] = $arg->{'5'}; }
-	   else { $evt_array->[5] = ''; }
+			return (0);
+		}
+	}
+	else {
 
-	if (exists  $arg->{'6'} && 
-	    defined $arg->{'6'} && 
-	         ! ($arg->{'6'} eq '')) 
-		{ $evt_array->[6] = $arg->{'6'}; }
-	   else { $evt_array->[6] = ''; }
+		return (0);
+	}
 
-	return ($evt_array);
+	# Pointer movement caused one (or both) X,Y coordinates to change: 
+	#
+	#   1) Copy previous X,Y coordinates of mouse pointer to mouse_over_x_prev/mouse_over_y_prev.
+	#   2) Store new X,Y coordinates of mouse pointer in mouse_over_x/mouse_over_y.
+	#   3) Update display console to indicate new position of mouse pointer.
+
+	$self->{'mouse_over_x_prev'} = $self->{'mouse_over_x'};
+	$self->{'mouse_over_y_prev'} = $self->{'mouse_over_y'};
+	$self->{'mouse_over_x'}	     = $arg->{'evt'}->[1];
+	$self->{'mouse_over_y'}      = $arg->{'evt'}->[2];
+
+	$objMouse->mouse_over 
+	  ({ 'mouse_over_x'      => $self->{'mouse_over_x'}, 
+	     'mouse_over_y'      => $self->{'mouse_over_y'}, 
+	     'mouse_over_x_prev' => $self->{'mouse_over_x_prev'}, 
+	     'mouse_over_y_prev' => $self->{'mouse_over_y_prev'} });
+
+	return (1);
 }
 
-sub event_loop {
+sub evt_loop {
 
 	my $self = shift;
 
@@ -243,9 +211,10 @@ sub event_loop {
 	my $objDebug   = $self->{'obj'}->{'debug'};
 	my $objDisplay = $self->{'obj'}->{'display'};
 	my $objEditor  = $self->{'obj'}->{'editor'};
+	my $objEvent   = $self->{'obj'}->{'event'};
 
 	# ___________________________________________________________________________________
-	# LOOP: READ CONSOLE EVENTS      [w/ CALL TO read_evt()]
+	# LOOP: READ CONSOLE EVENTS      [w/ CALL TO evt_read()]
 	#       PROCESS CONSOLE EVENTS   [w/ CALL TO FUNCTION LISTED IN EVENT HANDLERS TABLE]
 	#       SLEEP ON INACTIVITY      [w/ CALL TO usleep ()]
 	#
@@ -266,7 +235,7 @@ sub event_loop {
 
 		# Read events from console.
 
-		my $rv = $self->read_evt ({ 'evt_stack' => $evt_stack });
+		my $rv = $self->evt_read ({ 'evt_stack' => $evt_stack });
 
 		if (! defined $evt_stack || 
 		             ($evt_stack eq '') || 
@@ -283,11 +252,12 @@ sub event_loop {
 		EVENT_STACK: 
 		  foreach my $evt (shift @{ $evt_stack }) {
 
-			# Call evt_map() to determine if this event means something in the given context.
+			# Call evt_map(): determine if @evt matches an event (in the present context).
 
 			my $evt_nm = 
-			  $self->evt_map ({ 'ctxt' => $objEditor->{'ctxt'}, 
-			                    'evt'  => $evt });
+			  $objEvent->evt_map 
+			    ({ 'edt_ctxt' => $objEditor->{'edt_ctxt'}, 
+			       'evt'      => $evt });
 
 			# Store the event (temporarily) in self for access by: 
 			#   Debugging information display subroutines.
@@ -299,286 +269,54 @@ sub event_loop {
 			              $evt_nm eq '' || 
 			           ! ($evt_nm =~ /^[\w\_]+?$/)) {
 
-				$objDebug->errmsg ("Unsupported function: <evt_map() returned undef>.");
+				$objDebug->errmsg ("Unsupported function: evt_map() returned undef.");
 				next EVENT_STACK;
 			}
 
-			# Check to see if a callback routine has been registered to handle this event.
+			# Dispatch the event callback routine registered to handle this event.
 
-			if (exists  $self->{'cb'} && 
-			    defined $self->{'cb'} && 
-			      (ref ($self->{'cb'}) eq 'HASH') && 
-			    exists  $self->{'cb'}->{ $objEditor->{'ctxt'} } && 
-			    defined $self->{'cb'}->{ $objEditor->{'ctxt'} } && 
-			      (ref ($self->{'cb'}->{ $objEditor->{'ctxt'} }) eq 'HASH') && 
-			    exists  $self->{'cb'}->{ $objEditor->{'ctxt'} }->{$evt_nm} && 
-			    defined $self->{'cb'}->{ $objEditor->{'ctxt'} }->{$evt_nm} && 
-			      (ref ($self->{'cb'}->{ $objEditor->{'ctxt'} }->{$evt_nm}) eq 'CODE')) {
+			if ($objEvent->evt_dispatch ({ 'evt_nm'   => $evt_nm, 
+			                               'edt_ctxt' => $objEditor->{'edt_ctxt'}, 
+			                               'evt'      => $evt })) {
 
-				$objDebug->errmsg ("Calling function '" . $evt_nm . "' in context '" . $objEditor->{'ctxt'} . "'.");
-				$self->{'ct_evt_functional'}++;
-
-				# Call the subroutine associated with this event (callback routine).
-
-				$self->{'cb'}->{ $objEditor->{'ctxt'} }->{$evt_nm}->();
-				push @{ $self->{'evt_history'} }, $evt_nm;   # Push event onto 'evt_history'.
+				$objDebug->errmsg ("Call to evt_dispatch w/ argument '" . $evt_nm . "' returned w/ success.");
 			}
 			else {
 
-				# Store the event (temporarily) in self for access by: 
-				#   Debugging information display subroutines.
-
-				$objDebug->errmsg ("Unsupported function: <" . $evt_nm . ">");
+				$objDebug->errmsg ("Call to evt_dispatch w/ argument '" . $evt_nm . "' returned w/ failure.");
 				next EVENT_STACK;
 			}
 		}
 		continue {
 
-			# Store the current display data structure (before updating the display).
+			UPDATE_TERMINAL: {
 
-			$objDisplay->dsp_prev_set 
-			  ({ 'dsp_prev' => $objDisplay->{'dsp'} });
+				# Store the current display data structure (before updating the display).
 
-			# Update the editor display/debugging information/cursor, write to the display console.
+				$objDisplay->dsp_prev_set 
+				  ({ 'dsp_prev' => $objDisplay->{'dsp'} });
 
-			$objDisplay->dsp_set 
-			  ({ 'dsp' => $objDisplay->generate_editor_display() });
+				# Update the editor display/debugging information/cursor, write to the display console.
 
-			$objConsole->w32cons_refresh_display 
-			  ({ 'dsp'      => $objDisplay->{'dsp'}, 
-			     'dsp_prev' => $objDisplay->{'dsp_prev'}, 
-			     'dsp_xpad' => $objDisplay->{'dsp_xpad'}, 
-			     'dsp_ypad' => $objDisplay->{'dsp_ypad'},
-			     'd_width'  => $objDisplay->{'d_width'} });
+				$objDisplay->dsp_set 
+				  ({ 'dsp' => $objDisplay->generate_editor_display ({ 'evt' => \@{ [ '', '', '', '', '', '' ] } }) });
 
-			$objCursor->curs_display 
-			  ({ 'dsp_xpad' => $objDisplay->{'dsp_xpad'}, 
-			     'dsp_ypad' => $objDisplay->{'dsp_ypad'}, 
-			     'force'    => 0 });
+				$objConsole->w32cons_refresh_display 
+				  ({ 'dsp'      => $objDisplay->{'dsp'}, 
+				     'dsp_prev' => $objDisplay->{'dsp_prev'}, 
+				     'dsp_xpad' => $objDisplay->{'dsp_xpad'}, 
+				     'dsp_ypad' => $objDisplay->{'dsp_ypad'},
+				     'd_width'  => $objDisplay->{'d_width'} });
+
+				$objCursor->curs_display 
+				  ({ 'dsp_xpad' => $objDisplay->{'dsp_xpad'}, 
+				     'dsp_ypad' => $objDisplay->{'dsp_ypad'}, 
+				     'force'    => 0 });
+			}
 		}
 	}
 
 	return (1);
-}
-
-sub read_evt {
-
-	my $self = shift;
-	my $arg  = shift;
-
-	if (! defined $arg || 
-	      ! (ref ($arg) eq 'HASH')) 
-		{ die "Call to read_evt() failed, argument must be hash reference"; }
-
-	if (! exists  $arg->{'evt_stack'} || 
-	    ! defined $arg->{'evt_stack'} || 
-	             ($arg->{'evt_stack'} eq '') || 
-	      ! (ref ($arg->{'evt_stack'}) eq 'ARRAY')) 
-		{ die "Call to read_evt() failed, value associated w/ key 'evt_stack' must be array ref"; }
-
-	my $objConsole = $self->{'obj'}->{'console'};
-
-	# Function: GetEvents() 
-	#   Returns the number of unread input events in the console's 
-	#   input buffer (or "undef" on errors). 
-
-	CONSOLE_EVENT: 
-	  while (my $rv = $objConsole->{'CONS_IN'}->GetEvents()) {
-
-		# Function: Input() 
-		#   Reads an event from the input buffer. Returns a list of values 
-		#   related to the type of event returned. The two event types are 
-		#   keyboard and mouse. This method will return "undef" on errors. 
-
-		my @evt = $objConsole->{'CONS_IN'}->Input();
-
-		# Check for keyboard "key up" events:
-		#   These events are clogging up the debugging display, filter them from event stream.
-
-		if (defined $evt[0] && ($evt[0] == 1) &&   # Event_Type: 1 (keyboard event)
-		    defined $evt[1] && ($evt[1] == 0)) {   # Key_Down:   1 (key pressed)
-
-			next CONSOLE_EVENT;
-		}
-
-		# Check for mouse pointer movement events:
-		#   These events must be handled out-of-band (immediately).
-
-		if (defined $evt[0] && ($evt[0] == 2) &&              # Event_Type:    2 (indicates 'mouse' event).
-		    defined $evt[1] && ($evt[1] =~ /^\d\d?\d?$/) &&   # X Coordinate:  One to three digits.
-		    defined $evt[2] && ($evt[2] =~ /^\d\d?\d?$/) &&   # Y Coordinate:  One to three digits.
-		    defined $evt[3] && ($evt[3] == 0) &&              # Button state:  0 (indicates no mouse button was clicked).
-		    defined $evt[5] && ($evt[5] == 1)) {              # Event flags:   1 (???).
-
-			# Check to see if mouse pointer has moved enough to change either the X or Y coordinate.
-
-			if (! ($evt[1] eq $self->{'mouse_over_x'}) || 
-			    ! ($evt[2] eq $self->{'mouse_over_y'})) {
-
-				# Pointer movement caused one (or both) X,Y coordinates to change: 
-				#
-				#   1) Copy previous X,Y coordinates of mouse pointer to mouse_over_x_prev/mouse_over_y_prev.
-				#   2) Store new X,Y coordinates of mouse pointer in mouse_over_x/mouse_over_y.
-				#   3) Update display console to indicate new position of mouse pointer.
-
-				$self->{'mouse_over_x_prev'} = $self->{'mouse_over_x'};
-				$self->{'mouse_over_y_prev'} = $self->{'mouse_over_y'};
-				$self->{'mouse_over_x'}	     = $evt[1];
-				$self->{'mouse_over_y'}      = $evt[2];
-
-				$objConsole->mouse_over 
-				  ({ 'mouse_over_x'      => $self->{'mouse_over_x'}, 
-				     'mouse_over_y'      => $self->{'mouse_over_y'}, 
-				     'mouse_over_x_prev' => $self->{'mouse_over_x_prev'}, 
-				     'mouse_over_y_prev' => $self->{'mouse_over_y_prev'} });
-			}
-
-			# Back to the top, skipping the 'push' statement below.
-
-			next CONSOLE_EVENT;
-		}
-
-		# Add event to list of events (returned to caller).
-
-		push @{ $arg->{'evt_stack'} }, \@evt;
-	}
-
-	if (scalar (@{ $arg->{'evt_stack'} }) > 0) 
-	     { return (1); }
-	else { return (undef); }
-}
-
-sub evt_map {
-
-	my $self = shift;
-	my $arg  = shift;
-
-	if (! defined $arg || 
-	      ! (ref ($arg) eq 'HASH')) 
-		{ die "Call to evt_map() failed, argument must be hash reference"; }
-
-	if (! exists  $arg->{'ctxt'} || 
-	    ! defined $arg->{'ctxt'} || 
-	             ($arg->{'ctxt'} eq '')) 
-		{ die "Call to evt_map() failed, value associated w/ key 'ctxt' was undef or empty string"; }
-
-	if (! exists  $arg->{'evt'} || 
-	    ! defined $arg->{'evt'} || 
-	             ($arg->{'evt'} eq '') || 
-	      ! (ref ($arg->{'evt'}) eq 'ARRAY')) 
-		{ die "Call to evt_map() failed, value associated w/ key 'evt' must be array ref"; }
-
-	my $objCharMap = $self->{'obj'}->{'charmap'};
-	my $objDebug   = $self->{'obj'}->{'debug'};
-
-	# EVT Array Idx	Element Name		Values
-	# _____________	____________		______
-	# $evt->[0]	Event Type		1 == Keyboard Event
-	# $evt->[1]	Key   Down		1 == Key Pressed
-	# $evt->[2]	???			-
-	# $evt->[3]	Virtual Keycode		-
-	# $evt->[4]	Virtual Scancode	-
-	# $evt->[5]	???			-
-	# $evt->[6]	?Control Key Status?	-
-
-	my $evt = $arg->{'evt'};
-
-	# Eliminate non-interesting events.
-
-	if (exists $evt->[0] && ($evt->[0] == 2) &&   # Event_Type: 2 (indicates mouse event).
-	    exists $evt->[3] && 
-	       ( (($evt->[3] ==  1) ||                # Button_State:        1 (indicates left  mouse button).
-	          ($evt->[3] ==  2)) ||               # Button_State:        2 (indicates right mouse button).
-	       ( (($evt->[3] ==  7864320) ||          # Button_State:  7864320 (indicates mouse wheel roll upward).
-	          ($evt->[3] == -7864320)) &&         # Button_State: -7864320 (indicates mouse wheel roll downward).
-	  (defined $evt->[5] && ($evt->[5] == 4)) ) )) {
-
-		# Mouse button pressed, may be an event in this context, pass through...
-
-		undef;
-	}
-	elsif (defined $evt->[0] && ($evt->[0] == 2) &&              # Event_Type:    2 (indicates 'mouse' event).
-	       defined $evt->[1] && ($evt->[1] =~ /^\d\d?\d?$/) &&   # X Coordinate:  One to three digits.
-	       defined $evt->[2] && ($evt->[2] =~ /^\d\d?\d?$/) &&   # Y Coordinate:  One to three digits.
-	       defined $evt->[3] && ($evt->[3] == 0) &&              # Button state:  0 (indicates no mouse button was clicked).
-	       defined $evt->[5] && ($evt->[5] == 1)) {              # Event flags:   1 (???).
-
-		# Mouse movement, not an "event" in this context, return 'undef' to caller.
-
-		return (undef);
-	}
-	elsif (defined $evt->[0] && ($evt->[0] == 1) &&   # Event_Type: 1 (keyboard event)
-	       defined $evt->[1] && ($evt->[1] == 1)) {   # Key_Down:   1 (key pressed)
-
-		# Keyboard key pressed, may be an "event" in this context, pass through...
-
-		undef;
-	}
-	else {
-
-		# Unmatched event, return 'undef' to caller.
-
-		return (undef);
-	}
-
-	# ______________________________________________________
-	# CONTEXT BASED BRANCH DECISION TABLE
-	# ______________________________________________________
-	#
-	#   Possible values of 'ctxt':
-	#
-	#     __________	___________
-	#     CTXT Value	Description
-	#     __________	___________
-	#     DEFAULT		Default behavior, begins at start. Keystrokes cause events within editor display like scrolling.
-	#     INSERT		Insert a string of characters at a given position within file.
-	#     SEARCH		Search for a string of characters within file.
-
-	my $func = '';
-
-	foreach my $func_nm (keys %{ $self->{'evt_sig'}->{ $arg->{'ctxt'} } }) {
-
-		foreach my $func_evt (@{ $self->{'evt_sig'}->{ $arg->{'ctxt'} }->{ $func_nm } }) {
-
-			if ( ( ($func_evt->[0] eq '') || (! ($func_evt->[0] eq '') && ($func_evt->[0] eq $evt->[0]) ) ) && 
-			     ( ($func_evt->[1] eq '') || (! ($func_evt->[1] eq '') && ($func_evt->[1] eq $evt->[1]) ) ) && 
-			     ( ($func_evt->[2] eq '') || (! ($func_evt->[2] eq '') && ($func_evt->[2] eq $evt->[2]) ) ) && 
-			     ( ($func_evt->[3] eq '') || (! ($func_evt->[3] eq '') && ($func_evt->[3] eq $evt->[3]) ) ) && 
-			     ( ($func_evt->[4] eq '') || (! ($func_evt->[4] eq '') && ($func_evt->[4] eq $evt->[4]) ) ) && 
-			     ( ($func_evt->[5] eq '') || (! ($func_evt->[5] eq '') && ($func_evt->[5] eq $evt->[5]) ) ) && 
-			     ( ($func_evt->[6] eq '') || (! ($func_evt->[6] eq '') && ($func_evt->[6] eq $evt->[6]) ) ) ) {
-
-				$func = $func_nm;
-
-				# $self->{'obj'}->{'debug'}->errmsg ("FUNCTION MATCHED '" . $func_nm . "'.");
-			}
-			# else {
-			# 
-			# 	for (my $idx = 0; $idx < 6; $idx++) {
-			# 
-			# 		if (! exists  $func_evt->[$idx] || 
-			# 		    ! defined $func_evt->[$idx]) {
-			# 
-			# 			$func_evt->[$idx] = "<undef>";
-			# 		}
-			# 
-			# 		if (! exists  $evt->[$idx] || 
-			# 		    ! defined $evt->[$idx]) {
-			# 
-			# 			$evt->[$idx] = "<undef>";
-			# 		}
-			# 
-			# 		# $objDebug->errmsg 
-			# 		#   (sprintf ("Event array field " . $idx . ": %10.10s %10.10s", $func_evt->[$idx], $evt->[$idx]));
-			# 	}
-			# }
-		}
-	}
-
-	if (! defined $func || 
-	             ($func eq '')) 
-	     { return (undef); }
-	else { return ($func); }
 }
 
 
@@ -614,7 +352,7 @@ Usage:
 
     use ZHex::Common qw(new obj_init $VERS);
     my $objEventLoop = $self->{'obj'}->{'eventloop'};
-    $objEventLoop->read_evt();
+    $objEventLoop->evt_read();
 
 =head1 EXPORT
 
@@ -622,32 +360,23 @@ No functions are exported.
 
 =head1 SUBROUTINES/METHODS
 
-=head2 event_loop
-Method event_loop()...
-= cut
-
-=head2 evt_map
-Method evt_map()...
+=head2 evt_loop
+Method evt_loop()...
 = cut
 
 =head2 init
 Method init()...
 = cut
 
-=head2 gen_evt_array
-Method gen_evt_array()...
-= cut
+=head2 evt_read
+Method evt_read()...
 
-=head2 read_evt
-Method read_evt()...
-= cut
+=head2 evt_filter
+Method evt_filter()...
 
-=head2 register_callback
-Method register_callback()...
-= cut
+=head2 evt_mouse
+Method evt_mouse()...
 
-=head2 register_evt_sig
-Method register_evt_sig()...
 = cut
 
 =head1 AUTHOR

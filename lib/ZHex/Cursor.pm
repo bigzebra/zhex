@@ -9,18 +9,25 @@ use warnings FATAL => 'all';
 use ZHex::Common 
   qw(new 
      obj_init 
-     $VERS);
-
-use constant CURS_CTXT_LINE => 0;
-use constant CURS_CTXT_WORD => 1;
-use constant CURS_CTXT_BYTE => 2;
-use constant CURS_CTXT_INSR => 3;
+     $VERS
+     CURS_CTXT_LINE 
+     CURS_CTXT_WORD 
+     CURS_CTXT_BYTE 
+     CURS_CTXT_INSR 
+     CURS_CTXT 
+     CURS_POS
+     EDT_CTXT_DEFAULT 
+     EDT_CTXT_INSERT 
+     EDT_CTXT_SEARCH 
+     SZ_WORD 
+     SZ_LINE 
+     SZ_COLUMN);
 
 BEGIN { require Exporter;
 	our $VERSION   = $VERS;
 	our @ISA       = qw(Exporter);
 	our @EXPORT    = qw();
-	our @EXPORT_OK = qw(CURS_CTXT_LINE CURS_CTXT_WORD CURS_CTXT_BYTE CURS_CTXT_INSR);
+	our @EXPORT_OK = qw();
 }
 
 # Functions: Start-Up/Initialization.
@@ -34,18 +41,19 @@ sub init {
 
 	my $self = shift;
 
-	# Sizes: Word, line, column.
+	# Declared here. Set via accessor methods.
 
-	$self->{'sz_word'}   = 0;
-	$self->{'sz_line'}   = 0;
-	$self->{'sz_column'} = 0;
+	$self->{'sz_word'}   = '';   # Declared here. Set via accessor method: set_sz_word().
+	$self->{'sz_line'}   = '';   # Declared here. Set via accessor method: set_sz_line().
+	$self->{'sz_column'} = '';   # Declared here. Set via accessor method: set_sz_column().
 
-	# Cursor: Position, update flag, context, row pointer, offset from top row.
+	$self->{'curs_ctxt'} = '';   # Declared here. Set via accessor method: set_curs_ctxt().
+	$self->{'curs_pos'}  = '';   # Declared here. Set via accessor method: set_curs_pos().
 
-	$self->{'curs_pos'}        =  0;   # Offset (in bytes) of the cursor position within the file (0 indicates cursor at beginning).
-	$self->{'curs_ctxt'}       =  0;   # Context of cursor: 0/1/2 (Row/Column/Character).
-	$self->{'curs_coords'}     = [];   # Cursor coordinates.
-	$self->{'ct_display_curs'} =  0;
+	# Initialized here, used/updated by methods within this module.
+
+	$self->{'curs_coords'} = [];      # Cursor coordinates.
+	$self->{'ct_display_curs'} = 0;   # Counter, used for debugging information display.
 
 	return (1);
 }
@@ -56,159 +64,160 @@ sub register_evt_callbacks {
 
 	my $objCharMap   = $self->{'obj'}->{'charmap'};
 	my $objEditor    = $self->{'obj'}->{'editor'};
+	my $objEvent     = $self->{'obj'}->{'event'};
 	my $objEventLoop = $self->{'obj'}->{'eventloop'};
 	my $objFile      = $self->{'obj'}->{'file'};
 
-	$objEventLoop->register_callback 
-	  ({'ctxt'   => 'DEFAULT', 
-	    'evt_nm' => 'MOVE_BEG', 
-	    'evt_cb' => sub {
+	$objEvent->register_callback 
+	  ({'edt_ctxt' => EDT_CTXT_DEFAULT, 
+	    'evt_nm'   => 'MOVE_BEG', 
+	    'evt_cb'   => sub {
 			$self->set_curs_pos 
 			  ({'curs_pos' => 0});
-			$objEditor->set_dsp_pos 
-			  ({'dsp_pos' => 0}); }, 
-	     'evt' => [ $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({'lname' => 'CIRCUMFLEX ACCENT'}) }) ] });
+			$objEditor->set_edt_pos 
+			  ({'edt_pos' => 0}); }, 
+	     'evt' => [ $objEvent->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({'lname' => 'CIRCUMFLEX ACCENT'}) }) ] });
 
-	$objEventLoop->register_callback 
-	  ({'ctxt'   => 'DEFAULT', 
-	    'evt_nm' => 'MOVE_END', 
-	    'evt_cb' => sub { 
+	$objEvent->register_callback 
+	  ({'edt_ctxt' => EDT_CTXT_DEFAULT, 
+	    'evt_nm'   => 'MOVE_END', 
+	    'evt_cb'   => sub { 
 			$self->set_curs_ctxt 
 			  ({'curs_ctxt' => 2});
 			$self->set_curs_pos 
 			  ({'curs_pos' => ($objFile->file_len() - 1)});
 			$objEditor->dsp_pos_adjust 
 			  ({'curs_pos' => $self->{'curs_pos'} }); }, 
-	    'evt' =>  [ $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({'lname' => 'DOLLAR SIGN'}) }) ] });
+	    'evt' =>  [ $objEvent->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({'lname' => 'DOLLAR SIGN'}) }) ] });
 
-	$objEventLoop->register_callback 
-	  ({'ctxt'   => 'DEFAULT', 
-	    'evt_nm' => 'INCR_CURS_CTXT', 
-	    'evt_cb' => sub { $self->curs_ctxt_incr(); }, 
-	    'evt' =>  [ $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({'lname' => 'CARRIAGE RETURN (CR)'}) }) ] });
+	$objEvent->register_callback 
+	  ({'edt_ctxt' => EDT_CTXT_DEFAULT, 
+	    'evt_nm'   => 'INCR_CURS_CTXT', 
+	    'evt_cb'   => sub { $self->curs_ctxt_incr(); }, 
+	    'evt' =>  [ $objEvent->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({'lname' => 'CARRIAGE RETURN (CR)'}) }) ] });
 
-	$objEventLoop->register_callback 
-	  ({'ctxt'   => 'DEFAULT', 
-	    'evt_nm' => 'DECR_CURS_CTXT', 
-	    'evt_cb' => sub { $self->curs_ctxt_decr(); }, 
-	    'evt' =>  [ $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({'lname' => 'ESCAPE'}) }) ] });
+	$objEvent->register_callback 
+	  ({'edt_ctxt' => EDT_CTXT_DEFAULT, 
+	    'evt_nm'   => 'DECR_CURS_CTXT', 
+	    'evt_cb'   => sub { $self->curs_ctxt_decr(); }, 
+	    'evt' =>  [ $objEvent->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({'lname' => 'ESCAPE'}) }) ] });
 
-	$objEventLoop->register_callback 
-	  ({'ctxt'   => 'DEFAULT', 
-	    'evt_nm' => 'MOVE_CURS_FORWARD', 
-	    'evt_cb' => sub { 
+	$objEvent->register_callback 
+	  ({'edt_ctxt' => EDT_CTXT_DEFAULT, 
+	    'evt_nm'   => 'MOVE_CURS_FORWARD', 
+	    'evt_cb'   => sub { 
 			$self->curs_mv_fwd
 			  ({'file_len' => $objFile->file_len()});
 			$objEditor->dsp_pos_adjust 
 			  ({'curs_pos' => $self->{'curs_pos'}}); 
 	                }, 
-	    'evt' =>  [ $objEventLoop->gen_evt_array 
+	    'evt' =>  [ $objEvent->gen_evt_array 
 	                ({ '3' =>  9,     # 3
 			   '4' => 15,     # 4
 			   '5' =>  9,     # 5
 			   '6' => 32 }),  # 6
-			$objEventLoop->gen_evt_array 
+			$objEvent->gen_evt_array 
 	                ({ '3' =>  9,     # 3
 			   '4' => 15,     # 4
 			   '5' =>  9,     # 5
 			   '6' =>  0 })   # 6
 	                ] });
 
-	$objEventLoop->register_callback 
-	  ({'ctxt'   => 'DEFAULT', 
-	    'evt_nm' => 'MOVE_CURS_BACK', 
-	    'evt_cb' => sub { 
+	$objEvent->register_callback 
+	  ({'edt_ctxt' => EDT_CTXT_DEFAULT, 
+	    'evt_nm'   => 'MOVE_CURS_BACK', 
+	    'evt_cb'   => sub { 
 			$self->curs_mv_back();
 			$objEditor->dsp_pos_adjust 
 			  ({'curs_pos' => $self->{'curs_pos'}}); }, 
-	    'evt' =>  [ $objEventLoop->gen_evt_array 
+	    'evt' =>  [ $objEvent->gen_evt_array 
 	                ({ '3' =>  9,     # 3
 			   '4' => 15,     # 4
 			   '5' =>  9,     # 5
 			   '6' => 48 }),  # 6
-			$objEventLoop->gen_evt_array 
+			$objEvent->gen_evt_array 
 	                ({ '3' =>  9,     # 3
 			   '4' => 15,     # 4
 			   '5' =>  9,     # 5
 			   '6' => 16 })   # 6
 	                ] });
 
-	$objEventLoop->register_callback 
-	  ({'ctxt'   => 'DEFAULT', 
-	    'evt_nm' => 'MOVE_CURS_UP', 
-	    'evt_cb' => sub { 
+	$objEvent->register_callback 
+	  ({'edt_ctxt' => EDT_CTXT_DEFAULT, 
+	    'evt_nm'   => 'MOVE_CURS_UP', 
+	    'evt_cb'   => sub { 
 			$self->curs_mv_up();
 			$objEditor->dsp_pos_adjust 
 			  ({'curs_pos' => $self->{'curs_pos'}}); }, 
-	    'evt' =>  [ $objEventLoop->gen_evt_array 
+	    'evt' =>  [ $objEvent->gen_evt_array 
 	                ({ '3' =>  38,     # 3
 			   '4' =>  72,     # 4
 			   '5' =>   0,     # 5
 			   '6' => 288 }),  # 6
-			$objEventLoop->gen_evt_array 
+			$objEvent->gen_evt_array 
 	                ({ '3' =>  38,     # 3
 			   '4' =>  72,     # 4
 			   '5' =>   0,     # 5
 			   '6' => 256 })   # 6
 	                ] });
 
-	$objEventLoop->register_callback 
-	  ({'ctxt'   => 'DEFAULT', 
-	    'evt_nm' => 'MOVE_CURS_DOWN', 
-	    'evt_cb' => sub { 
+	$objEvent->register_callback 
+	  ({'edt_ctxt' => EDT_CTXT_DEFAULT, 
+	    'evt_nm'   => 'MOVE_CURS_DOWN', 
+	    'evt_cb'   => sub { 
 	                $self->curs_mv_down
 			  ({'file_len' => $objFile->file_len()});
 			$objEditor->dsp_pos_adjust 
 			  ({'curs_pos' => $self->{'curs_pos'}}); }, 
-	    'evt' =>  [ $objEventLoop->gen_evt_array 
+	    'evt' =>  [ $objEvent->gen_evt_array 
 	                ({ '3' =>  40,     # 3
 			   '4' =>  80,     # 4
 			   '5' =>   0,     # 5
 			   '6' => 256 }),  # 6
-			$objEventLoop->gen_evt_array 
+			$objEvent->gen_evt_array 
 	                ({ '3' =>  40,     # 3
 			   '4' =>  80,     # 4
 			   '5' =>   0,     # 5
 			   '6' => 288 })   # 6
 	                ] });
 
-	$objEventLoop->register_callback 
-	  ({'ctxt'   => 'DEFAULT', 
-	    'evt_nm' => 'MOVE_CURS_LEFT', 
-	    'evt_cb' => sub { 
+	$objEvent->register_callback 
+	  ({'edt_ctxt' => EDT_CTXT_DEFAULT, 
+	    'evt_nm'   => 'MOVE_CURS_LEFT', 
+	    'evt_cb'   => sub { 
 			$self->curs_mv_left();
 			$objEditor->dsp_pos_adjust 
 			  ({'curs_pos' => $self->{'curs_pos'}}); }, 
-	    'evt' =>  [ $objEventLoop->gen_evt_array 
+	    'evt' =>  [ $objEvent->gen_evt_array 
 	                ({ '5' => $objCharMap->chr_map_ord_val ({'lname' => 'LATIN SMALL LETTER H'}) }), 
-	                $objEventLoop->gen_evt_array 
+	                $objEvent->gen_evt_array 
 	                ({ '3' =>  37,     # 3
 			   '4' =>  75,     # 4
 			   '5' =>   0,     # 5
 			   '6' => 288 }),  # 6
-			$objEventLoop->gen_evt_array 
+			$objEvent->gen_evt_array 
 	                ({ '3' =>  37,     # 3
 			   '4' =>  75,     # 4
 			   '5' =>   0,     # 5
 			   '6' => 256 })   # 6
 	                ] });
 
-	$objEventLoop->register_callback 
-	  ({'ctxt'   => 'DEFAULT', 
-	    'evt_nm' => 'MOVE_CURS_RIGHT', 
-	    'evt_cb' => sub { 
+	$objEvent->register_callback 
+	  ({'edt_ctxt' => EDT_CTXT_DEFAULT, 
+	    'evt_nm'   => 'MOVE_CURS_RIGHT', 
+	    'evt_cb'   => sub { 
 			$self->curs_mv_right
 			  ({'file_len' => $objFile->file_len()});
 			$objEditor->dsp_pos_adjust 
 			  ({'curs_pos' => $self->{'curs_pos'}}); }, 
-	    'evt' =>  [ $objEventLoop->gen_evt_array 
+	    'evt' =>  [ $objEvent->gen_evt_array 
 	                ({ '5' => $objCharMap->chr_map_ord_val ({'lname' => 'LATIN SMALL LETTER L'}) }), 
-	                $objEventLoop->gen_evt_array 
+	                $objEvent->gen_evt_array 
 	                ({ '3' =>  39,     # 3
 			   '4' =>  77,     # 4
 			   '5' =>   0,     # 5
 			   '6' => 288 }),  # 6
-			$objEventLoop->gen_evt_array 
+			$objEvent->gen_evt_array 
 	                ({ '3' =>  39,     # 3
 			   '4' =>  77,     # 4
 			   '5' =>   0,     # 5
@@ -221,11 +230,38 @@ sub register_evt_callbacks {
 #   _____________	___________
 #   Function Name	Description
 #   _____________	___________
-#   set_curs_pos()	Member variable accessor.
-#   set_curs_ctxt()	...
-#   set_sz_word()	Member variable accessor.
-#   set_sz_line()	Member variable accessor.
-#   set_sz_column()	Member variable accessor.
+#   set_curs_ctxt()	Member variable accessor method.
+#   set_curs_pos()	Member variable accessor method.
+#   set_sz_word()	Member variable accessor method.
+#   set_sz_line()	Member variable accessor method.
+#   set_sz_column()	Member variable accessor method.
+
+sub set_curs_ctxt {
+
+	my $self = shift;
+	my $arg  = shift;
+
+	if (! defined $arg || 
+	      ! (ref ($arg) eq 'HASH')) 
+		{ die "Call to set_curs_ctxt() failed, argument must be hash reference"; }
+
+	if (! exists  $arg->{'curs_ctxt'} || 
+	    ! defined $arg->{'curs_ctxt'} || 
+	          (! ($arg->{'curs_ctxt'} == CURS_CTXT_LINE) &&
+	           ! ($arg->{'curs_ctxt'} == CURS_CTXT_WORD) && 
+	           ! ($arg->{'curs_ctxt'} == CURS_CTXT_BYTE) && 
+	           ! ($arg->{'curs_ctxt'} == CURS_CTXT_INSR))) {
+
+		die "Call to set_curs_ctxt() failed, value of key 'curs_ctxt' must be one of: " . 
+		    (join (', ', (CURS_CTXT_LINE, 
+		                  CURS_CTXT_WORD, 
+		                  CURS_CTXT_BYTE, 
+		                  CURS_CTXT_INSR)));
+	}
+	$self->{'curs_ctxt'} = $arg->{'curs_ctxt'};
+
+	return (1);
+}
 
 sub set_curs_pos {
 
@@ -242,25 +278,6 @@ sub set_curs_pos {
 		{ die "Call to set_curs_pos() failed, value of key 'curs_pos' must be numeric"; }
 
 	$self->{'curs_pos'} = $arg->{'curs_pos'};
-
-	return (1);
-}
-
-sub set_curs_ctxt {
-
-	my $self = shift;
-	my $arg  = shift;
-
-	if (! defined $arg || 
-	      ! (ref ($arg) eq 'HASH')) 
-		{ die "Call to set_curs_ctxt() failed, argument must be hash reference"; }
-
-	if (! exists  $arg->{'curs_ctxt'} || 
-	    ! defined $arg->{'curs_ctxt'} || 
-	           ! ($arg->{'curs_ctxt'} =~ /^\d$/)) 
-		{ die "Call to set_curs_ctxt() failed, value of key 'curs_ctxt' must be a digit 0, 1, 2, or 3"; }
-
-	$self->{'curs_ctxt'} = $arg->{'curs_ctxt'};
 
 	return (1);
 }
@@ -350,10 +367,10 @@ sub dsp_coord {
 	           ! ($arg->{'curs_pos'} =~ /^\d+?$/)) 
 		{ die "Call to dsp_coord() failed, value associated w/ key 'curs_pos' must be one or more digits"; }
 
-	if (! exists  $arg->{'dsp_pos'} || 
-	    ! defined $arg->{'dsp_pos'} || 
-	           ! ($arg->{'dsp_pos'} =~ /^\d+?$/)) 
-		{ die "Call to dsp_coord() failed, value associated w/ key 'dsp_pos' must be one or more digits"; }
+	if (! exists  $arg->{'edt_pos'} || 
+	    ! defined $arg->{'edt_pos'} || 
+	           ! ($arg->{'edt_pos'} =~ /^\d+?$/)) 
+		{ die "Call to dsp_coord() failed, value associated w/ key 'edt_pos' must be one or more digits"; }
 
 	if (! exists  $arg->{'dsp_xpad'} || 
 	    ! defined $arg->{'dsp_xpad'} || 
@@ -369,12 +386,12 @@ sub dsp_coord {
 	my $objDisplay = $self->{'obj'}->{'display'};
 	my $objEditor  = $self->{'obj'}->{'editor'};
 
-	if ($arg->{'curs_pos'} < $arg->{'dsp_pos'}) {
+	if ($arg->{'curs_pos'} < $arg->{'edt_pos'}) {
 		
 		die "#1 Call to dsp_coord() failed: curs_pos='" . $arg->{'curs_pos'} . "'";
 	}
 
-	if ($arg->{'curs_pos'} > ($arg->{'dsp_pos'} + ($objEditor->{'sz_line'} * $objEditor->{'sz_column'}))) {
+	if ($arg->{'curs_pos'} > ($arg->{'edt_pos'} + ($objEditor->{'sz_line'} * $objEditor->{'sz_column'}))) {
 
 		# $objDebug->errmsg ("c) dsp_coord: curs_pos='" . $arg->{'curs_pos'} . "'.");
 		# $objDebug->errmsg ("c) dsp_coord: curs_pos='" . $arg->{'curs_pos'} . "'.");
@@ -382,7 +399,7 @@ sub dsp_coord {
 		die "#2 Call to dsp_coord() failed: curs_pos='" . $arg->{'curs_pos'} . "'";
 	}
 
-	my $cofs = $arg->{'curs_pos'} - $objEditor->{'dsp_pos'};
+	my $cofs = $arg->{'curs_pos'} - $objEditor->{'edt_pos'};
 
 	my $xofs = 0;
 	my $yofs = 0;
@@ -474,7 +491,7 @@ sub curs_display {
 	  $self->calc_coord_array 
 	    ({ 'curs_ctxt' => $self->{'curs_ctxt'}, 
 	       'curs_pos'  => $self->{'curs_pos'}, 
-	       'dsp_pos'   => $objEditor->{'dsp_pos'}, 
+	       'edt_pos'   => $objEditor->{'edt_pos'}, 
 	       'dsp_xpad'  => $arg->{'dsp_xpad'}, 
 	       'dsp_ypad'  => $arg->{'dsp_ypad'} });
 
@@ -554,7 +571,7 @@ sub curs_display {
 	return (1);
 }
 
-# calc_coord_array() args: 'ctxt', 'curs_pos', 'dsp_pos', 'dsp_xpad', 'dsp_ypad'.
+# calc_coord_array() args: 'curs_ctxt', 'curs_pos', 'edt_pos', 'dsp_xpad', 'dsp_ypad'.
 
 sub calc_coord_array {
 
@@ -575,10 +592,10 @@ sub calc_coord_array {
 	           ! ($arg->{'curs_pos'} =~ /^\d+?$/)) 
 		{ die "Call to calc_coord_array() failed, value associated w/ key 'curs_pos' must be one or more digits"; }
 
-	if (! exists  $arg->{'dsp_pos'} || 
-	    ! defined $arg->{'dsp_pos'} || 
-	           ! ($arg->{'dsp_pos'} =~ /^\d+?$/)) 
-		{ die "Call to calc_coord_array() failed, value associated w/ key 'dsp_pos' must be one or more digits"; }
+	if (! exists  $arg->{'edt_pos'} || 
+	    ! defined $arg->{'edt_pos'} || 
+	           ! ($arg->{'edt_pos'} =~ /^\d+?$/)) 
+		{ die "Call to calc_coord_array() failed, value associated w/ key 'edt_pos' must be one or more digits"; }
 
 	if (! exists  $arg->{'dsp_xpad'} || 
 	    ! defined $arg->{'dsp_xpad'} || 
@@ -606,7 +623,7 @@ sub calc_coord_array {
 			       \@{ [
 			       $self->dsp_coord 
 			         ({ 'curs_pos' => $pos, 
-			            'dsp_pos'  => $arg->{'dsp_pos'}, 
+			            'edt_pos'  => $arg->{'edt_pos'}, 
 			            'dsp_ypad' => $arg->{'dsp_xpad'}, 
 			            'dsp_xpad' => $arg->{'dsp_ypad'} }) ] };
 		}
@@ -619,7 +636,7 @@ sub calc_coord_array {
 			       \@{ [
 			       $self->dsp_coord 
 			         ({ 'curs_pos' => $pos, 
-			            'dsp_pos'  => $arg->{'dsp_pos'}, 
+			            'edt_pos'  => $arg->{'edt_pos'}, 
 			            'dsp_ypad' => $arg->{'dsp_xpad'}, 
 			            'dsp_xpad' => $arg->{'dsp_ypad'} }) ] };
 		}
@@ -630,7 +647,7 @@ sub calc_coord_array {
 		       \@{ [
 		       $self->dsp_coord 
 		         ({ 'curs_pos' => $arg->{'curs_pos'}, 
-			    'dsp_pos'  => $arg->{'dsp_pos'}, 
+			    'edt_pos'  => $arg->{'edt_pos'}, 
 			    'dsp_ypad' => $arg->{'dsp_xpad'}, 
 			    'dsp_xpad' => $arg->{'dsp_ypad'} }) ] };
 	}
@@ -1017,7 +1034,7 @@ sub curs_ctxt_incr {
 		my ($xpos, $ypos) = 
 		  $self->dsp_coord 
 		    ({ 'curs_pos' => $self->{'curs_pos'}, 
-		       'dsp_pos'  => $objEditor->{'dsp_pos'}, 
+		       'edt_pos'  => $objEditor->{'edt_pos'}, 
 		       'dsp_ypad' => $objDisplay->{'dsp_xpad'}, 
 		       'dsp_xpad' => $objDisplay->{'dsp_ypad'} });
 
@@ -1025,9 +1042,9 @@ sub curs_ctxt_incr {
 		  ({ 'xpos' => $xpos, 
 		     'ypos' => $ypos });
 
-		# Switch context to 'INSERT'.
+		# Switch editor context to EDT_CTXT_INSERT.
 
-		$objEditor->{'ctxt'} = 'INSERT';
+		$objEditor->{'edt_ctxt'} = EDT_CTXT_INSERT;
 	}
 
 	return (1);
@@ -1042,37 +1059,37 @@ sub curs_adjust {
 	      ! (ref ($arg) eq 'HASH')) 
 		{ die "Call to curs_adjust() failed, argument must be hash reference"; }
 
-	if (! exists  $arg->{'dsp_pos'} || 
-	    ! defined $arg->{'dsp_pos'} || 
-	             ($arg->{'dsp_pos'} eq '') || 
-	           ! ($arg->{'dsp_pos'} =~ /^\d+?$/)) 
-		{ die "Call to curs_adjust() failed, value associated w/ key 'dsp_pos' must be one or more digits"; }
+	if (! exists  $arg->{'edt_pos'} || 
+	    ! defined $arg->{'edt_pos'} || 
+	             ($arg->{'edt_pos'} eq '') || 
+	           ! ($arg->{'edt_pos'} =~ /^\d+?$/)) 
+		{ die "Call to curs_adjust() failed, value associated w/ key 'edt_pos' must be one or more digits"; }
 
 	# If cursor is OOB: update cursor position [below bottom line in editor display].
 
 	while ($self->{'curs_pos'} >= 
-	         ($arg->{'dsp_pos'} + ($self->{'sz_line'} * $self->{'sz_column'}))) 
+	         ($arg->{'edt_pos'} + ($self->{'sz_line'} * $self->{'sz_column'}))) 
 		{ $self->{'curs_pos'} -= $self->{'sz_line'}; }
 
 	# If cursor is OOB: update cursor position [above top line in editor display].
 
-	while ($self->{'curs_pos'} < $arg->{'dsp_pos'}) 
+	while ($self->{'curs_pos'} < $arg->{'edt_pos'}) 
 		{ $self->{'curs_pos'} += $self->{'sz_line'}; }
 
 	# If cursor is OOB: update cursor position [below bottom line in editor display, AGAIN???].
 
 	while (($self->{'curs_ctxt'} == 0) && 
-	       ($self->{'curs_pos'} > ($arg->{'dsp_pos'} + ($self->{'sz_line'} * $self->{'sz_column'}) - $self->{'sz_line'}))) 
+	       ($self->{'curs_pos'} > ($arg->{'edt_pos'} + ($self->{'sz_line'} * $self->{'sz_column'}) - $self->{'sz_line'}))) 
 		{ $self->{'curs_pos'} -= $self->{'sz_line'}; }
 
 	while ((($self->{'curs_ctxt'} == 1)  || 
 	        ($self->{'curs_ctxt'} == 2)) && 
-	        ($self->{'curs_pos'} > ($arg->{'dsp_pos'} + ($self->{'sz_line'} * $self->{'sz_column'}) - 1))) 
+	        ($self->{'curs_pos'} > ($arg->{'edt_pos'} + ($self->{'sz_line'} * $self->{'sz_column'}) - 1))) 
 		{ $self->{'curs_pos'} -= $self->{'sz_line'}; }
 
 	# If cursor is OOB: update cursor position [above top line in editor display, AGAIN???].
 
-	while ($self->{'curs_pos'} < $arg->{'dsp_pos'}) 
+	while ($self->{'curs_pos'} < $arg->{'edt_pos'}) 
 		{ $self->{'curs_pos'} += $self->{'sz_line'}; }
 
 	return (1);

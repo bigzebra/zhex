@@ -9,7 +9,10 @@ use warnings FATAL => 'all';
 use ZHex::Common 
   qw(new 
      obj_init 
-     $VERS);
+     $VERS 
+     EDT_CTXT_DEFAULT 
+     EDT_CTXT_INSERT 
+     EDT_CTXT_SEARCH);
 
 BEGIN { require Exporter;
 	our $VERSION   = $VERS;
@@ -31,21 +34,17 @@ sub init {
 
 	my $self = shift;
 
-	# HAVE ACCESSOR(S):
+	# Declared here. Set via accessor methods.
 
-	$self->{'dsp_pos'}   = '';     # The first character (byte number) appearing at top/left of hex editor display.
+	$self->{'horiz_rule_char'} = '';   # Word seperator: a vertical line used in display for readability.
+	$self->{'oob_char'} = '';          # Out-of-bounds character: displayed in place of non-displayable characters.
+
 	$self->{'sz_word'}   = '';     # Size: width (in characters) of a word.
 	$self->{'sz_line'}   = '';     # Size: width (in characters) of a line.
 	$self->{'sz_column'} = '';     # Size: height (in lines) of a column.
 
-	$self->{'ctxt'} = 'DEFAULT';   # In DEFAULT context, keystrokes mostly cause events.
-	                               # In SEARCH  context, keystrokes are added to the search string until the ENTER key is pressed.
-	                               # In INSERT  context, keystrokes are added to the file being edited, until the ESCAPE key is pressed.
-
-	# NEED ACCESSOR(S):
-
-	$self->{'horiz_rule'} = '|';   # Word seperator: a vertical line used in display for readability.
-	$self->{'oob_char'}   = '-';   # Out-of-bounds character: displayed in place of non-displayable characters.
+	$self->{'edt_ctxt'} = '';   # The editor context.
+	$self->{'edt_pos'}  = '';   # The offset (in bytes) of the first character appearing at top/left of hex editor display.
 
 	return (1);
 }
@@ -57,174 +56,236 @@ sub register_evt_callbacks {
 	my $objCharMap   = $self->{'obj'}->{'charmap'};
 	my $objCursor    = $self->{'obj'}->{'cursor'};
 	my $objDisplay   = $self->{'obj'}->{'display'};
+	my $objEvent     = $self->{'obj'}->{'event'};
 	my $objEventLoop = $self->{'obj'}->{'eventloop'};
 	my $objFile      = $self->{'obj'}->{'file'};
 
-	$objEventLoop->register_callback 
-	  ({'ctxt'   => 'DEFAULT', 
-	    'evt_nm' => 'VSTRETCH', 
-	    'evt_cb' => sub { 
+	$objEvent->register_callback 
+	  ({'edt_ctxt' => EDT_CTXT_DEFAULT, 
+	    'evt_nm'   => 'VSTRETCH', 
+	    'evt_cb'   => sub { 
 			$self->vstretch 
 			  ({'max_columns' => $objDisplay->max_columns(), 
 			    'file_len'    => $objFile->file_len()});
 			$objCursor->set_sz_column 
 			  ({'sz_column' => $self->{'sz_column'}});
 			$objDisplay->adjust_display(); },
-	    'evt' =>  [ $objEventLoop->gen_evt_array 
+	    'evt' =>  [ $objEvent->gen_evt_array 
 	                ({ '3' =>  38,     # 3
 			   '4' =>  72,     # 4
 			   '5' =>   0,     # 5
 			   '6' => 264 }),  # 6
 	                ] });
 
-	$objEventLoop->register_callback 
-	  ({'ctxt'   => 'DEFAULT', 
-	    'evt_nm' => 'VCOMPRESS', 
-	    'evt_cb' => sub { 
+	$objEvent->register_callback 
+	  ({'edt_ctxt' => EDT_CTXT_DEFAULT, 
+	    'evt_nm'   => 'VCOMPRESS', 
+	    'evt_cb'   => sub { 
 			$self->vcompress();
 			$objCursor->set_sz_column 
 			  ({'sz_column' => $self->{'sz_column'}});
 			$objCursor->curs_adjust 
-			  ({'dsp_pos' => $self->{'dsp_pos'}});
+			  ({'edt_pos' => $self->{'edt_pos'}});
 			$objDisplay->adjust_display(); },
-	    'evt' =>  [ $objEventLoop->gen_evt_array 
+	    'evt' =>  [ $objEvent->gen_evt_array 
 	                ({ '3' =>  40,     # 3
 			   '4' =>  80,     # 4
 			   '5' =>   0,     # 5
 			   '6' => 264 })   # 6
 	                ] });
 
-	$objEventLoop->register_callback 
-	  ({'ctxt'   => 'DEFAULT', 
-	    'evt_nm' => 'SCROLL_UP_1LN', 
-	    'evt_cb' => sub { 
+	$objEvent->register_callback 
+	  ({'edt_ctxt' => EDT_CTXT_DEFAULT, 
+	    'evt_nm'   => 'SCROLL_UP_1LN', 
+	    'evt_cb'   => sub { 
 			$self->scroll_up_1x_line(); 
 			$objCursor->curs_adjust 
-			  ({'dsp_pos' => $self->{'dsp_pos'}}); }, 
-	    'evt' =>  [ $objEventLoop->gen_evt_array 
+			  ({'edt_pos' => $self->{'edt_pos'}}); }, 
+	    'evt' =>  [ $objEvent->gen_evt_array 
 	                ({ '5' => $objCharMap->chr_map_ord_val ({'lname' => 'LATIN SMALL LETTER K'}) }), 
-	                $objEventLoop->gen_evt_array 
+	                $objEvent->gen_evt_array 
 	                ({ '0' => 2,         # 0
 	                   '3' => 7864320,   # 3
 			   '5' => 4 })       # 6
 	                ] });
 
-	$objEventLoop->register_callback 
-	  ({'ctxt'   => 'DEFAULT', 
-	    'evt_nm' => 'SCROLL_UP_1PG', 
-	    'evt_cb' => sub { 
+	$objEvent->register_callback 
+	  ({'edt_ctxt' => EDT_CTXT_DEFAULT, 
+	    'evt_nm'   => 'SCROLL_UP_1PG', 
+	    'evt_cb'   => sub { 
 			$self->scroll_up_1x_page();
 			$objCursor->curs_adjust 
-			  ({'dsp_pos' => $self->{'dsp_pos'}}); }, 
-	    'evt' =>  [ $objEventLoop->gen_evt_array 
+			  ({'edt_pos' => $self->{'edt_pos'}}); }, 
+	    'evt' =>  [ $objEvent->gen_evt_array 
 	                ({ '5' => $objCharMap->chr_map_ord_val ({'lname' => 'LATIN CAPITAL LETTER J'}) }), 
-	                $objEventLoop->gen_evt_array 
+	                $objEvent->gen_evt_array 
 	                ({ '3' =>  33,     # 3
 			   '4' =>  73,     # 4
 			   '5' =>   0,     # 5
 			   '6' => 288 }),  # 6
-			$objEventLoop->gen_evt_array 
+			$objEvent->gen_evt_array 
 	                ({ '3' =>  33,     # 3
 			   '4' =>  73,     # 4
 			   '5' =>   0,     # 5
 			   '6' => 256 })   # 6
 	                ] });
 
-	$objEventLoop->register_callback 
-	  ({'ctxt'   => 'DEFAULT', 
-	    'evt_nm' => 'SCROLL_DOWN_1LN', 
-	    'evt_cb' => sub { 
+	$objEvent->register_callback 
+	  ({'edt_ctxt' => EDT_CTXT_DEFAULT, 
+	    'evt_nm'   => 'SCROLL_DOWN_1LN', 
+	    'evt_cb'   => sub { 
 			$self->scroll_down_1x_line
 			  ({'file_len' => $objFile->file_len()});
 			$objCursor->curs_adjust 
-			  ({'dsp_pos' => $self->{'dsp_pos'}}); },  
-	    'evt' =>  [ $objEventLoop->gen_evt_array 
+			  ({'edt_pos' => $self->{'edt_pos'}}); },  
+	    'evt' =>  [ $objEvent->gen_evt_array 
 	                ({ '5' => $objCharMap->chr_map_ord_val ({'lname' => 'LATIN SMALL LETTER J'}) }), 
-	                $objEventLoop->gen_evt_array 
+	                $objEvent->gen_evt_array 
 	                ({ '0' => 2,          # 0
 			   '3' => -7864320,   # 3
 			   '5' => 4 }),       # 5
 	                ] });
 
-	$objEventLoop->register_callback 
-	  ({'ctxt'   => 'DEFAULT', 
-	    'evt_nm' => 'SCROLL_DOWN_1PG', 
-	    'evt_cb' => sub { 
+	$objEvent->register_callback 
+	  ({'edt_ctxt' => EDT_CTXT_DEFAULT, 
+	    'evt_nm'   => 'SCROLL_DOWN_1PG', 
+	    'evt_cb'   => sub { 
 			$self->scroll_down_1x_page
 			  ({'file_len' => $objFile->file_len()});
 			$objCursor->curs_adjust 
-			  ({'dsp_pos' => $self->{'dsp_pos'}}); },
-	    'evt' =>  [ $objEventLoop->gen_evt_array 
+			  ({'edt_pos' => $self->{'edt_pos'}}); },
+	    'evt' =>  [ $objEvent->gen_evt_array 
 	                ({ '5' => $objCharMap->chr_map_ord_val ({'lname' => 'LATIN CAPITAL LETTER K'}) }), 
-	                $objEventLoop->gen_evt_array 
+	                $objEvent->gen_evt_array 
 	                ({ '5' => $objCharMap->chr_map_ord_val ({'lname' => 'SPACE'}) }), 
-	                $objEventLoop->gen_evt_array 
+	                $objEvent->gen_evt_array 
 	                ({ '3' =>  34,     # 3
 			   '4' =>  81,     # 4
 			   '5' =>   0,     # 5
 			   '6' => 288 }),  # 6
-			$objEventLoop->gen_evt_array 
+			$objEvent->gen_evt_array 
 	                ({ '3' =>  34,     # 3
 			   '4' =>  81,     # 4
 			   '5' =>   0,     # 5
 			   '6' => 256 })   # 6
 	                ] });
 
-	$objEventLoop->register_callback 
-	  ({'ctxt'   => 'DEFAULT', 
-	    'evt_nm' => 'INSERT_MODE', 
-	    'evt_cb' => sub { $self->insert_mode(); },
-	    'evt' =>  [ $objEventLoop->gen_evt_array 
+	$objEvent->register_callback 
+	  ({'edt_ctxt' => EDT_CTXT_DEFAULT, 
+	    'evt_nm'   => 'INSERT_MODE', 
+	    'evt_cb'   => sub { $self->insert_mode(); },
+	    'evt' =>  [ $objEvent->gen_evt_array 
 	                ({ '5' => $objCharMap->chr_map_ord_val ({'lname' => 'LATIN SMALL LETTER I'}) }), 
-	                $objEventLoop->gen_evt_array 
+	                $objEvent->gen_evt_array 
 	                ({ '3' =>  45,     # 3
 			   '4' =>  82,     # 4
 			   '5' =>   0,     # 5
 			   '6' => 288 }),  # 6
-			$objEventLoop->gen_evt_array 
+			$objEvent->gen_evt_array 
 	                ({ '3' =>  45,     # 3
 			   '4' =>  82,     # 4
 			   '5' =>   0,     # 5
 			   '6' => 256 })   # 6
 	                ] });
 
-	$objEventLoop->register_callback 
-	  ({'ctxt'   => 'DEFAULT', 
-	    'evt_nm' => 'SEARCH_MODE', 
-	    'evt_cb' => sub { $self->search_mode(); },
-	    'evt' =>  [ $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({'lname' => 'LATIN SMALL LETTER S'}) }) ] });
+	$objEvent->register_callback 
+	  ({'edt_ctxt' => EDT_CTXT_DEFAULT, 
+	    'evt_nm'   => 'SEARCH_MODE', 
+	    'evt_cb'   => sub { $self->search_mode(); },
+	    'evt' =>  [ $objEvent->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({'lname' => 'LATIN SMALL LETTER S'}) }) ] });
 
 	return (1);
 }
 
 # Functions: Accessors.
 #
-#   _____________	___________
-#   Function Name	Description
-#   _____________	___________
-#   set_dsp_pos()	Member variable accessor.
-#   set_sz_word()	Member variable accessor.
-#   set_sz_line()	Member variable accessor.
-#   set_sz_column()	Member variable accessor.
+#   _____________		___________
+#   Function Name		Description
+#   _____________		___________
+#   set_horiz_rule_char()	...
+#   set_oob_char()		...
+#   set_edt_ctxt()		Member variable accessor.
+#   set_edt_pos()		Member variable accessor.
+#   set_sz_word()		Member variable accessor.
+#   set_sz_line()		Member variable accessor.
+#   set_sz_column()		Member variable accessor.
 
-sub set_dsp_pos {
+sub set_horiz_rule_char {
 
 	my $self = shift;
 	my $arg  = shift;
 
 	if (! defined $arg || 
 	      ! (ref ($arg) eq 'HASH')) 
-		{ die "Call to set_sz_dsp_pos() failed, argument must be hash reference"; }
+		{ die "Call to set_horiz_rule_char() failed, argument must be hash reference"; }
 
-	if (! exists  $arg->{'dsp_pos'} || 
-	    ! defined $arg->{'dsp_pos'} || 
-	           ! ($arg->{'dsp_pos'} =~ /^\d+?$/)) 
-		{ die "Call to set_sz_dsp_pos() failed, value of key 'dsp_pos' must be numeric"; }
+	if (! exists  $arg->{'char'} || 
+	    ! defined $arg->{'char'} || 
+	             ($arg->{'char'} eq '')) 
+		{ die "Call to set_horiz_rule_char() failed, value of key 'char' may not be undef/empty"; }
 
-	$self->{'dsp_pos'} = $arg->{'dsp_pos'};
+	$self->{'horiz_rule_char'} = $arg->{'char'};
 
 	return (1);
 }
+
+sub set_oob_char {
+
+	my $self = shift;
+	my $arg  = shift;
+
+	if (! defined $arg || 
+	      ! (ref ($arg) eq 'HASH')) 
+		{ die "Call to set_oob_char() failed, argument must be hash reference"; }
+
+	if (! exists  $arg->{'char'} || 
+	    ! defined $arg->{'char'} || 
+	             ($arg->{'char'} eq '')) 
+		{ die "Call to set_oob_char() failed, value of key 'char' may not be undef/empty"; }
+
+	$self->{'oob_char'} = $arg->{'char'};
+
+	return (1);
+}
+
+sub set_edt_ctxt {
+
+	my $self = shift;
+	my $arg  = shift;
+
+	if (! defined $arg || 
+	      ! (ref ($arg) eq 'HASH')) 
+		{ die "Call to set_edt_ctxt() failed, argument must be hash reference"; }
+
+	if (! exists  $arg->{'edt_ctxt'} || 
+	    ! defined $arg->{'edt_ctxt'} || 
+	             ($arg->{'edt_ctxt'} eq '')) 
+		{ die "Call to set_edt_ctxt() failed, value of key 'edt_ctxt' may not be undef/empty"; }
+
+	$self->{'edt_ctxt'} = $arg->{'edt_ctxt'};
+
+	return (1);
+}
+
+sub set_edt_pos {
+
+	my $self = shift;
+	my $arg  = shift;
+
+	if (! defined $arg || 
+	      ! (ref ($arg) eq 'HASH')) 
+		{ die "Call to set_edt_pos() failed, argument must be hash reference"; }
+
+	if (! exists  $arg->{'edt_pos'} || 
+	    ! defined $arg->{'edt_pos'} || 
+	           ! ($arg->{'edt_pos'} =~ /^\d+?$/)) 
+		{ die "Call to set_edt_pos() failed, value of key 'edt_pos' must be numeric"; }
+
+	$self->{'edt_pos'} = $arg->{'edt_pos'};
+
+	return (1);
+}
+
 
 sub set_sz_word {
 
@@ -279,25 +340,6 @@ sub set_sz_column {
 		{ die "Call to set_sz_column() failed, value of key 'sz_column' must be numeric"; }
 
 	$self->{'sz_column'} = $arg->{'sz_column'};
-
-	return (1);
-}
-
-sub set_ctxt {
-
-	my $self = shift;
-	my $arg  = shift;
-
-	if (! defined $arg || 
-	      ! (ref ($arg) eq 'HASH')) 
-		{ die "Call to set_ctxt() failed, argument must be hash reference"; }
-
-	if (! exists  $arg->{'ctxt'} || 
-	    ! defined $arg->{'ctxt'} || 
-	             ($arg->{'ctxt'} eq '')) 
-		{ die "Call to set_ctxt() failed, value of key 'ctxt' may not be undef/empty"; }
-
-	$self->{'ctxt'} = $arg->{'ctxt'};
 
 	return (1);
 }
@@ -790,9 +832,9 @@ sub gen_char {
 
 		push @lines, 
 		  sprintf ($fmt_str, 
-		           $self->{'horiz_rule'}, 
+		           $self->{'horiz_rule_char'}, 
 		           join ('', @utf8_bytes), 
-		           $self->{'horiz_rule'});
+		           $self->{'horiz_rule_char'});
 	}
 
 	return (\@lines);
@@ -935,17 +977,17 @@ sub gen_sep {
 #   vstretch()			Stretch the editor display vertically.
 #   vcompress()                 Compress the editor display vertically.
 #   dsp_pos_adjust()		...
-#   insert_mode()		INSERT_MODE	Switch to 'INSERT' context.
-#   search_mode()		SEARCH_MODE	Switch to 'SEARCH' context.
+#   insert_mode()		INSERT_MODE	Switch to EDT_CTXT_INSERT context.
+#   search_mode()		SEARCH_MODE	Switch to EDT_CTXT_SEARCH context.
 
 sub scroll_up_1x_line {
 
 	my $self = shift;
 
-	if ($self->{'dsp_pos'} < $self->{'sz_line'}) 
+	if ($self->{'edt_pos'} < $self->{'sz_line'}) 
 		{ return (undef); }
 
-	$self->{'dsp_pos'} -= $self->{'sz_line'};
+	$self->{'edt_pos'} -= $self->{'sz_line'};
 
 	return (1);
 }
@@ -965,10 +1007,10 @@ sub scroll_down_1x_line {
 	           ! ($arg->{'file_len'} =~ /^\d+?$/)) 
 		{ die "Call to scroll_down_1x_line() failed, value associated w/ key 'file_len' must be one or more digits"; }
 
-	if ($self->{'dsp_pos'} > ($arg->{'file_len'} - ($self->{'sz_line'} * $self->{'sz_column'}))) 
+	if ($self->{'edt_pos'} > ($arg->{'file_len'} - ($self->{'sz_line'} * $self->{'sz_column'}))) 
 		{ return (undef); }
 
-	$self->{'dsp_pos'} += $self->{'sz_line'};
+	$self->{'edt_pos'} += $self->{'sz_line'};
 
 	return (1); 
 }
@@ -977,11 +1019,11 @@ sub scroll_up_1x_page {
 
 	my $self = shift;
 
-	if (($self->{'dsp_pos'} - ($self->{'sz_line'} * $self->{'sz_column'})) <= 0) 
-		{ $self->{'dsp_pos'} = 0; }   # Scroll to beginning of page (less than one full page).
+	if (($self->{'edt_pos'} - ($self->{'sz_line'} * $self->{'sz_column'})) <= 0) 
+		{ $self->{'edt_pos'} = 0; }   # Scroll to beginning of page (less than one full page).
 	
-	elsif (($self->{'dsp_pos'} - ($self->{'sz_line'} * $self->{'sz_column'})) > 0) 
-		{ $self->{'dsp_pos'} -= ($self->{'sz_line'} * $self->{'sz_column'}); }   # Scroll one full page.
+	elsif (($self->{'edt_pos'} - ($self->{'sz_line'} * $self->{'sz_column'})) > 0) 
+		{ $self->{'edt_pos'} -= ($self->{'sz_line'} * $self->{'sz_column'}); }   # Scroll one full page.
 
         return (1);
 }
@@ -1001,19 +1043,19 @@ sub scroll_down_1x_page {
 	           ! ($arg->{'file_len'} =~ /^\d+?$/)) 
 		{ die "Call to scroll_down_1x_page() failed, value associated w/ key 'file_len' must be one or more digits"; }
 
-	if (($self->{'dsp_pos'} + ($self->{'sz_line'} * $self->{'sz_column'})) < 
+	if (($self->{'edt_pos'} + ($self->{'sz_line'} * $self->{'sz_column'})) < 
 	       ($arg->{'file_len'} - ($self->{'sz_line'} * $self->{'sz_column'}))) {
 
-		$self->{'dsp_pos'} += ($self->{'sz_line'} * $self->{'sz_column'});
+		$self->{'edt_pos'} += ($self->{'sz_line'} * $self->{'sz_column'});
 	}
-	elsif (($self->{'dsp_pos'} + ($self->{'sz_line'} * $self->{'sz_column'})) > 
+	elsif (($self->{'edt_pos'} + ($self->{'sz_line'} * $self->{'sz_column'})) > 
 	          ($arg->{'file_len'} - ($self->{'sz_line'} * $self->{'sz_column'}))) {
 
 		my $lines = ($arg->{'file_len'} / $self->{'sz_line'});
 		if ($lines =~ s/\.\d+?$//) 
 			{ $lines++; }
 
-		$self->{'dsp_pos'} = (($lines * $self->{'sz_line'}) - 
+		$self->{'edt_pos'} = (($lines * $self->{'sz_line'}) - 
 		                      ($self->{'sz_line'} * $self->{'sz_column'}));
 	}
 	else {
@@ -1050,13 +1092,13 @@ sub vstretch {
 		$self->set_sz_column 
 		  ({ 'sz_column' => ($self->{'sz_column'} + 1) });
 
-		if ($self->{'dsp_pos'} > 
+		if ($self->{'edt_pos'} > 
 		      ($arg->{'file_len'} - 
 			 (($self->{'sz_column'} * $self->{'sz_line'}) - 
 		            $self->{'sz_line'}))) {
 
-			$self->set_dsp_pos 
-			  ({ 'dsp_pos' => ($self->{'dsp_pos'} - 
+			$self->set_edt_pos 
+			  ({ 'edt_pos' => ($self->{'edt_pos'} - 
 			                   $self->{'sz_line'}) });
 		}
 	}
@@ -1094,14 +1136,14 @@ sub dsp_pos_adjust {
 
 	# If curs_pos is OOB: adjust display position [curs_mv_up].
 
-	while ($self->{'dsp_pos'} > $arg->{'curs_pos'}) 
-		{ $self->{'dsp_pos'} -= $self->{'sz_line'}; }
+	while ($self->{'edt_pos'} > $arg->{'curs_pos'}) 
+		{ $self->{'edt_pos'} -= $self->{'sz_line'}; }
 
 	# If curs_pos is OOB: adjust display position [curs_mv_up].
 
-	while ($self->{'dsp_pos'} <= ($arg->{'curs_pos'} - 
+	while ($self->{'edt_pos'} <= ($arg->{'curs_pos'} - 
 	                               ($self->{'sz_line'} * $self->{'sz_column'})))
-		{ $self->{'dsp_pos'} += $self->{'sz_line'}; }
+		{ $self->{'edt_pos'} += $self->{'sz_line'}; }
 
 	return (1);
 }
@@ -1116,9 +1158,9 @@ sub insert_mode {
 	my $objEditor    = $self->{'obj'}->{'editor'};      # Used.
 	my $objEventLoop = $self->{'obj'}->{'eventloop'};   # Used.
 
-	# Switch context to 'INSERT'.
+	# Switch context to EDT_CTXT_INSERT.
 
-	$self->{'ctxt'} = 'INSERT';
+	$self->{'edt_ctxt'} = EDT_CTXT_INSERT;
 
 	# Change cursor context to 3 (insert mode).
 
@@ -1146,7 +1188,7 @@ sub insert_mode {
 	my ($xpos, $ypos) = 
 	  $objCursor->dsp_coord 
 	    ({ 'curs_pos' => $objCursor->{'curs_pos'}, 
-	       'dsp_pos'  => $self->{'dsp_pos'}, 
+	       'edt_pos'  => $self->{'edt_pos'}, 
 	       'dsp_ypad' => $objDisplay->{'dsp_xpad'}, 
 	       'dsp_xpad' => $objDisplay->{'dsp_ypad'} });
 
@@ -1168,9 +1210,9 @@ sub search_mode {
 	my $objDisplay   = $self->{'obj'}->{'display'};
 	my $objEventLoop = $self->{'obj'}->{'eventloop'};
 
-	# Switch context to 'SEARCH'.
+	# Switch editor context to EDT_CTXT_SEARCH.
 
-	$self->{'ctxt'} = 'SEARCH';
+	$self->{'edt_ctxt'} = EDT_CTXT_SEARCH;
 
 	# Draw search box over the top of the editor display.
 
@@ -1327,8 +1369,8 @@ Method search_mode()...
 Method set_ctxt()...
 = cut
 
-=head2 set_dsp_pos
-Method set_dsp_pos()...
+=head2 set_edt_pos
+Method set_edt_pos()...
 = cut
 
 =head2 set_sz_column

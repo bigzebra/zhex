@@ -9,7 +9,11 @@ use warnings FATAL => 'all';
 use ZHex::Common 
   qw(new 
      obj_init 
-     $VERS);
+     $VERS 
+     EDT_CTXT_DEFAULT 
+     EDT_CTXT_INSERT 
+     EDT_CTXT_SEARCH 
+     SZ_READ);
 
 use IO::File;
 use Fcntl qw(:DEFAULT :Fcompat);
@@ -23,10 +27,11 @@ BEGIN { require Exporter;
 
 # Functions: Start-Up/Initialization.
 #
-#   _____________	___________
-#   Function Name	Description
-#   _____________	___________
-#   init()		Global variable declarations.
+#   _____________		___________
+#   Function Name		Description
+#   _____________		___________
+#   init()			Global variable declarations.
+#   register_evt_callbacks()	Register event handler callbacks w/ event loop.
 
 sub init {
 
@@ -48,18 +53,10 @@ sub init {
 	$self->{'f_blksize'} = '';   # Return value f/ stat() function
 	$self->{'f_blocks'}  = '';   # Return value f/ stat() function
 
-	# Extended file attributes (formatted for display).
-
-	$self->{'f_fmt_ctime'} = '';   # Formatted for display: date/time date/time: creation
-	$self->{'f_fmt_atime'} = '';   # Formatted for display: date/time date/time: last accessed
-	$self->{'f_fmt_mtime'} = '';   # Formatted for display: date/time date/time: last modified
-
 	# Variables defined/used by function ...
 
 	$self->{'fn'} = '';   # File name.
 	$self->{'fc'} = [];   # File contents: reference to array of strings (binmode raw).
-
-	$self->{'sz_read'} = 1024;   # Size: number of bytes to read from file w/ each call to read().
 
 	return (1);
 }
@@ -69,13 +66,16 @@ sub register_evt_callbacks {
 	my $self = shift;
 
 	my $objCharMap   = $self->{'obj'}->{'charmap'};
+	my $objEvent     = $self->{'obj'}->{'event'};
 	my $objEventLoop = $self->{'obj'}->{'eventloop'};
 
-	$objEventLoop->register_callback 
-	  ({'ctxt'   => 'DEFAULT', 
-	    'evt_nm' => 'WRITE_DISK', 
-	    'evt_cb' => sub { $self->write_file ({'fn' => $self->{'fn'}}); },
-	    'evt' =>  [ $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({'lname' => 'LATIN SMALL LETTER W'}) }) ] });
+	$objEvent->register_callback 
+	  ({'edt_ctxt' => EDT_CTXT_DEFAULT, 
+	    'evt_nm'   => 'WRITE_DISK', 
+	    'evt_cb'   => sub { $self->write_file ({'fn' => $self->{'fn'}}); },
+	    'evt'      => [ $objEvent->gen_evt_array 
+	                      ({ '5' => $objCharMap->chr_map_ord_val 
+	                                  ({'lname' => 'LATIN SMALL LETTER W'}) }) ] });
 
 	return (1);
 }
@@ -84,7 +84,6 @@ sub register_evt_callbacks {
 #
 #   Function Name	Description
 #   _____________	___________
-#   check_file()	Verify existence of file on filesystem.
 #   set_file()		Store filename in self.
 #   stat_file()		Wrapper for system stat() function.
 #   read_file()		Method for reading file, store in object (system memory).
@@ -92,31 +91,6 @@ sub register_evt_callbacks {
 #   file_bytes()	Return list of bytes from 'pos' -> 'ofs'.
 #   insert_str()	Insert byte at 'pos'.
 #   write_file()	Write file to disk.
-
-sub check_file {
-
-	my $self = shift;
-	my $arg  = shift;
-
-	if (! defined $arg || 
-	      ! (ref ($arg) eq 'HASH')) 
-		{ die "Call to check_file() failed, argument must be hash reference"; }
-
-	if (! exists  $arg->{'fn'} || 
-	    ! defined $arg->{'fn'} || 
-	             ($arg->{'fn'} eq '')) 
-		{ die "Call to check_file() failed, value associated w/ key 'fn' was undef/empty string"; }
-
-	# Test filename argument: verify that file exists on filesystem.
-
-	if (! -e $arg->{'fn'} || 
-	    ! -f $arg->{'fn'}) {
-
-		return (undef);
-	}
-
-	return (1);
-}
 
 sub set_file {
 
@@ -186,40 +160,22 @@ sub stat_file {
 		return (undef);
 	}
 
-	my %stat_key_pos = 
-	  ('f_dev'     => '0', 
-	   'f_ino'     => '1', 
-	   'f_mode'    => '2', 
-	   'f_nlink'   => '3', 
-	   'f_uid'     => '4', 
-	   'f_gid'     => '5', 
-	   'f_rdev'    => '6', 
-	   'f_size'    => '7', 
-	   'f_atime'   => '8', 
-	   'f_mtime'   => '9', 
-	   'f_ctime'   => '10', 
-	   'f_blksize' => '11', 
-	   'f_blocks'  => '12');
-
 	# Call stat() to retreive file attributes.
 
-	my @stat_rv = stat ($arg->{'fn'});
-
-	# Store file attributes (within self).
-
-	$self->{'f_dev'}     = $stat_rv[ $stat_key_pos{'f_dev'}     ];
-	$self->{'f_ino'}     = $stat_rv[ $stat_key_pos{'f_ino'}     ];
-	$self->{'f_mode'}    = $stat_rv[ $stat_key_pos{'f_mode'}    ];
-	$self->{'f_nlink'}   = $stat_rv[ $stat_key_pos{'f_nlink'}   ];
-	$self->{'f_uid'}     = $stat_rv[ $stat_key_pos{'f_uid'}     ];
-	$self->{'f_gid'}     = $stat_rv[ $stat_key_pos{'f_gid'}     ];
-	$self->{'f_rdev'}    = $stat_rv[ $stat_key_pos{'f_rdev'}    ]; 
-	$self->{'f_size'}    = $stat_rv[ $stat_key_pos{'f_size'}    ];
-	$self->{'f_atime'}   = $stat_rv[ $stat_key_pos{'f_atime'}   ];
-	$self->{'f_mtime'}   = $stat_rv[ $stat_key_pos{'f_mtime'}   ];
-	$self->{'f_ctime'}   = $stat_rv[ $stat_key_pos{'f_ctime'}   ];
-	$self->{'f_blksize'} = $stat_rv[ $stat_key_pos{'f_blksize'} ];
-	$self->{'f_blocks'}  = $stat_rv[ $stat_key_pos{'f_blocks'}  ];
+	($self->{'f_dev'}, 
+	 $self->{'f_ino'}, 
+	 $self->{'f_mode'}, 
+	 $self->{'f_nlink'}, 
+	 $self->{'f_uid'}, 
+	 $self->{'f_gid'}, 
+	 $self->{'f_rdev'}, 
+	 $self->{'f_size'}, 
+	 $self->{'f_atime'}, 
+	 $self->{'f_mtime'}, 
+	 $self->{'f_ctime'}, 
+	 $self->{'f_blksize'}, 
+	 $self->{'f_blocks'}) 
+	   = stat ($arg->{'fn'});
 
 	return (1);
 }
@@ -241,10 +197,8 @@ sub read_file {
 	# Test filename argument: verify that file exists on filesystem.
 
 	if (! -e $arg->{'fn'} || 
-	    ! -f $arg->{'fn'}) {
-
-		return (undef);
-	}
+	    ! -f $arg->{'fn'}) 
+		{ return (undef); }
 
 	my $fh;   # Filehandle
 
@@ -252,7 +206,7 @@ sub read_file {
 	use bytes;   # Bytes pragma: ON.
 
 	my ($buf);   # <--- Declare inside "use bytes" pragma.
-	my (@fc);              # <--- Declare inside "use bytes" pragma.
+	my (@fc);    # <--- Declare inside "use bytes" pragma.
 	if (open ($fh, "<:raw", $arg->{'fn'})) 
 	     { undef; }
 	else { warn ("Function open() returned w/ error. ", $!, $^E); }
@@ -264,7 +218,7 @@ sub read_file {
 	no bytes;    # Bytes pragma: OFF.
 	             # __________________
 
-	while (my $rv = read ($fh, $buf, $self->{'sz_read'}, 0)) 
+	while (my $rv = read ($fh, $buf, SZ_READ, 0)) 
 		{ push @fc, split '', $buf; }
 
 	close $fh;
@@ -278,15 +232,28 @@ sub file_len {
 
 	my $self = shift;
 
-	if (! exists  $self->{'fc'} || 
-	    ! defined $self->{'fc'} || 
-	    !  ((ref ($self->{'fc'})) eq 'ARRAY') || 
-	  ((scalar (@{ $self->{'fc'} })) < 1)) {
+	# Check for acceptable value associated w/ key 'fl' (cached file length).
 
-		return (undef);
+	if (! exists  $self->{'fl'} || 
+	    ! defined $self->{'fl'} || 
+	             ($self->{'fl'} eq '')) {
+
+		# Check for value associated w/ key 'fc' (file contents: raw bytes).
+
+		if (! exists  $self->{'fc'} || 
+		    ! defined $self->{'fc'} || 
+		    !  ((ref ($self->{'fc'})) eq 'ARRAY')) 
+			{ return (undef); }
+
+		# Calculate/store file length.
+
+		my $fl = scalar (@{ $self->{'fc'} });
+		if ($fl < 1) 
+			{ return (undef); }
+		$self->{'fl'} = $fl;
 	}
 
-	return (scalar (@{ $self->{'fc'} }));
+	return ($self->{'fl'});
 }
 
 sub file_bytes {
@@ -308,16 +275,14 @@ sub file_bytes {
 	             ($arg->{'len'} eq '')) 
 		{ die "Call to file_bytes() failed, value associated w/ key 'len' was undef/empty string"; }
 
-	my $fc_len = scalar (@{ $self->{'fc'} });
-
 	if (! exists  $arg->{'ofs'} || 
 	    ! defined $arg->{'ofs'} || 
 	           ! ($arg->{'ofs'} =~ /^\d+?$/) || 
-	             ($arg->{'ofs'} > $fc_len) || 
+	             ($arg->{'ofs'} > $self->file_len()) || 
 	    ! exists  $arg->{'len'} || 
 	    ! defined $arg->{'len'} || 
 	           ! ($arg->{'len'} =~ /^\d+?$/) || 
-	            (($arg->{'ofs'} + $arg->{'len'}) > $fc_len)) {
+	            (($arg->{'ofs'} + $arg->{'len'}) > $self->file_len())) {
 
 		return (undef);
 	}
@@ -340,48 +305,35 @@ sub insert_str {
 	           ! ($arg->{'pos'} =~ /^\d+?$/)) 
 		{ die "Call to insert_str() failed, value associated w/ key 'pos' must be one or more digits"; }
 
-	my $fc_len = $self->file_len();
-
-	if (! defined $fc_len || 
-	           ! ($fc_len =~ /^\d+?$/)) {
-
-		return (undef);
-	}
-
-	if ($arg->{'pos'} > $fc_len) 
-		{ die "Call to insert_str() failed, value associated w/ key 'pos' is greater than file length"; }
-
 	if (! exists  $arg->{'str'} || 
 	    ! defined $arg->{'str'} || 
 	             ($arg->{'str'} eq '')) 
 		{ die "Call to insert_str() failed, value associated w/ key 'str' was undef/empty string"; }
 
-	# From: http://www.perlmonks.org/?displaytype=print;node_id=836926;replies=1
-	#
-	#   print "Array isn't empty. Array Values:@array\n" if($array[0]);
-	#   print "Array isn't empty. Array Values:@array\n" if($#array >= 0);
-	#   print "Array isn't empty. Array Values:@array\n" if(@array);
+	# Determine file length. Verify that offset (where string to be 
+	# inserted) is within bounds of the file.
 
-	my @fc_tmp;
-	push @fc_tmp, @{ $self->{'fc'} }[0 .. ($arg->{'pos'} - 1)];
+	my $fl = $self->file_len();
+
+	if (! defined $fl || 
+	           ! ($fl =~ /^\d+?$/)) 
+		{ return (undef); }
+
+	if ($arg->{'pos'} > $fl) 
+		{ die "Call to insert_str() failed, value associated w/ key 'pos' is greater than file length"; }
 
 	my $unpack_str = ('a ' x length ($arg->{'str'}));
+	my @str_bytes = unpack ($unpack_str, $arg->{'str'});
+	if (! ($#str_bytes >= 0) || 
+	    ! (scalar (@str_bytes) > 0)) 
+		{ return (undef); }
 
-	my @str_bytes = 
-	  unpack ($unpack_str, $arg->{'str'});
+	$self->{'fc'} =  
+	   [ @{ $self->{'fc'} }[0 .. ($arg->{'pos'} - 1)], 
+	     @str_bytes, 
+	     @{ $self->{'fc'} }[$arg->{'pos'} .. ($fl - 1)] ];
 
-	if ($#str_bytes >= 0 && 
-	    scalar (@str_bytes) > 0) {
-
-		foreach my $str_byte (@str_bytes) {
-
-			push @fc_tmp, $str_byte;
-		}
-	}
-
-	push @fc_tmp, @{ $self->{'fc'} }[$arg->{'pos'} .. ($fc_len - 1)];
-
-	$self->{'fc'} = \@fc_tmp;
+	$self->{'fl'} = '';   # Invalidate cached file length (cause it to be updated on next call to file_len()).
 
 	return (1);
 }
@@ -400,7 +352,7 @@ sub write_file {
 	             ($arg->{'fn'} eq '')) 
 		{ die "Call to read_file() failed, value associated w/ key 'fn' was undef/empty string"; }
 
-	# Test filename argument: verify that file exists on filesystem.
+	# Test filename argument: verify file exists.
 
 	if (! -e $arg->{'fn'} || 
 	    ! -f $arg->{'fn'}) {
@@ -408,27 +360,22 @@ sub write_file {
 		return (undef);
 	}
 
-	# $oldfh = select (HANDLE); 
-	# $| = 1; 
-	# select ($oldfh);
-
-	             # _________________
 	use bytes;   # Bytes pragma: ON.
 
-	my ($buf);   # <--- Declare inside "use bytes" pragma.
-	my (@fc);    # <--- Declare inside "use bytes" pragma.
+	my ($buf);   # Declare inside "use bytes" pragma.
+	my (@fc);    # Declare inside "use bytes" pragma.
 
         my $fh = IO::File->new ($arg->{'fn'}, O_WRONLY|O_CREAT);
-        if (defined $fh) 
-	     { undef; }
-        else { die ("Function IO::File->new() returned w/ error (called w/ path=" . $arg->{'fn'} . ": ". $! . $^E); }
+        if (! (defined $fh)) {
 
-	if (binmode ($fh, ":raw")) 
-	     { undef; }
-	else { warn ("Function binmode() returned w/ error. ", $!, $^E); }
+		die "Function IO::File->new() returned w/ error (called w/ path=" . 
+		    $arg->{'fn'} . ": ". $! . $^E;
+	}
+
+	if (! (binmode ($fh, ":raw"))) 
+		{ warn ("Function binmode() returned w/ error. ", $!, $^E); }
 
 	no bytes;    # Bytes pragma: OFF.
-	             # __________________
 
 	my $pack_str = 'a' . $self->file_len();
 	print $fh pack ($pack_str, (join ('', @{ $self->{'fc'} })));
@@ -467,17 +414,13 @@ Usage:
 
     use ZHex::Common qw(new obj_init $VERS);
     my $objFile = $self->{'obj'}->{'file'};
-    $objFile->stat_file({'fn' => $abspath_w_filename});
+    $objFile->stat_file ({'fn' => $abspath_w_filename});
 
 =head1 EXPORT
 
 No functions are exported.
 
 =head1 SUBROUTINES/METHODS
-
-=head2 check_file
-Method check_file()...
-= cut
 
 =head2 file_bytes
 Method file_bytes()...

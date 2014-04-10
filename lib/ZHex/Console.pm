@@ -9,7 +9,10 @@ use warnings FATAL => 'all';
 use ZHex::Common 
   qw(new 
      obj_init 
-     $VERS);
+     $VERS 
+     EDT_CTXT_DEFAULT 
+     EDT_CTXT_INSERT 
+     EDT_CTXT_SEARCH);
 
 BEGIN { require Exporter;
 	our $VERSION   = $VERS;
@@ -179,35 +182,20 @@ sub register_evt_callbacks {
 	my $self = shift;
 
 	my $objCharMap   = $self->{'obj'}->{'charmap'};
+	my $objEvent     = $self->{'obj'}->{'event'};
 	my $objEventLoop = $self->{'obj'}->{'eventloop'};
 
-	$objEventLoop->register_callback 
-	  ({'ctxt'   => 'DEFAULT', 
-	    'evt_nm' => 'CONSCURS_INVIS', 
-	    'evt_cb' => sub { $self->w32cons_cursor_invisible(); }, 
-	    'evt' =>  [ $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({'lname' => 'LATIN SMALL LETTER V'}) }) ] });
+	$objEvent->register_callback 
+	  ({'edt_ctxt' => EDT_CTXT_DEFAULT, 
+	    'evt_nm'   => 'CONSCURS_INVIS', 
+	    'evt_cb'   => sub { $self->w32cons_cursor_invisible(); }, 
+	    'evt' =>  [ $objEvent->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({'lname' => 'LATIN SMALL LETTER V'}) }) ] });
 
-	$objEventLoop->register_callback 
-	  ({'ctxt'   => 'DEFAULT', 
-	    'evt_nm' => 'CONSCURS_VIS', 
-	    'evt_cb' => sub { $self->w32cons_cursor_visible(); }, 
-	    'evt' =>  [ $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({'lname' => 'LATIN SMALL LETTER V'}) }) ] });
-
-	$objEventLoop->register_callback 
-	  ({'ctxt'   => 'DEFAULT', 
-	    'evt_nm' => 'L_MOUSE_BUTTON', 
-	    'evt_cb' => sub { $self->lmouse(); }, 
-	    'evt' =>  [ $objEventLoop->gen_evt_array 
-	                ({ '0' => 2,
-	                   '3' => 1 }) ] });
-
-	$objEventLoop->register_callback 
-	  ({'ctxt'   => 'DEFAULT', 
-	    'evt_nm' => 'R_MOUSE_BUTTON', 
-	    'evt_cb' => sub { $self->rmouse(); }, 
-	    'evt' =>  [ $objEventLoop->gen_evt_array 
-	                ({ '0' => 2,
-	                   '3' => 2 }) ] });
+	$objEvent->register_callback 
+	  ({'edt_ctxt' => EDT_CTXT_DEFAULT, 
+	    'evt_nm'   => 'CONSCURS_VIS', 
+	    'evt_cb'   => sub { $self->w32cons_cursor_visible(); }, 
+	    'evt' =>  [ $objEvent->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({'lname' => 'LATIN SMALL LETTER V'}) }) ] });
 
 	return (1);
 }
@@ -1006,200 +994,6 @@ sub colorize_combine_attrs {
 	}
 
 	return ($attr_combined);
-}
-
-# Functions: Mouse event handlers.
-#
-#   ____		___________
-#   NAME		DESCRIPTION
-#   ____		___________
-#   lmouse()		Left  mouse button handler. Call function based upon context.
-#   rmouse()		Right mouse button handler. Call function based upon context.
-#   mouse_over()	Highlight character below mouse pointer, restore attributes to character at previous mouse position.
-
-sub lmouse {
-
-	my $self = shift;
-
-	my $objCursor    = $self->{'obj'}->{'cursor'};
-	my $objDisplay   = $self->{'obj'}->{'display'};
-	my $objEditor    = $self->{'obj'}->{'editor'};
-	my $objEventLoop = $self->{'obj'}->{'eventloop'};
-
-	my $xpos = $objEventLoop->{'evt'}->[1];
-	my $ypos = $objEventLoop->{'evt'}->[2];
-
-	my @dsp_pos;
-	SEARCH_DSP_POS: 
-	  foreach my $pos 
-	    ($objEditor->{'dsp_pos'} .. ($objEditor->{'dsp_pos'} + 
-	                                ($objEditor->{'sz_line'} * 
-	                                 $objEditor->{'sz_column'}))) {
-
-		my ($xc, $yc) = 
-		  $objCursor->dsp_coord 
-		    ({ 'curs_pos' => $pos, 
-		       'dsp_pos'  => $objEditor->{'dsp_pos'}, 
-		       'dsp_ypad' => $objDisplay->{'dsp_xpad'}, 
-		       'dsp_xpad' => $objDisplay->{'dsp_ypad'} });
-
-		if ((($xpos == ($xc + $objDisplay->{'dsp_xpad'})) || 
-		     ($xpos == ($xc + $objDisplay->{'dsp_xpad'} + 1))) && 
-		     ($ypos == ($yc + $objDisplay->{'dsp_ypad'}))) {
-
-			if ($objCursor->{'curs_ctxt'} == 0) {
-
-				# Cursor in "line" context: highlight line 
-				# beginning at align_line_boundary().
-
-				my $lb_pos = $objCursor->align_line_boundary ({ 'pos' => $pos });
-				if (defined $lb_pos && 
-				            $lb_pos =~ /^\d+?$/) {
-
-					$objCursor->{'curs_pos'} = $lb_pos;
-				}
-			}
-			elsif ($objCursor->{'curs_ctxt'} == 1) {
-
-				# Cursor in "word" context: highlight word 
-				# beginning at align_word_boundary().
-
-				my $wb_pos = $objCursor->align_word_boundary ({ 'pos' => $pos });
-				if (defined $wb_pos && 
-				            $wb_pos =~ /^\d+?$/) {
-
-					$objCursor->{'curs_pos'} = $wb_pos;
-				}
-			}
-			elsif ($objCursor->{'curs_ctxt'} == 2) {
-
-				$objCursor->{'curs_pos'} = $pos;
-			}
-			else {
-
-				return (undef);
-			}
-
-			last SEARCH_DSP_POS;
-		}
-	}
-
-	# $self->{'CONS'}->FillAttr (($FG_BLACK | $BG_LIGHTMAGENTA), 1, $xpos, $ypos);
-
-	return (1); 
-}
-
-sub rmouse {
-
-	my $self = shift;
-
-	my $objEventLoop = $self->{'obj'}->{'eventloop'};
-
-	my $xpos = $objEventLoop->{'evt'}->[1];
-	my $ypos = $objEventLoop->{'evt'}->[2];
-
-	$self->{'CONS'}->FillAttr (($FG_BLACK | $BG_LIGHTBLUE), 1, $xpos, $ypos);
-
-	return (1);
-}
-
-sub mouse_over {
-
-	my $self = shift;
-	my $arg  = shift;
-
-	if (! defined $arg || 
-	      ! (ref ($arg) eq 'HASH')) 
-		{ die "Call to mouse_over() failed, argument must be hash reference"; }
-
-	if (! exists  $arg->{'mouse_over_x'} || 
-	    ! defined $arg->{'mouse_over_x'} || 
-	           ! ($arg->{'mouse_over_x'} =~ /^\d\d?\d?$/)) 
-		{ die "Call to mouse_over() failed, value of key 'mouse_over_x' must be numeric"; }
-
-	if (! exists  $arg->{'mouse_over_y'} || 
-	    ! defined $arg->{'mouse_over_y'} || 
-	           ! ($arg->{'mouse_over_y'} =~ /^\d\d?\d?$/)) 
-		{ die "Call to mouse_over() failed, value of key 'mouse_over_y' must be numeric"; }
-
-	if (! exists  $arg->{'mouse_over_x_prev'} || 
-	    ! defined $arg->{'mouse_over_x_prev'} || 
-	           ! ($arg->{'mouse_over_x_prev'} =~ /^\d\d?\d?$/)) 
-		{ die "Call to mouse_over() failed, value of key 'mouse_over_x_prev' must be numeric"; }
-
-	if (! exists  $arg->{'mouse_over_y_prev'} || 
-	    ! defined $arg->{'mouse_over_y_prev'} || 
-	           ! ($arg->{'mouse_over_y_prev'} =~ /^\d\d?\d?$/)) 
-		{ die "Call to mouse_over() failed, value of key 'mouse_over_y_prev' must be numeric"; }
-
-	# Restore original attributes to character at previous mouseover X,Y coordinate.
-
-	$self->{'CONS'}->WriteAttr 
-	  ($self->{'mouse_over_attr'}, 
-	   $arg->{'mouse_over_x_prev'}, 
-	   $arg->{'mouse_over_y_prev'});
-
-	# ReadChar [number, col, row]
-	#   Reads the specified *number* of consecutive characters, beginning at
-	#   *col*, *row*, from the console. Returns a string containing the
-	#   characters read, or "undef" on errors. You can then pass the
-	#   returned variable to "WriteChar" to restore the saved characters on
-	#   screen. See also: "ReadAttr", "ReadRect".
-	# 
-	#   Example:
-	#     $chars = $CONSOLE->ReadChar (80 * 25, 0, 0);
-
-	# Read/store character underneath mouse pointer.
-
-	$self->{'mouse_over_char'} = 
-	  $self->{'CONS'}->ReadChar 
-	    (1, 
-	     $arg->{'mouse_over_x'}, 
-	     $arg->{'mouse_over_y'});
-
-	# ReadAttr (number, col, row)
-	#   Reads the specified *number* of consecutive attributes, beginning at
-	#   *col*, *row*, from the console. Returns the attributes read (a
-	#   variable containing one character for each attribute), or "undef" on
-	#   errors. You can then pass the returned variable to "WriteAttr" to
-	#   restore the saved attributes on screen. See also: "ReadChar",
-	#   "ReadRect".
-	# 
-	#     Example:
-	#       $colors = $CONSOLE->ReadAttr(80*25, 0, 0);
-
-	# Read/store attributes of character underneath mouse pointer
-
-	$self->{'mouse_over_attr'} = 
-	  $self->{'CONS'}->ReadAttr 
-	    (1, 
-	     $arg->{'mouse_over_x'}, 
-	     $arg->{'mouse_over_y'});
-
-	# WriteAttr (attrs, col, row)
-	#   Writes the attributes in the string *attrs*, beginning at *col*,
-	#   *row*, without affecting the characters that are on screen. The
-	#   string attrs can be the result of a "ReadAttr" function, or you can
-	#   build your own attribute string; in this case, keep in mind that
-	#   every attribute is treated as a character, not a number (see
-	#   example). Returns the number of attributes written or "undef" on
-	#   errors. See also: "Write", "WriteChar", "WriteRect".
-	# 
-	#   Example:
-	#     $CONSOLE->WriteAttr ($attrs, 0, 0);
-	# 
-	#   Note the use of chr()...
-	#     $attrs = chr ($FG_BLACK | $BG_WHITE) x 80;
-	#     $CONSOLE->WriteAttr ($attrs, 0, 0);
-
-	# Hi-light character underneath mouse pointer.
-
-	$self->{'CONS'}->WriteAttr 
-	  (chr ($FG_BLACK | $BG_LIGHTRED), 
-	   $arg->{'mouse_over_x'}, 
-	   $arg->{'mouse_over_y'});
-
-	return (1);
 }
 
 

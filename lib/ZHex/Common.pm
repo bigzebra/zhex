@@ -6,12 +6,59 @@ use 5.006;
 use strict;
 use warnings FATAL => 'all';
 
-BEGIN { use constant CURS_POS  => 0;
-	use constant CURS_CTXT => 0;
-	use constant DSP_POS   => 0;
+BEGIN { 
+
+	# Constants used by more than one module:
+
 	use constant SZ_WORD   => 4;
 	use constant SZ_LINE   => 16;
 	use constant SZ_COLUMN => 40;
+	use constant SZ_READ   => 1024;   # Number of bytes requested w/ calls to read().
+
+	# Console.pm constants:
+
+	use constant W32CONS_TITLE => 'ZHex - Console Based Hex Editor v0.02';
+
+	# Cursor.pm constants:
+
+	use constant CURS_CTXT_LINE => '0';   # Cursor highlights 16 bytes.
+	use constant CURS_CTXT_WORD => '1';   # Cursor highlights  4 bytes.
+	use constant CURS_CTXT_BYTE => '2';   # Cursor highlights  1 bytes.
+	use constant CURS_CTXT_INSR => '3';   # Cursor hidden (console cursor becomes visible).
+	use constant CURS_CTXT => CURS_CTXT_LINE;
+	use constant CURS_POS  => 0;
+
+	# Display.pm constants:
+
+	use constant DSP_WIDTH  => 100;
+	use constant DSP_HEIGHT => 40;
+	use constant DSP_XPAD   => 0;
+	use constant DSP_YPAD   => 0;
+	use constant DSP_D_ELEMENTS => '';
+	use constant DSP_C_ELEMENTS => '';
+
+	my $dsp_line = (' ' x DSP_WIDTH);
+	my $dsp = [];
+	for (my $i = 0; $i < DSP_HEIGHT; $i++) {
+		push @{ $dsp }, $dsp_line;
+	}
+
+	use constant DSP      => $dsp;
+	use constant DSP_PREV => DSP;
+
+	# Editor.pm constants:
+
+	use constant EDT_HORIZ_RULE_CHAR => '|';   # Word seperator: a vertical line used in display for readability.
+	use constant EDT_OOB_CHAR        => '-';   # Out-of-bounds character: displayed in place of non-displayable characters.
+	use constant EDT_CTXT_DEFAULT => '0';
+	use constant EDT_CTXT_INSERT  => '1';
+	use constant EDT_CTXT_SEARCH  => '2';
+	use constant EDT_CTXT => EDT_CTXT_DEFAULT;
+	use constant EDT_POS  => 0;
+
+	# Event.pm constants:
+
+	# ...
 }
 
 BEGIN { require Exporter;
@@ -24,12 +71,36 @@ BEGIN { require Exporter;
              init 
 	     obj_init 
 	     $VERS 
-	     CURS_POS 
-	     CURS_CTXT 
-	     DSP_POS 
+
+             CURS_CTXT_LINE 
+             CURS_CTXT_WORD 
+             CURS_CTXT_BYTE 
+             CURS_CTXT_INSR 
+             CURS_CTXT 
+             CURS_POS 
+
+	     DSP_WIDTH 
+	     DSP_HEIGHT 
+	     DSP_XPAD 
+	     DSP_YPAD 
+	     DSP_D_ELEMENTS 
+	     DSP_C_ELEMENTS 
+	     DSP 
+	     DSP_PREV 
+
+             EDT_HORIZ_RULE_CHAR 
+             EDT_OOB_CHAR 
+             EDT_CTXT_DEFAULT 
+             EDT_CTXT_INSERT 
+             EDT_CTXT_SEARCH 
+             EDT_CTXT 
+             EDT_POS 
+
 	     SZ_WORD 
 	     SZ_LINE 
-	     SZ_COLUMN);
+	     SZ_COLUMN 
+	     SZ_READ 
+	     W32CONS_TITLE);
 }
 
 # Functions: Start-up/initialization.
@@ -85,17 +156,19 @@ sub obj_init {
 
 	# Verify that obj hash defines correct key/value pairs:
 	#
-	#   Hash Key	Perl Module	Package
-	#   ________	___________	_______
-	#   charmap	CharMap.pm	ZHex::CharMap
-	#   console	Console.pm	ZHex::Console
-	#   cursor	Cursor.pm	ZHex::Cursor
-	#   debug	Debug.pm	ZHex::Debug
-	#   display	Display.pm	ZHex::Display
-	#   editor	Editor.pm	ZHex::Editor
-	#   event	Event.pm	ZHex::Event
-	#   eventloop	EventLoop.pm	ZHex::EventLoop
-	#   file	File.pm		ZHex::File
+	#   Hash Key		Perl Module		Package
+	#   ________		___________		_______
+	#   charmap		CharMap.pm		ZHex::CharMap
+	#   console		Console.pm		ZHex::Console
+	#   cursor		Cursor.pm		ZHex::Cursor
+	#   debug		Debug.pm		ZHex::Debug
+	#   display		Display.pm		ZHex::Display
+	#   editor		Editor.pm		ZHex::Editor
+	#   event		Event.pm		ZHex::Event
+	#   eventhandler	EventHandler.pm		ZHex::EventHandler
+	#   eventloop		EventLoop.pm		ZHex::EventLoop
+	#   file		File.pm			ZHex::File
+	#   mouse		Mouse.pm		ZHex::Mouse
 
 	if (! exists  $arg->{'obj'}->{'charmap'} || 
 	    ! defined $arg->{'obj'}->{'charmap'} || 
@@ -125,13 +198,21 @@ sub obj_init {
 	    ! defined $arg->{'obj'}->{'event'} || 
 	      ! (ref ($arg->{'obj'}->{'event'}) eq 'ZHex::Event') || 
 
+	    ! exists  $arg->{'obj'}->{'eventhandler'} || 
+	    ! defined $arg->{'obj'}->{'eventhandler'} || 
+	      ! (ref ($arg->{'obj'}->{'eventhandler'}) eq 'ZHex::EventHandler') || 
+
 	    ! exists  $arg->{'obj'}->{'eventloop'} || 
 	    ! defined $arg->{'obj'}->{'eventloop'} || 
 	      ! (ref ($arg->{'obj'}->{'eventloop'}) eq 'ZHex::EventLoop') || 
 
 	    ! exists  $arg->{'obj'}->{'file'} || 
 	    ! defined $arg->{'obj'}->{'file'} || 
-	      ! (ref ($arg->{'obj'}->{'file'}) eq 'ZHex::File')) 
+	      ! (ref ($arg->{'obj'}->{'file'}) eq 'ZHex::File') || 
+
+	    ! exists  $arg->{'obj'}->{'mouse'} || 
+	    ! defined $arg->{'obj'}->{'mouse'} || 
+	      ! (ref ($arg->{'obj'}->{'mouse'}) eq 'ZHex::Mouse')) 
 
 		{ die "Call to obj_init() failed: argument 'obj' missing one (or more) required key/value pairs"; }
 

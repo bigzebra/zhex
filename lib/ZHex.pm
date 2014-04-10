@@ -2,6 +2,25 @@
 
 package ZHex;
 
+my $singleton;
+
+BEGIN {
+
+	$singleton = {
+
+		attribute => 'value',
+		another   => 'something',
+	};
+
+	bless $singleton, "Name";
+}
+
+sub new {
+
+	my $class = shift;
+	return $singleton;
+}
+
 use 5.006;
 use strict;
 use warnings FATAL => 'all';
@@ -10,13 +29,39 @@ use ZHex::Common
   qw(new 
      init 
      obj_init 
+
      $VERS 
-     CURS_POS
+
+     CURS_CTXT_LINE
+     CURS_CTXT_WORD
+     CURS_CTXT_BYTE
+     CURS_CTXT_INSR
      CURS_CTXT
-     DSP_POS
+     CURS_POS
+
+     DSP_WIDTH 
+     DSP_HEIGHT 
+     DSP_XPAD 
+     DSP_YPAD 
+     DSP_D_ELEMENTS 
+     DSP_C_ELEMENTS 
+     DSP
+     DSP_PREV 
+
+     EDT_HORIZ_RULE_CHAR 
+     EDT_OOB_CHAR 
+     EDT_CTXT_DEFAULT 
+     EDT_CTXT_INSERT 
+     EDT_CTXT_SEARCH 
+     EDT_CTXT 
+     EDT_POS 
+
      SZ_WORD
      SZ_LINE
-     SZ_COLUMN);
+     SZ_COLUMN
+     SZ_READ 
+
+     W32CONS_TITLE);
 
 use ZHex::CharMap;
 use ZHex::Console;
@@ -25,8 +70,10 @@ use ZHex::Debug;
 use ZHex::Display;
 use ZHex::Editor;
 use ZHex::Event;
+use ZHex::EventHandler;
 use ZHex::EventLoop;
 use ZHex::File;
+use ZHex::Mouse;
 
 use Getopt::Long;
 
@@ -37,148 +84,10 @@ BEGIN { require Exporter;
 	our @EXPORT_OK = qw(); 
 }
 
-sub init_config_main {
-
-	my $self = shift;
-
-	$self->{'cfg'} = {};   # User configurable settings stored here...
-
-	# ______________________________
-	# Member variables (Console.pm).
-
-	$self->{'cfg'}->{'w32cons_title'} = 
-	  'ZHex - Console Based Hex Editor (" . $VERS . ") (03/12/2014) (by Double Z)';
-
-	# ______________________________
-	# Member variables (Cursor.pm).
-
-	$self->{'cfg'}->{'curs_pos'}  = CURS_POS;    # The first character (byte number) appearing at top/left of hex editor display.
-	$self->{'cfg'}->{'curs_ctxt'} = CURS_CTXT;   # ...
-	$self->{'cfg'}->{'sz_word'}   = SZ_WORD;     # Size: width (in characters) of a word.
-	$self->{'cfg'}->{'sz_line'}   = SZ_LINE;     # Size: width (in characters) of a line.
-	$self->{'cfg'}->{'sz_column'} = SZ_COLUMN;   # Size: height (in lines) of a column.
-
-	# ______________________________
-	# Member variables (Display.pm).
-
-	$self->{'cfg'}->{'dsp'}        = '';
-	$self->{'cfg'}->{'dsp_prev'}   = '';
-	$self->{'cfg'}->{'dsp_xpad'}   =  2;   # "X" padding (horizontal).
-	$self->{'cfg'}->{'dsp_ypad'}   =  2;   # "Y" padding (vertical).
-	$self->{'cfg'}->{'d_width'}    = ''; 
-	$self->{'cfg'}->{'d_height'}   = '';
-	$self->{'cfg'}->{'d_elements'} = '';
-	$self->{'cfg'}->{'c_elements'} = '';
-
-	# ______________________________
-	# Member variables (Editor.pm).
-
-	$self->{'cfg'}->{'dsp_pos'}    = DSP_POS;     # The first character (byte number) appearing at top/left of hex editor display.
-	$self->{'cfg'}->{'sz_word'}    = SZ_WORD;     # Size: width (in characters) of a word.
-	$self->{'cfg'}->{'sz_line'}    = SZ_LINE;     # Size: width (in characters) of a line.
-	$self->{'cfg'}->{'sz_column'}  = SZ_COLUMN;   # Size: height (in lines) of a column.
-	$self->{'cfg'}->{'horiz_rule'} = '|';         # Word seperator: a vertical line used in display for readability.
-	$self->{'cfg'}->{'oob_char'}   = '-';         # Out-of-bounds character: displayed in place of non-displayable characters. 
-
-	# ______________________________
-	# Member variables (Event.pm).
-
-	$self->{'cfg'}->{'cb'} = {};
-	$self->{'cfg'}->{'cb'}->{'DEFAULT'} = {};   # DEFAULT context event handlers (callback subroutines).
-	$self->{'cfg'}->{'cb'}->{'INSERT'}  = {};   # INSERT  context event handlers (callback subroutines).
-	$self->{'cfg'}->{'cb'}->{'SEARCH'}  = {};   # SEARCH  context event handlers (callback subroutines).
-	$self->{'cfg'}->{'search_str'}      = '';
-	$self->{'cfg'}->{'search_pos'}      = 0;
-	$self->{'cfg'}->{'curs_ctxt_prev'}  = 0;
-
-	# ______________________________
-	# Member variables (EventLoop.pm).
-
-	$self->{'cfg'}->{'ctxt'} = 'DEFAULT';         # In DEFAULT context, keystrokes mostly cause events.
-	                                              # In SEARCH  context, keystrokes are added to the search string until the ENTER key is pressed.
-	                                              # In INSERT  context, keystrokes are added to the file being edited, until the ESCAPE key is pressed.
-	$self->{'cfg'}->{'FLAG_QUIT'} = 0;            # Flag controls exit from main event loop.
-	$self->{'cfg'}->{'mouse_over_char'}   = '';   # Mouse handling: position, character, attributes.
-	$self->{'cfg'}->{'mouse_over_attr'}   = '';   # Mouse handling: position, character, attributes.
-	$self->{'cfg'}->{'mouse_over_x'}      =  0;   # Mouse handling: position, character, attributes.
-	$self->{'cfg'}->{'mouse_over_y'}      =  0;   # Mouse handling: position, character, attributes.
-	$self->{'cfg'}->{'mouse_over_x_prev'} =  0;   # Mouse handling: position, character, attributes.
-	$self->{'cfg'}->{'mouse_over_y_prev'} =  0;   # Mouse handling: position, character, attributes.
-	$self->{'cfg'}->{'ct_evt_functional'} =  0;   # Counters: ...
-	$self->{'cfg'}->{'cb'} = {};                  # Event callback subroutine references.
-	$self->{'cfg'}->{'evt_history'} = [];         # Event history (makes 'undo' possible).
-
-	# ______________________________
-	# Member variables (File.pm).
-
-	# File attributes returned by function stat().
-	$self->{'cfg'}->{'f_dev'}     = '';   # Return value f/ stat() function (13 values returned)
-	$self->{'cfg'}->{'f_ino'}     = '';   # Return value f/ stat() function
-	$self->{'cfg'}->{'f_mode'}    = '';   # Return value f/ stat() function
-	$self->{'cfg'}->{'f_nlink'}   = '';   # Return value f/ stat() function
-	$self->{'cfg'}->{'f_uid'}     = '';   # Return value f/ stat() function
-	$self->{'cfg'}->{'f_gid'}     = '';   # Return value f/ stat() function
-	$self->{'cfg'}->{'f_rdev'}    = '';   # Return value f/ stat() function
-	$self->{'cfg'}->{'f_size'}    = '';   # Return value f/ stat() function
-	$self->{'cfg'}->{'f_atime'}   = '';   # Return value f/ stat() function (date/time: last accessed)
-	$self->{'cfg'}->{'f_mtime'}   = '';   # Return value f/ stat() function (date/time: last modified)
-	$self->{'cfg'}->{'f_ctime'}   = '';   # Return value f/ stat() function (date/time: creation)
-	$self->{'cfg'}->{'f_blksize'} = '';   # Return value f/ stat() function
-	$self->{'cfg'}->{'f_blocks'}  = '';   # Return value f/ stat() function
-	# Extended file attributes (formatted for display).
-	$self->{'cfg'}->{'f_fmt_ctime'} = '';   # Formatted for display: date/time date/time: creation
-	$self->{'cfg'}->{'f_fmt_atime'} = '';   # Formatted for display: date/time date/time: last accessed
-	$self->{'cfg'}->{'f_fmt_mtime'} = '';   # Formatted for display: date/time date/time: last modified
-	# Variables defined/used by function ...
-	$self->{'cfg'}->{'fn'} = '';   # File name.
-	$self->{'cfg'}->{'fc'} = [];   # File contents: reference to array of strings (binmode raw).
-	$self->{'cfg'}->{'sz_read'} = 1024;   # Size: number of bytes to read from file w/ each call to read().
-
-	return (1);
-}
-
-sub set_accessors_main {
-
-	my $self = shift;
-
-	# Set variables in Editor.pm.
-
-	$self->{'obj'}->{'editor'}->set_dsp_pos 
-	  ({ 'dsp_pos' => $self->{'cfg'}->{'dsp_pos'} });
-
-	$self->{'obj'}->{'editor'}->set_sz_word 
-	  ({ 'sz_word' => $self->{'cfg'}->{'sz_word'} });
-
-	$self->{'obj'}->{'editor'}->set_sz_line 
-	  ({ 'sz_line' => $self->{'cfg'}->{'sz_line'} });
-
-	$self->{'obj'}->{'editor'}->set_sz_column 
-	  ({ 'sz_column' => $self->{'cfg'}->{'sz_column'} });
-
-	# Set variables in Cursor.pm.
-
-	$self->{'obj'}->{'cursor'}->set_curs_pos 
-	  ({ 'curs_pos' => $self->{'cfg'}->{'curs_pos'} });
-
-	$self->{'obj'}->{'cursor'}->set_curs_ctxt 
-	  ({ 'curs_ctxt' => $self->{'cfg'}->{'curs_ctxt'} });
-
-	$self->{'obj'}->{'cursor'}->set_sz_word 
-	  ({ 'sz_word' => $self->{'cfg'}->{'sz_word'} });
-
-	$self->{'obj'}->{'cursor'}->set_sz_line 
-	  ({ 'sz_line' => $self->{'cfg'}->{'sz_line'} });
-
-	$self->{'obj'}->{'cursor'}->set_sz_column 
-	  ({ 'sz_column' => $self->{'cfg'}->{'sz_column'} });
-
-	# Set variables in Editor.pm.
-
-	$self->{'obj'}->{'editor'}->set_ctxt 
-	  ({ 'ctxt' => 'DEFAULT' });
-
-	return (1);
-}
+# Functions
+#   init_cli_opts_main()
+#
+#
 
 sub init_cli_opts_main {
 
@@ -282,8 +191,10 @@ sub init_objects_main {
 		    'display'   => ZHex::Display->new(), 
 		    'editor'    => ZHex::Editor->new(), 
 		    'event'     => ZHex::Event->new(), 
+		    'eventhandler' => ZHex::EventHandler->new(), 
 		    'eventloop' => ZHex::EventLoop->new(), 
-		    'file'      => ZHex::File->new() };
+		    'file'      => ZHex::File->new(), 
+		    'mouse'     => ZHex::Mouse->new() };
 
 		foreach my $module (sort keys %{ $obj }) {
 
@@ -294,6 +205,50 @@ sub init_objects_main {
 
 	$self->{'obj'} = {};
 	$self->{'obj'} = $obj;
+
+	return (1);
+}
+
+sub set_accessors_main {
+
+	my $self = shift;
+
+	# ___________________________
+	# Set variables in Cursor.pm.
+
+	$self->{'obj'}->{'cursor'}->set_curs_ctxt ({ 'curs_ctxt' => CURS_CTXT_LINE });
+	$self->{'obj'}->{'cursor'}->set_curs_pos  ({ 'curs_pos'  => CURS_POS });
+	$self->{'obj'}->{'cursor'}->set_sz_word   ({ 'sz_word'   => SZ_WORD });
+	$self->{'obj'}->{'cursor'}->set_sz_line   ({ 'sz_line'   => SZ_LINE });
+	$self->{'obj'}->{'cursor'}->set_sz_column ({ 'sz_column' => SZ_COLUMN });
+
+	# ___________________________
+	# Set variables in Display.pm.
+
+	$self->{'obj'}->{'display'}->dimensions_set ({ 'd_width'  => DSP_WIDTH, 'd_height' => DSP_HEIGHT });
+	$self->{'obj'}->{'display'}->padding_set    ({ 'dsp_xpad' => DSP_XPAD,  'dsp_ypad' => DSP_YPAD });
+
+	# $self->{'obj'}->{'display'}->d_elements_set ({ 'd_elements' => ? });
+	# $self->{'obj'}->{'display'}->c_elements_set ({ 'c_elements' => ? });
+
+	my $dsp = 
+	  $self->{'obj'}->{'display'}->generate_blank_display 
+	    ({ 'd_width'  => DSP_WIDTH, 
+	       'd_height' => DSP_HEIGHT });
+
+	$self->{'obj'}->{'display'}->dsp_set      ({ 'dsp'      => $dsp });
+	$self->{'obj'}->{'display'}->dsp_prev_set ({ 'dsp_prev' => $dsp });
+
+	# ___________________________
+	# Set variables in Editor.pm.
+
+	$self->{'obj'}->{'editor'}->set_horiz_rule_char ({ 'char'      => EDT_HORIZ_RULE_CHAR });
+	$self->{'obj'}->{'editor'}->set_oob_char        ({ 'char'      => EDT_OOB_CHAR });
+	$self->{'obj'}->{'editor'}->set_edt_ctxt        ({ 'edt_ctxt'  => EDT_CTXT_DEFAULT });
+	$self->{'obj'}->{'editor'}->set_edt_pos         ({ 'edt_pos'   => EDT_POS });
+	$self->{'obj'}->{'editor'}->set_sz_word         ({ 'sz_word'   => SZ_WORD });
+	$self->{'obj'}->{'editor'}->set_sz_line         ({ 'sz_line'   => SZ_LINE });
+	$self->{'obj'}->{'editor'}->set_sz_column       ({ 'sz_column' => SZ_COLUMN });
 
 	return (1);
 }
@@ -310,16 +265,13 @@ sub run {
 		#   3) Stat file (system call, returns w/ file attributes).
 		#   4) Read file into memory.
 
-		if (! ($self->{'obj'}->{'file'}->check_file ({ 'fn' => $self->{'opt'}->{'cla_fn'} }))) 
-			{ die "Call to check_file() returned w/ failure"; }
-
-		if (! ($self->{'obj'}->{'file'}->set_file   ({ 'fn' => $self->{'opt'}->{'cla_fn'} }))) 
-			{ die "Call to set_file() returned w/ failure"; }
-
-		if (! ($self->{'obj'}->{'file'}->stat_file  ({ 'fn' => $self->{'opt'}->{'cla_fn'} }))) 
+		if (! ($self->{'obj'}->{'file'}->stat_file ({ 'fn' => $self->{'opt'}->{'cla_fn'} }))) 
 			{ die "Call to stat_file() returned w/ failure"; }
 
-		if (! ($self->{'obj'}->{'file'}->read_file  ({ 'fn' => $self->{'opt'}->{'cla_fn'} }))) 
+		if (! ($self->{'obj'}->{'file'}->set_file ({ 'fn' => $self->{'opt'}->{'cla_fn'} }))) 
+			{ die "Call to set_file() returned w/ failure"; }
+
+		if (! ($self->{'obj'}->{'file'}->read_file ({ 'fn' => $self->{'opt'}->{'cla_fn'} }))) 
 			{ die "Call to read_file() returned w/ failure"; }
 	}
 
@@ -349,7 +301,7 @@ sub run {
 		#   5) Move   Win32   console cursor to top left corner.
 		
 		if (! ($self->{'obj'}->{'console'}->w32cons_title_set 
-			({ 'w32cons_title' => $self->{'cfg'}->{'w32cons_title'} }))) 
+			({ 'w32cons_title' => W32CONS_TITLE }))) 
 			{ die "Call to w32cons_title_set() returned w/ failure"; }
 
 		if (! ($self->{'obj'}->{'console'}->w32cons_mode_set())) 
@@ -377,13 +329,13 @@ sub run {
 
 		$self->{'obj'}->{'display'}->dimensions_set 
 		  ({ 'd_width'  => (($self->{'obj'}->{'console'}->{'w32cons_last_col'} + 1) - 
-		                     $self->{'cfg'}->{'dsp_xpad'}), 
+		                     DSP_XPAD), 
 		     'd_height' => (($self->{'obj'}->{'console'}->{'w32cons_bottom_row'} + 1) - 
-		                     $self->{'cfg'}->{'dsp_ypad'}) });
+		                     DSP_YPAD) });
 
 		$self->{'obj'}->{'display'}->padding_set 
-		  ({ 'dsp_ypad' => $self->{'cfg'}->{'dsp_ypad'}, 
-		     'dsp_xpad' => $self->{'cfg'}->{'dsp_xpad'} });
+		  ({ 'dsp_ypad' => DSP_XPAD, 
+		     'dsp_xpad' => DSP_YPAD });
 
 		$self->{'obj'}->{'display'}->dsp_prev_set 
 		  ({ 'dsp_prev' => 
@@ -418,7 +370,7 @@ sub run {
 		# 2) Write editor display to display console.
 
 		$self->{'obj'}->{'display'}->dsp_set 
-		  ({ 'dsp' => $self->{'obj'}->{'display'}->generate_editor_display() });
+		  ({ 'dsp' => $self->{'obj'}->{'display'}->generate_editor_display ({ 'evt' => \@{ [ '', '', '', '', '', '' ] } }) });
 
 		$self->{'obj'}->{'console'}->w32cons_refresh_display 
 		  ({ 'dsp'      => $self->{'obj'}->{'display'}->{'dsp'}, 
@@ -460,18 +412,16 @@ sub run {
 		$self->{'obj'}->{'cursor'}->register_evt_callbacks();
 		$self->{'obj'}->{'display'}->register_evt_callbacks();
 		$self->{'obj'}->{'editor'}->register_evt_callbacks();
-		$self->{'obj'}->{'event'}->register_evt_callbacks();
+		$self->{'obj'}->{'eventhandler'}->register_evt_callbacks();
 		$self->{'obj'}->{'file'}->register_evt_callbacks();
+		$self->{'obj'}->{'mouse'}->register_evt_callbacks();
 	}
-
-	# sleep (5);
-	# exit (0);
 
 	PROCESS_EVENTS_IN_MAIN_EVENT_LOOP: {
 
 		# Enter main event loop.
 
-		$self->{'obj'}->{'eventloop'}->event_loop();
+		$self->{'obj'}->{'eventloop'}->evt_loop();
 	}
 
 	CLEAN_UP_AND_RESTORE_DISPLAY_CONSOLE: {

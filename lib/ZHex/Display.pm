@@ -9,7 +9,10 @@ use warnings FATAL => 'all';
 use ZHex::Common 
   qw(new 
      obj_init 
-     $VERS);
+     $VERS 
+     EDT_CTXT_DEFAULT 
+     EDT_CTXT_INSERT 
+     EDT_CTXT_SEARCH);
 
 BEGIN { require Exporter;
 	our $VERSION   = $VERS;
@@ -24,29 +27,20 @@ BEGIN { require Exporter;
 #   Function Name		Description
 #   _____________		___________
 #   init()			Initialize member variables.
-#   dimensions_set()		Store width/height of display (X,Y values in characters).
-#   padding_set()		Store left/top margin: used to pad editor display (values in characters).
-#   d_elements_set()		Accessor member function for $self->{'d_elements'} (member variable).
-#   c_elements_set()		Accessor member function for $self->{'c_elements'} (member variable).
-#   dsp_prev_init()		Initialization function for $self->{'dsp_prev'} (member variable).
-#   dsp_set()			Accessor member function for $self->{'dsp'} (member variable).
-#   dsp_prev_set()		Accessor member function for $self->{'dsp_prev'} (member variable).
+#   register_evt_callbacks()	...
 
 sub init {
 
 	my $self = shift;
 
-	$self->{'d_width'}  = '';     # Set via member function dimensions_set().
-	$self->{'d_height'} = '';     # Set via member function dimensions_set().
-
-	$self->{'dsp_xpad'} = '';     # Set via member function padding_set().
-	$self->{'dsp_ypad'} = '';     # Set via member function padding_set().
-
+	$self->{'d_width'}    = '';   # Set via member function dimensions_set().
+	$self->{'d_height'}   = '';   # Set via member function dimensions_set().
+	$self->{'dsp_xpad'}   = '';   # Set via member function padding_set().
+	$self->{'dsp_ypad'}   = '';   # Set via member function padding_set().
 	$self->{'d_elements'} = '';   # Set via member function d_elements_set().
 	$self->{'c_elements'} = '';   # Set via member function c_elements_set().
-
-	$self->{'dsp'}      = '';     # Set via member function dsp_set().
-	$self->{'dsp_prev'} = '';     # Set via member function dsp_prev_set().
+	$self->{'dsp'}        = '';   # Set via member function dsp_set().
+	$self->{'dsp_prev'}   = '';   # Set via member function dsp_prev_set().
 
 	return (1);
 }
@@ -56,24 +50,38 @@ sub register_evt_callbacks {
 	my $self = shift;
 
 	my $objCharMap   = $self->{'obj'}->{'charmap'};
+	my $objEvent     = $self->{'obj'}->{'event'};
 	my $objEventLoop = $self->{'obj'}->{'eventloop'};
 
-	$objEventLoop->register_callback 
-	  ({'ctxt'   => 'DEFAULT', 
-	    'evt_nm' => 'DEBUG_OFF', 
-	    'evt_cb' => sub { $self->debug_off(); }, 
-	    'evt' =>  [ $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({'lname' => 'LATIN SMALL LETTER D'}) }) ]
+	$objEvent->register_callback 
+	  ({'edt_ctxt' => EDT_CTXT_DEFAULT, 
+	    'evt_nm'   => 'DEBUG_OFF', 
+	    'evt_cb'   => sub { $self->debug_off(); }, 
+	    'evt' =>  [ $objEvent->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({'lname' => 'LATIN SMALL LETTER D'}) }) ]
 	   });
 
-	$objEventLoop->register_callback 
-	  ({'ctxt'   => 'DEFAULT', 
-	    'evt_nm' => 'DEBUG_ON', 
-	    'evt_cb' => sub { $self->debug_on(); }, 
-	    'evt' =>  [ $objEventLoop->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({'lname' => 'LATIN CAPITAL LETTER D'}) }) ]
+	$objEvent->register_callback 
+	  ({'edt_ctxt' => EDT_CTXT_DEFAULT, 
+	    'evt_nm'   => 'DEBUG_ON', 
+	    'evt_cb'   => sub { $self->debug_on(); }, 
+	    'evt' =>  [ $objEvent->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({'lname' => 'LATIN CAPITAL LETTER D'}) }) ]
 	   });
 
 	return (1);
 }
+
+# Accessor methods for member variables.
+#
+#   _____________		___________
+#   Function Name		Description
+#   _____________		___________
+#   dimensions_set()		Store width/height of display (X,Y values in characters).
+#   padding_set()		Store left/top margin: used to pad editor display (values in characters).
+#   d_elements_set()		Accessor member function for $self->{'d_elements'} (member variable).
+#   c_elements_set()		Accessor member function for $self->{'c_elements'} (member variable).
+#   dsp_set()			Accessor member function for $self->{'dsp'} (member variable).
+#   dsp_prev_set()		Accessor member function for $self->{'dsp_prev'} (member variable).
+#   dsp_prev_init()		Initialization function for $self->{'dsp_prev'} (member variable).
 
 sub dimensions_set {
 
@@ -82,17 +90,17 @@ sub dimensions_set {
 
 	if (! defined $arg || 
 	      ! (ref ($arg) eq 'HASH')) 
-		{ die "Call to dimensions_init() failed, argument must be hash reference"; }
+		{ die "Call to dimensions_set() failed, argument must be hash reference"; }
 
 	if (! exists  $arg->{'d_width'} || 
 	    ! defined $arg->{'d_width'} || 
 	           ! ($arg->{'d_width'} =~ /^\d+?$/)) 
-		{ die "Call to dimensions_init() failed, value of key 'd_width' must be numeric"; }
+		{ die "Call to dimensions_set() failed, value of key 'd_width' must be numeric"; }
 
 	if (! exists  $arg->{'d_height'} || 
 	    ! defined $arg->{'d_height'} || 
 	           ! ($arg->{'d_height'} =~ /^\d+?$/)) 
-		{ die "Call to dimensions_init() failed, value of key 'd_height' must be numeric"; }
+		{ die "Call to dimensions_set() failed, value of key 'd_height' must be numeric"; }
 
 	$self->{'d_width'}  = $arg->{'d_width'};    # Display width:  Number of characters in display console (horizontally).
 	$self->{'d_height'} = $arg->{'d_height'};   # Display height: Number of characters in display console (vertically).
@@ -107,17 +115,17 @@ sub padding_set {
 
 	if (!defined $arg || 
 	     ! (ref ($arg) eq 'HASH')) 
-		{ die "Call to padding_init() failed, argument must be hash reference"; }
+		{ die "Call to padding_set() failed, argument must be hash reference"; }
 
 	if (! exists  $arg->{'dsp_xpad'} || 
 	    ! defined $arg->{'dsp_xpad'} || 
 	           ! ($arg->{'dsp_xpad'} =~ /^\d+?$/)) 
-		{ die "Call to padding_init() failed, value associated w/ key 'dsp_xpad' must be numeric"; }
+		{ die "Call to padding_set() failed, value associated w/ key 'dsp_xpad' must be numeric"; }
 
 	if (! exists  $arg->{'dsp_ypad'} || 
 	    ! defined $arg->{'dsp_ypad'} || 
 	           ! ($arg->{'dsp_ypad'} =~ /^\d+?$/)) 
-		{ die "Call to padding_init() failed, value associated w/ key 'dsp_ypad' must be numeric"; }
+		{ die "Call to padding_set() failed, value associated w/ key 'dsp_ypad' must be numeric"; }
 
 	$self->{'dsp_ypad'} = $arg->{'dsp_ypad'};   # Display padding (Top margin):  number of chars padding the editor display vertically   from top.
 	$self->{'dsp_xpad'} = $arg->{'dsp_xpad'};   # Display padding (Left margin): number of chars padding the editor display horizontally from left.
@@ -163,33 +171,26 @@ sub c_elements_set {
 	return (1);
 }
 
-sub dsp_prev_init {
+sub dsp_set {
 
 	my $self = shift;
 	my $arg  = shift;
 
 	if (! defined $arg || 
 	      ! (ref ($arg) eq 'HASH')) 
-		{ die "Call to dsp_prev_set() failed, argument must be hash reference"; }
+		{ die "Call to dsp_set() failed, argument must be hash reference"; }
 
-	if (! exists  $arg->{'d_width'} || 
-	    ! defined $arg->{'d_width'} || 
-	             ($arg->{'d_width'} eq '') || 
-	      ! ($arg->{'d_width'} =~ /^\d+?$/)) 
-		{ die "Call to dsp_prev_init() failed, value associated w/ key 'd_width' must be one or more digits"; }
+	if (! exists  $arg->{'dsp'} || 
+	    ! defined $arg->{'dsp'} || 
+	      ! (ref ($arg->{'dsp'}) eq 'ARRAY')) 
+		{ die "Call to dsp_set() failed, value associated w/ key 'dsp' must be array reference"; }
 
-	if (! exists  $arg->{'d_height'} || 
-	    ! defined $arg->{'d_height'} || 
-	             ($arg->{'d_height'} eq '') || 
-	      ! ($arg->{'d_height'} =~ /^\d+?$/)) 
-		{ die "Call to dsp_prev_init() failed, value associated w/ key 'd_height' must be one or more digits"; }
+	if (! (scalar (@{ $arg->{'dsp'} }) == $self->{'d_height'})) 
+		{ die "Call to dsp_set() failed, value associated w/ key 'dsp' did not have correct number of elements defined"; }
 
-	my $dsp_prev = 
-	  $self->generate_blank_display 
-	    ({ 'd_width'  => $arg->{'d_width'}, 
-	       'd_height' => $arg->{'d_height'} });
+	$self->{'dsp'} = $arg->{'dsp'};
 
-	return ($dsp_prev);
+	return (1);
 }
 
 sub dsp_prev_set {
@@ -214,26 +215,33 @@ sub dsp_prev_set {
 	return (1);
 }
 
-sub dsp_set {
+sub dsp_prev_init {
 
 	my $self = shift;
 	my $arg  = shift;
 
 	if (! defined $arg || 
 	      ! (ref ($arg) eq 'HASH')) 
-		{ die "Call to dsp_prev_set() failed, argument must be hash reference"; }
+		{ die "Call to dsp_prev_init() failed, argument must be hash reference"; }
 
-	if (! exists  $arg->{'dsp'} || 
-	    ! defined $arg->{'dsp'} || 
-	      ! (ref ($arg->{'dsp'}) eq 'ARRAY')) 
-		{ die "Call to dsp_set() failed, value associated w/ key 'dsp' must be array reference"; }
+	if (! exists  $arg->{'d_width'} || 
+	    ! defined $arg->{'d_width'} || 
+	             ($arg->{'d_width'} eq '') || 
+	      ! ($arg->{'d_width'} =~ /^\d+?$/)) 
+		{ die "Call to dsp_prev_init() failed, value associated w/ key 'd_width' must be one or more digits"; }
 
-	if (! (scalar (@{ $arg->{'dsp'} }) == $self->{'d_height'})) 
-		{ die "Call to dsp_set() failed, value associated w/ key 'dsp' did not have correct number of elements defined"; }
+	if (! exists  $arg->{'d_height'} || 
+	    ! defined $arg->{'d_height'} || 
+	             ($arg->{'d_height'} eq '') || 
+	      ! ($arg->{'d_height'} =~ /^\d+?$/)) 
+		{ die "Call to dsp_prev_init() failed, value associated w/ key 'd_height' must be one or more digits"; }
 
-	$self->{'dsp'} = $arg->{'dsp'};
+	my $dsp_prev = 
+	  $self->generate_blank_display 
+	    ({ 'd_width'  => $arg->{'d_width'}, 
+	       'd_height' => $arg->{'d_height'} });
 
-	return (1);
+	return ($dsp_prev);
 }
 
 # Functions: Display handling.
@@ -293,22 +301,22 @@ sub d_elements_tbl {
 	#    ELEMENT NAME         WIDT HEIGHT                     H  V  COLORIZATION ELEMENTS (c_elements)                                                SUBREF
 	#    ____________         ____ ______                     _  _  __________________________________                                                ______
 	my $d_element_tbl = 
-	  [ ['column_titles',     114, 3,                         2, 0, ['column_titles'],                                                                sub{return($objEditor->gen_hdr({'d_elements'=>$self->{'d_elements'}}));}], 
-	    ['ofs_hex',           22,  $objEditor->{'sz_column'}, 2, 0, ['ofs_hex_col1', 'ofs_hex_div', 'ofs_hex_col2'],                                  sub{return($objEditor->gen_ofs_hex({'pos'=>$objEditor->{'dsp_pos'},'sz_line'=>$objEditor->{'sz_line'},'sz_column'=>$objEditor->{'sz_column'},'f_size'=>$objFile->file_len()}));}], 
-	    ['ofs_dec',           18,  $objEditor->{'sz_column'}, 2, 0, ['ofs_dec_col1', 'ofs_dec_div', 'ofs_dec_col2'],                                  sub{return($objEditor->gen_ofs_dec({'pos'=>$objEditor->{'dsp_pos'},'sz_line'=>$objEditor->{'sz_line'},'sz_column'=>$objEditor->{'sz_column'},'f_size'=>$objFile->file_len()}));}], 
-	    ['editor_disp',       43,  $objEditor->{'sz_column'}, 2, 0, ['editor_disp_col1', 'editor_disp_col2', 'editor_disp_col3', 'editor_disp_col4'], sub{return($objEditor->gen_hex_cols({'pos'=>$objEditor->{'dsp_pos'},'sz_line'=>$objEditor->{'sz_line'},'sz_column'=>$objEditor->{'sz_column'},'f_size'=>$objFile->file_len(),'col_ct'=>4,'hpad'=>1,'prefix'=>'0x'}));}], 
-	    ['char_disp',         18,  $objEditor->{'sz_column'}, 1, 0, ['char_disp'],                                                                    sub{return($objEditor->gen_char({'pos'=>$objEditor->{'dsp_pos'},'sz_line'=>$objEditor->{'sz_line'},'sz_column'=>$objEditor->{'sz_column'},'f_size'=>$objFile->file_len()}));}], 
-	    ['line_num',          6,   $objEditor->{'sz_column'}, 2, 0, ['line_num'],                                                                     sub{return($objEditor->gen_lnum({'pos'=>$objEditor->{'dsp_pos'},'sz_line'=>$objEditor->{'sz_line'},'sz_column'=>$objEditor->{'sz_column'},'f_size'=>$objFile->file_len()}));}], 
-	    ['sep',               114, 1,                         0, 2, ['sep'],                                                                          sub{return($objEditor->gen_sep({'d_elements'=>$self->{'d_elements'}}));}], 
-	    ['dbg_mouse_evt',     17,  10,                        2, 1, ['dbg_mouse_evt'],                                                                sub{return($objDebug->dbg_mouse_evt($objEventLoop->{'evt'}));}], 
-	    ['dbg_keybd_evt',     17,  8,                         2, 1, [],                                                                               sub{return($objDebug->dbg_keybd_evt($objEventLoop->{'evt'}));}], 
-	    ['dbg_unmatched_evt', 17,  8,                         2, 1, ['dbg_unmatched_evt'],                                                            sub{return($objDebug->dbg_unmatched_evt($objEventLoop->{'evt'}));}], 
-	    ['dbg_curs',          23,  5,                         2, 1, [],                                                                               sub{return($objDebug->dbg_curs());}], 
-	    ['dbg_display',       25,  12,                        2, 1, ['dbg_display'],                                                                  sub{return($objDebug->dbg_display());}], 
-	    ['dbg_count',         19,  4,                         1, 1, [],                                                                               sub{return($objDebug->dbg_count());}], 
-	    ['dbg_console',       19,  8,                         1, 1, ['dbg_console'],                                                                  sub{return($objDebug->dbg_console());}], 
-	    ['errmsg_queue',      116, 12,                        2, 1, ['errmsg_queue'],                                                                 sub{return($objDebug->errmsg_queue());}], 
-	    ['search_box',        100, 3,                         0, 0, ['search_box'],                                                                   sub{return($objEvent->search_box());}] ];
+	  [ ['column_titles',     114, 3,                         2, 0, ['column_titles'],                                                                sub {return ($objEditor->gen_hdr({'d_elements'=>$self->{'d_elements'}}));}], 
+	    ['ofs_hex',           22,  $objEditor->{'sz_column'}, 2, 0, ['ofs_hex_col1', 'ofs_hex_div', 'ofs_hex_col2'],                                  sub {return ($objEditor->gen_ofs_hex({'pos'=>$objEditor->{'edt_pos'},'sz_line'=>$objEditor->{'sz_line'},'sz_column'=>$objEditor->{'sz_column'},'f_size'=>$objFile->file_len()}));}], 
+	    ['ofs_dec',           18,  $objEditor->{'sz_column'}, 2, 0, ['ofs_dec_col1', 'ofs_dec_div', 'ofs_dec_col2'],                                  sub {return ($objEditor->gen_ofs_dec({'pos'=>$objEditor->{'edt_pos'},'sz_line'=>$objEditor->{'sz_line'},'sz_column'=>$objEditor->{'sz_column'},'f_size'=>$objFile->file_len()}));}], 
+	    ['editor_disp',       43,  $objEditor->{'sz_column'}, 2, 0, ['editor_disp_col1', 'editor_disp_col2', 'editor_disp_col3', 'editor_disp_col4'], sub {return ($objEditor->gen_hex_cols({'pos'=>$objEditor->{'edt_pos'},'sz_line'=>$objEditor->{'sz_line'},'sz_column'=>$objEditor->{'sz_column'},'f_size'=>$objFile->file_len(),'col_ct'=>4,'hpad'=>1,'prefix'=>'0x'}));}], 
+	    ['char_disp',         18,  $objEditor->{'sz_column'}, 1, 0, ['char_disp'],                                                                    sub {return ($objEditor->gen_char({'pos'=>$objEditor->{'edt_pos'},'sz_line'=>$objEditor->{'sz_line'},'sz_column'=>$objEditor->{'sz_column'},'f_size'=>$objFile->file_len()}));}], 
+	    ['line_num',          6,   $objEditor->{'sz_column'}, 2, 0, ['line_num'],                                                                     sub {return ($objEditor->gen_lnum({'pos'=>$objEditor->{'edt_pos'},'sz_line'=>$objEditor->{'sz_line'},'sz_column'=>$objEditor->{'sz_column'},'f_size'=>$objFile->file_len()}));}], 
+	    ['sep',               114, 1,                         0, 2, ['sep'],                                                                          sub {return ($objEditor->gen_sep({'d_elements'=>$self->{'d_elements'}}));}], 
+	    ['dbg_mouse_evt',     17,  10,                        2, 1, ['dbg_mouse_evt'],                                                                sub {return ($objDebug->dbg_mouse_evt({'evt'=> ${ $_[0] }->{'evt'} }));}], 
+	    ['dbg_keybd_evt',     17,  8,                         2, 1, [],                                                                               sub {return ($objDebug->dbg_keybd_evt({'evt'=> ${ $_[0] }->{'evt'} }));}], 
+	    ['dbg_unmatched_evt', 17,  8,                         2, 1, ['dbg_unmatched_evt'],                                                            sub {return ($objDebug->dbg_unmatched_evt({'evt'=> \@{ ${ $_[0] }->{'evt'} } }));}], 
+	    ['dbg_curs',          23,  5,                         2, 1, [],                                                                               sub {return ($objDebug->dbg_curs());}], 
+	    ['dbg_display',       25,  12,                        2, 1, ['dbg_display'],                                                                  sub {return ($objDebug->dbg_display());}], 
+	    ['dbg_count',         19,  4,                         1, 1, [],                                                                               sub {return ($objDebug->dbg_count());}], 
+	    ['dbg_console',       19,  8,                         1, 1, ['dbg_console'],                                                                  sub {return ($objDebug->dbg_console());}], 
+	    ['errmsg_queue',      116, 12,                        2, 1, ['errmsg_queue'],                                                                 sub {return ($objDebug->errmsg_queue());}], 
+	    ['search_box',        100, 3,                         0, 0, ['search_box'],                                                                   sub {return ($objEvent->search_box());}] ];
 
 	my $d_elements = {};
 	foreach my $d_element (@{ $d_element_tbl }) {
@@ -868,7 +876,7 @@ sub generate_blank_display {
 
 	if (! defined $arg || 
 	      ! (ref ($arg) eq 'HASH')) 
-		{ die "Call to generate_blank_e_contents() failed, argument must be hash reference"; }
+		{ die "Call to generate_blank_display() failed, argument must be hash reference"; }
 
 	if (! exists  $arg->{'d_width'} || 
 	    ! defined $arg->{'d_width'} || 
@@ -894,6 +902,17 @@ sub generate_blank_display {
 sub generate_editor_display {
 
 	my $self = shift;
+	my $arg  = shift;
+
+	if (! defined $arg || 
+	      ! (ref ($arg) eq 'HASH')) 
+		{ die "Call to generate_editor_display() failed, argument must be hash reference"; }
+
+	if (! exists  $arg->{'evt'} || 
+	    ! defined $arg->{'evt'} || 
+	             ($arg->{'evt'} eq '') || 
+	      ! (ref ($arg->{'evt'}) eq 'ARRAY')) 
+		{ die "Call to generate_editor_display() failed, value associated w/ key 'evt' must be array reference"; }
 
 	my $display = 
 	  $self->generate_blank_display 
@@ -938,12 +957,30 @@ sub generate_editor_display {
 		# Check return value to for correct number of lines, 
 		# Store return value in 'd_element' hash as value associated w/ key 'e_contents'.
 
-		my $rv = &{ $subref };
-		if (defined $rv            && 
-		      (ref ($rv) eq 'ARRAY') && 
-		(scalar (@{ $rv }) == $e_height)) {
+		if (($nm eq 'dbg_mouse_evt') || 
+		    ($nm eq 'dbg_keybd_evt') ||
+		    ($nm eq 'dbg_unknown_evt')) {
 
-			$d_el->{'e_contents'} = $rv;
+			$d_el->{'e_contents'} = $self->{'d_elements'}->{$nm}->{'subref'}-({'evt' => $arg->{'evt'} });
+		}
+		else {
+
+			$d_el->{'e_contents'} = $self->{'d_elements'}->{$nm}->{'subref'}->();
+		}
+
+		if (exists  $d_el->{'e_contents'} && 
+		    defined $d_el->{'e_contents'} && 
+		      (ref ($d_el->{'e_contents'}) eq 'ARRAY') && 
+		(scalar (@{ $d_el->{'e_contents'} }) == $e_height)) {
+
+			undef;
+		}
+		else {
+
+			$d_el->{'e_contents'} = 
+			  $self->generate_blank_e_contents 
+			    ({ 'e_width'  => $e_width, 
+			       'e_height' => $e_height });
 		}
 
 		# Line by line, substitute strings from 'e_contents' into the larger strings held in 'display'.
@@ -1025,6 +1062,8 @@ sub adjust_display {
 
 	my $self = shift;
 
+	my $objEventLoop = $self->{'obj'}->{'eventloop'};
+
 	INIT_EDITOR_DISPLAY_ELEMENTS: {
 
 		# 1) Initialize editor display elements: 
@@ -1050,7 +1089,7 @@ sub adjust_display {
 		# 2) Write editor display to display console.
 
 		$self->dsp_set 
-		  ({ 'dsp' => $self->generate_editor_display() });
+		  ({ 'dsp' => $self->generate_editor_display ({ 'evt' => \@{ [ '', '', '', '', '', '' ] } }) });
 
 		$self->{'obj'}->{'console'}->w32cons_refresh_display 
 		  ({ 'dsp'      => $self->{'dsp'}, 

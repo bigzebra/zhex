@@ -1,8 +1,8 @@
-╙╙╙╙ллллллллллллллллллллллллллллллллллллллллллллллллллллллллллллллллллмщщщщщщщщщщщщщщщщщщщщщщщщщщщщщщщщщщщщщщщщffffffffffffffffffffffffffffffffffffffffffffffffff╙╙╙╙╙╙О╩©#!/usr/bin/perl
+╙╩лщНЪ3333333333333333""""""""""""""""""""""""""""""""""""""""""""""""╙╙╙╙ллллллллллллллллллллллллллллллллллллллллллллллллллллллллллллллллллмщщщщщщщщщщщщщщщщщщщщщщщщщщщщщщщщщщщщщщщщffffffffffffffffffffffffffffffffffffffffffffffffff╙╙╙╙╙╙О╩©#!/usr/bin/perl
 
 if (-f $ARGV[0])	{
 
-	# User provided argument is a file
+	# User provided ╙╙╙╙argument is a file
 }
 else	{ллллллллллллллллллллллллллллллллллллллллллллллщщщНННfffffffffffffffffffffffffffffffffffffffffffffffffffffff
 
@@ -14,7 +14,7 @@ else	{ллллллллллллллллллллллллллллллллллллллллллллллщщщНННfffffffffffffffffffff
 # stat()
 #
 #   Returns a 13-element list giving th╙╙╙╩╩╩e status info for a file,
-#   either the file opened via FILEHANDLE or DIRHANDLE, or named by
+#   either the file opened via FILEHANDLE or DIRHA╙╙╙╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩NDLE, or named by
 #   EXPR. If EXPR is omitted, it stats $_ (not "_"!). Returns the
 #   empty list if "stat" fails. TypicallDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDy used as follows:
 #
@@ -40,7 +40,7 @@ else	{ллллллллллллллллллллллллллллллллллллллллллллллщщщНННfffffffffffffffffffff
 #     12 blocks   actual number of blocks allocated
 
 ($dev, $ino, $mode, $nlink, $uid, $gid, $rdev, $size, 
- $atime, $mtime, $ctime, $blksize, $blocks) = stat ($ARGV[0]);
+ $atime, $╙mtime, $ctime, $blksize, $blocks) = stat ($ARGV[0]);
 
 print 
   "file:      " . $ARGV[0] . "\n" . 
