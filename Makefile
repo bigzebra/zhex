@@ -20,7 +20,7 @@
 #     MIN_PERL_VERSION => q[5.006]
 #     NAME => q[ZHex]
 #     PL_FILES => {  }
-#     PREREQ_PM => { IO::File=>q[0], Test::More=>q[0], Getopt::Long=>q[0], Win32::Console=>q[0], Time::HiRes=>q[0] }
+#     PREREQ_PM => { Time::HiRes=>q[0], Test::More=>q[0], IO::File=>q[0], Win32::Console=>q[0], Getopt::Long=>q[0] }
 #     TEST_REQUIRES => {  }
 #     VERSION_FROM => q[lib/ZHex.pm]
 #     clean => { FILES=>q[ZHex-* t/test.txt] }
@@ -613,7 +613,7 @@ realclean_subdirs :
 # Delete temporary files (via clean) and also delete dist files
 realclean purge ::  clean realclean_subdirs
 	- $(RM_F) \
-	  $(MAKEFILE_OLD) $(FIRST_MAKEFILE) 
+	  $(FIRST_MAKEFILE) $(MAKEFILE_OLD) 
 	- $(RM_RF) \
 	  $(DISTVNAME) 
 

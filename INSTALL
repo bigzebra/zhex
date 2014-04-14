@@ -6,11 +6,11 @@ typically used to build an ExtUtils::MakeMaker module:
 	make test
 	make install
 
-ZHex is organized as a Perl module. The main program, named 'zhexsh.pl' uses 
-the ZHex.pm module, which in turn uses several more modules from the directory 
+ZHex is organized as a Perl module. The main program, named 'zhex.pl' uses 
+the ZHex.pm module, which in turn uses several modules from the directory 
 'ZHex'.
 
-Once installed, invoke ZHex by calling zhexsh.pl from the command line:
+Once installed, invoke ZHex by calling zhex.pl from the command line:
 
-	> zhexsh.pl --file some.exe
+	> perl zhex.pl --file <filename>
 
