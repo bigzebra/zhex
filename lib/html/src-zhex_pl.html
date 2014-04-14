@@ -3,16 +3,16 @@
 <html>
 <head>
 	<meta charset="UTF-8">
-	<title>ZHex - ZebraHex Editor v0.01: Project Source Code</title>
+	<title>ZHex Editor v0.02: Project Source Code</title>
 	<link rel="stylesheet" type="text/css" href="desert.css"/>
 </head>
 <body>
-	<h2>ZHex - ZebraHex Editor v0.01</h2>
+	<h2>ZHex Editor v0.02</h2>
 	<p>ZHex Editor source code filename: ../zhex.pl</p>
 	<div><pre class="prettyprint"><span class="com">#!/usr/bin/perl
 </span><span class="pln">
 </span><span class="com"># ______________________________________________________________________
-</span><span class="com"># ZHex - ZebraHex Editor (v0.01) (3/12/2014) (by Double Z)
+</span><span class="com"># ZHex - ZHex Editor (v0.02) (4/14/2014) (by Double Z)
 </span><span class="com"># ZHex Shell (zhexsh.pl)
 </span><span class="com"># ______________________________________________________________________
 </span><span class="pln">
@@ -25,10 +25,11 @@
 </span><span class="pln">
 </span><span class="kwd">my</span><span class="pln"> </span><span class="typ">$zhex</span><span class="pln"> </span><span class="pun">=</span><span class="pln"> </span><span class="pln">ZHex</span><span class="pun">-&gt;</span><span class="typ">new</span><span class="pun">(</span><span class="pun">)</span><span class="pun">;</span><span class="pln">
 </span><span class="pln">
-</span><span class="typ">$zhex</span><span class="pun">-&gt;</span><span class="typ">init_config_main</span><span class="pun">(</span><span class="pun">)</span><span class="pun">;</span><span class="pln">
 </span><span class="typ">$zhex</span><span class="pun">-&gt;</span><span class="typ">init_cli_opts_main</span><span class="pun">(</span><span class="pun">)</span><span class="pun">;</span><span class="pln">
 </span><span class="typ">$zhex</span><span class="pun">-&gt;</span><span class="typ">init_objects_main</span><span class="pun">(</span><span class="pun">)</span><span class="pun">;</span><span class="pln">
+</span><span class="typ">$zhex</span><span class="pun">-&gt;</span><span class="typ">init_console</span><span class="pun">(</span><span class="pun">)</span><span class="pun">;</span><span class="pln">
 </span><span class="typ">$zhex</span><span class="pun">-&gt;</span><span class="typ">set_accessors_main</span><span class="pun">(</span><span class="pun">)</span><span class="pun">;</span><span class="pln">
+</span><span class="pln">
 </span><span class="typ">$zhex</span><span class="pun">-&gt;</span><span class="typ">run</span><span class="pun">(</span><span class="pun">)</span><span class="pun">;</span><span class="pln">
 </span><span class="pln">
 </span><span class="kwd">exit</span><span class="pln"> </span><span class="pun">(</span><span class="atv">0</span><span class="pun">)</span><span class="pun">;</span><span class="pln">

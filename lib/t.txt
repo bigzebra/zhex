@@ -1,160 +1,118 @@
-ª»Ìİîÿ3333333333333333""""""""""""""""""""""""""""""""""""""""""""""""ªªªªÌÌÌÌÌÌÌÌÌÌÌÌÌÌÌÌÌÌÌÌÌÌÌÌÌÌÌÌÌÌÌÌÌÌÌÌÌÌÌÌÌÌÌÌÌÌÌÌÌÌÌÌÌÌÌÌÌÌÌÌÌÌÌÌÌÌÍİİİİİİİİİİİİİİİİİİİİİİİİİİİİİİİİİİİİİİİİffffffffffffffffffffffffffffffffffffffffffffffffffªªªªªªï»¿#!/usr/bin/perl
+Lorem Ipsum
 
-if (-f $ARGV[0])	{
+Discovery
 
-	# User provided ªªªªargument is a file
-}
-else	{ÌÌÌÌÌÌÌÌÌÌÌÌÌÌÌÌÌÌÌÌÌÌÌÌÌÌÌÌÌÌÌÌÌÌÌÌÌÌÌÌÌÌÌÌÌÌİİİîîîfffffffffffffffffffffffffffffffffffffffffffffffffffffff
+"Lorem ipsum" text is derived from sections 1.10.32â€“3 of Cicero's De 
+finibus bonorum et malorum (On the Ends of Goods and Evils, or 
+alternatively [About] The Purposes of Good and Evil). The original 
+passage began: Neque porro quisquam est qui dolorem ipsum quia dolor sit 
+amet consectetur adipisci velit (translation: "Neither is there anyone 
+who loves, pursues or desires pain itself because it is pain"). 
 
-	# User provided argument is not a file
+It is not known exactly when the text acquired its current standard 
+form; it may have been as late as the 1960s. Richard McClintock, a Latin 
+scholar who was the publications director at Hampden-Sydney College in 
+Virginia, discovered the source of the passage sometime before 1982 
+while searching for instances of the Latin word "consectetur", rarely 
+used in classical literature. The physical source of the Lorem 
+Ipsum text may be the 1914 Loeb Classical Library Edition of the De 
+Finibus, where the Latin text finishes page 34 with "Neque porro 
+quisquam est qui do-" and begins page 36 with "lorem ipsum (et 
+seq.)â€¦", suggesting that the galley type of that page was scrambled to 
+make the dummy text seen today.
 
-	die "Provide a filename w/ path as first argument.\n";
-}
 
-# stat()
-#
-#   Returns a 13-element list giving thªªª»»»e status info for a file,
-#   either the file opened via FILEHANDLE or DIRHAªªª»»»»»»»»»»»»»»»»»»»»»»»»»»»»»»»»»»»»»NDLE, or named by
-#   EXPR. If EXPR is omitted, it stats $_ (not "_"!). Returns the
-#   empty list if "stat" fails. TypicallDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDy used as follows:
-#
-#     ($dev,$ino,$mode,$nlink,$uid,$gid,$rdev,$size,
-#        $atime,$mtime,$ctime,$blksize,$blocks)
-#            = stat($filename);
-#
-#   Not all fields are supported on all filesystem types. Here are
-#   the meanings of the fields:
-#
-#      0 dev      device number of filesystem
-#      1 ino      inode number
-#      2 mode     file mode  (type and permissions)
-#      3 nlink    number of (hard) links to the file
-#      4 uid      numeric user ID of file's owner
-#      5 gid      numeric group ID of file's owner
-#      6 rdev     the device identifier (special files only)
-#      7 size     total size of file, in bytes
-#      8 atime    last access time in seconds since the epoch
-#      9 mtime    last modify time in seconds since the epoch
-#     10 ctime    inode change time in seconds since the epoch (*)
-#     11 blksize  preferred block size for file system I/O
-#     12 blocks   actual number of blocks allocated
+Latin source
 
-($dev, $ino, $mode, $nlink, $uid, $gid, $rdev, $size, 
- $atime, $ªmtime, $ctime, $blksize, $blocks) = stat ($ARGV[0]);
+The original version (with the excerpted items highlighted) appears in 
+the 1914 Loeb Classical Library Edition of the De Finibus, Book 1, 
+sections 32-3:
 
-print 
-  "file:      " . $ARGV[0] . "\n" . 
-  "  dev:     " . $dev     . "\n" . 
-  "  ino:     " . $ino     . "\n" .  
-  "  mode:    " . $mode    . "\n" . 
-  "  nlink:   " . $nlink   . "\n" . 
-  "  uid:     " . $uid     . "\n" . 
-  "  gid:     " . $gid     . "\n" . 
-  "  rdev:    " . $rdev    . "\n" . 
-  "  size:    " . $size    . "\n" . 
-  "  atime:   " . $atime   . "\n" . 
-  "  mtime:   " . $mtime   . "\n" . 
-  "  ctime:   " . $ctime   . "\n" . 
-  "  blksize: " . $blksize . "\n" . 
-  "  blocks:  " . $blocks  . "\n\n";
+Sed ut perspiciatis, unde omnis iste natus error sit voluptatem 
+accusantium doloremque laudantium, totam rem aperiam eaque ipsa, quae ab 
+illo inventore veritatis et quasi architecto beatae vitae dicta sunt, 
+explicabo. Nemo enim ipsam voluptatem, quia voluptas sit, aspernatur aut 
+odit aut fugit, sed quia consequuntur magni dolores eos, qui ratione 
+voluptatem sequi nesciunt, neque porro quisquam est, qui dolorem ipsum, 
+quia dolor sit amet consectetur adipisci[ng] velit, sed quia non numquam 
+[do] eius modi tempora inci[di]dunt, ut labore et dolore magnam aliquam 
+quaerat voluptatem. Ut enim ad minima veniam, quis nostrum 
+exercitationem ullam corporis suscipit laboriosam, nisi ut aliquid ex ea 
+commodi consequatur? Quis autem vel eum iure reprehenderit, qui in ea 
+voluptate velit esse, quam nihil molestiae consequatur, vel illum, qui 
+dolorem eum fugiat, quo voluptas nulla pariatur?
 
-undef $/; # Turn off record seperator for read (file-at-once)
-open my $fh, $ARGV[0] or die "Can't open file $file $!\n";
-binmode $fh;
-my $data = <$fh>;
-close $fh;
+At vero eos et accusamus et iusto odio dignissimos ducimus, qui 
+blanditiis praesentium voluptatum deleniti atque corrupti, quos dolores 
+et quas molestias excepturi sint, obcaecati cupiditate non provident, 
+similique sunt in culpa, qui officia deserunt mollitia animi, id est 
+laborum et dolorum fuga. Et harum quidem rerum facilis est et expedita 
+distinctio. Nam libero tempore, cum soluta nobis est eligendi optio, 
+cumque nihil impedit, quo minus id, quod maxime placeat, facere 
+possimus, omnis voluptas assumenda est, omnis dolor repellendus. 
+Temporibus autem quibusdam et aut officiis debitis aut rerum 
+necessitatibus saepe eveniet, ut et voluptates repudiandae sint et 
+molestiae non recusandae. Itaque earum rerum hic tenetur a sapiente 
+delectus, ut aut reiciendis voluptatibus maiores alias consequatur aut 
+perferendis doloribus asperiores repellat...
 
-# Convert data to hex form
 
-my $first3chars = unpack 'H6', $data;
-if ($first3chars eq "efbbbf")	{
+English translation
 
-	$hex_offset = $hex_offset + 3;
-}
-else	{
+H. Rackham's 1914 translation â€“ in the aforementioned Loeb Classical 
+Library edition - with the major source of lorem ipsum highlighted:
 
-	print "NO-I!!!, $first3chars\n\n";
-	exit (0);
-}
+But I must explain to you how all this mistaken idea of denouncing of a 
+pleasure and praising pain was born and I will give you a complete 
+account of the system, and expound the actual teachings of the great 
+explorer of the truth, the master-builder of human happiness. No one 
+rejects, dislikes, or avoids pleasure itself, because it is pleasure, 
+but because those who do not know how to pursue pleasure rationally 
+encounter consequences that are extremely painful. Nor again is there 
+anyone who loves or pursues or desires to obtain pain of itself, because 
+it is pain, but occasionally circumstances occur in which toil and pain 
+can procure him some great pleasure. To take a trivial example, which of 
+us ever undertakes laborious physical exercise, except to obtain some 
+advantage from it? But who has any right to find fault with a man who 
+chooses to enjoy a pleasure that has no annoying consequences, or one 
+who avoids a pain that produces no resultant pleasure?
 
-my $hex = unpack 'H*', $data;
-my $hex_len = length ($hex);
+On the other hand, we denounce with righteous indignation and dislike 
+men who are so beguiled and demoralized by the charms of pleasure of the 
+moment, so blinded by desire, that they cannot foresee the pain and 
+trouble that are bound to ensue; and equal blame belongs to those who 
+fail in their duty through weakness of will, which is the same as saying 
+through shrinking from toil and pain. These cases are perfectly simple 
+and easy to distinguish. In a free hour, when our power of choice is 
+untrammeled and when nothing prevents our being able to do what we like 
+best, every pleasure is to be welcomed and every pain avoided. But in 
+certain circumstances and owing to the claims of duty or the obligations 
+of business it will frequently occur that pleasures have to be 
+repudiated and annoyances accepted. The wise man therefore always holds 
+in these matters to this principle of selection: he rejects pleasures to 
+secure other greater pleasures, or else he endures pains to avoid worse 
+pains.
 
-my $hex_offset       = 0;
-my $data_offset      = 0;
-my $hex_substr_len   = 8;
-my $data_substr_len  = 4;
 
-my $hdr = 
-"-Offset-(Hex)---------  -Offset-(Decimal)-  -Word--#1- -Word--#2- -Word--#3- -Word--#4-\n" . 
-"____First_->_Last_____  __First_->_Last___  _(4_Byte)_ _(4_Byte)_ _(4_Byte)_ _(4_Byte)_\n";
+Variations
 
-print $hdr;
+Today's popular version of Lorem ipsum was first created in the 
+mid-1980s for Aldus Corporation's breakthrough desktop publishing 
+program PageMaker for the Apple Macintosh. Aldus adapted older forms 
+of the lorem text from typography samples to use in PageMaker's graphics 
+and word processing templates.
 
-while ($hex_offset < $hex_len)	{
+Nowadays a variety of software, including text editors and plug-ins, can 
+generate semi-random "lorem-like text", which often has little or 
+nothing in common with the canonical adaptations other than looking like 
+(and often being) jumbled Latin. Apple's Pages and Keynote software 
+employ such jumbled text as sample screenplay layout. Lorem ipsum is 
+also featured on Joomla! and WordPress web content managers. Microsoft 
+Office Word 2007, 2010 and 2013 have a Lorem ipsum feature. Adobe 
+Dreamweaver offers a "Lorem and More" extension for inserting "lorem 
+text" into web pages. 
 
-	# substr (EXPR, OFFSET, LENGTH) 
+Cicero's first Oration against Catiline - Quo usque tandem abutere, 
+Catilina, patientia nostra? Quam diu etiam furor iste tuus nos 
+eludet?... - is sometimes used in type specimens.
 
-	my $hex_substr_word1 = substr ($hex, $hex_offset + ($hex_substr_len * 0), $hex_substr_len);
-
-	my ($hex_chr1, $hex_chr2, $hex_chr3, $hex_chr4) = 
-	  (  "0x" . substr ($hex, ($hex_offset + 0), 2), 
-	     "0x" . substr ($hex, ($hex_offset + 2), 2), 
-	     "0x" . substr ($hex, ($hex_offset + 4), 2), 
-	     "0x" . substr ($hex, ($hex_offset + 6), 2)  );
-
-	my ($data_chr1, $data_chr2, $data_chr3, $data_chr4) = 
-	  (  pack ("W4", $hex_chr1), 
-	     pack ("W4", $hex_chr2), 
-	     pack ("W4", $hex_chr3), 
-	     pack ("W4", $hex_chr4)  );
-	
-	my ($unicode_chr1, $unicode_chr2, $unicode_chr3, $unicode_chr4);
-
-	if ($data_chr1 =~ /[\x30-\x39]|[\x41-\x5a]|[\x61-\x7a]/)	{ 
-
-		$unicode_chr1 = $data_chr1;
-	}
-	else	{
-
-		$unicode_chr1 = $hex_chr1;
-	}
-		
-	# 0xefbbbf30  0x31323334  0x35363738  0x39616263
-	# 0x64656667  0x68696a6b  0x6c6d6e6f  0x70717273
-	# 0x74757677  0x78797a41  0x42434445  0x46474849
-	# 0x4a4b4c4d  0x4e4f5051  0x52535455  0x56575859
-	# 0x5a214023  0x24255e26  0x2a28295f  0x2b2d3d5b
-	# 0x5d7b7d3b  0x3a27223c  0x3e2c2e2f  0x3f607e
-
-	my $hex_substr_word2 = substr ($hex, $hex_offset + ($hex_substr_len * 1), $hex_substr_len);
-	my $hex_substr_word3 = substr ($hex, $hex_offset + ($hex_substr_len * 2), $hex_substr_len);
-	my $hex_substr_word4 = substr ($hex, $hex_offset + ($hex_substr_len * 3), $hex_substr_len);
-
-	$fmt_offset_start_hex  = sprintf ("%08x",  $data_offset);
-	$fmt_offset_finish_hex = sprintf ("%08x", ($data_offset + ($data_substr_len * 4)));
-	$fmt_offset_start_dec  = sprintf ("%08d",  $data_offset);
-	$fmt_offset_finish_dec = sprintf ("%08d", ($data_offset + ($data_substr_len * 4)));
-
-	print 
-	  "0x" . $fmt_offset_start_hex  . 
-	  "->" . 
-	  "0x" . $fmt_offset_finish_hex . 
-	  " " x 2 . 
-	  $fmt_offset_start_dec  . 
-	  "->" . 
-	  $fmt_offset_finish_dec . 
-	  " " x 2 . 
-	  "0x" . $hex_substr_word1  . " " x 1 . 
-	  "0x" . $hex_substr_word2  . " " x 1 . 
-	  "0x" . $hex_substr_word3  . " " x 1 . 
-	  "0x" . $hex_substr_word4  . " " x 1 . 
-	  "HEX CHR 1: [" . $hex_chr1 . "] DATA CHR 1: [" . $data_chr1 . "]\n";
-
-	$hex_offset  += ($hex_substr_len  * 4);
-	$data_offset += ($data_substr_len * 4);
-}
-
-# print $hex;
-
-exit (0);

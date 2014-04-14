@@ -3,11 +3,11 @@
 <html>
 <head>
 	<meta charset="UTF-8">
-	<title>ZHex - ZebraHex Editor v0.01: Project Source Code</title>
+	<title>ZHex Editor v0.02: Project Source Code</title>
 	<link rel="stylesheet" type="text/css" href="desert.css"/>
 </head>
 <body>
-	<h2>ZHex - ZebraHex Editor v0.01</h2>
+	<h2>ZHex Editor v0.02</h2>
 	<p>ZHex Editor source code filename: ../ZHex/Console.pm</p>
 	<div><pre class="prettyprint"><span class="com">#!/usr/bin/perl
 </span><span class="pln">
@@ -17,7 +17,13 @@
 </span><span class="kwd">use</span><span class="pln"> </span><span class="kwd">strict</span><span class="pun">;</span><span class="pln">
 </span><span class="kwd">use</span><span class="pln"> </span><span class="kwd">warnings</span><span class="pln"> </span><span class="str">FATAL</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;all&#39;</span><span class="pun">;</span><span class="pln">
 </span><span class="pln">
-</span><span class="kwd">use</span><span class="pln"> </span><span class="pln">ZHex::Common</span><span class="pln"> </span><span class="str">qw(new obj_init $VERS)</span><span class="pun">;</span><span class="pln">
+</span><span class="kwd">use</span><span class="pln"> </span><span class="pln">ZHex::Common</span><span class="pln"> 
+</span><span class="pln">  </span><span class="str">qw(new 
+     obj_init 
+     $VERS 
+     EDT_CTXT_DEFAULT 
+     EDT_CTXT_INSERT 
+     EDT_CTXT_SEARCH)</span><span class="pun">;</span><span class="pln">
 </span><span class="pln">
 </span><span class="kwd">BEGIN</span><span class="pln"> </span><span class="pun">{</span><span class="pln"> </span><span class="kwd">require</span><span class="pln"> </span><span class="pln">Exporter</span><span class="pun">;</span><span class="pln">
 </span><span class="pln">	</span><span class="kwd">our</span><span class="pln"> </span><span class="typ">$VERSION</span><span class="pln">   </span><span class="pun">=</span><span class="pln"> </span><span class="typ">$VERS</span><span class="pun">;</span><span class="pln">
@@ -118,7 +124,7 @@
 	</span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;w32cons_attr_orig&#39;</span><span class="pun">}</span><span class="pln">      </span><span class="pun">=</span><span class="pln"> </span><span class="str">&#39;&#39;</span><span class="pun">;</span><span class="pln">   </span><span class="com"># Original console attributes STDOUT [used by function Write()].</span><span class="pln">
 </span><span class="pln">	</span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;w32cons_in_attr_orig&#39;</span><span class="pun">}</span><span class="pln">   </span><span class="pun">=</span><span class="pln"> </span><span class="str">&#39;&#39;</span><span class="pun">;</span><span class="pln">   </span><span class="com"># Original console attributes STDIN  [used by function Write()].</span><span class="pln">
 </span><span class="pln">	</span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;w32cons_title_orig&#39;</span><span class="pun">}</span><span class="pln">     </span><span class="pun">=</span><span class="pln"> </span><span class="str">&#39;&#39;</span><span class="pun">;</span><span class="pln">   </span><span class="com"># Original display title</span><span class="pln">
-</span><span class="pln">	</span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;w32cons_title_ZHex&#39;</span><span class="pun">}</span><span class="pln"> </span><span class="pun">=</span><span class="pln"> </span><span class="str">&#39;&#39;</span><span class="pun">;</span><span class="pln">   </span><span class="com"># Console window title (displayed in title bar).</span><span class="pln">
+</span><span class="pln">	</span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;w32cons_title_zhex&#39;</span><span class="pun">}</span><span class="pln">     </span><span class="pun">=</span><span class="pln"> </span><span class="str">&#39;&#39;</span><span class="pun">;</span><span class="pln">   </span><span class="com"># Console window title (displayed in title bar).</span><span class="pln">
 </span><span class="pln">	</span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;w32cons_codep_in&#39;</span><span class="pun">}</span><span class="pln">       </span><span class="pun">=</span><span class="pln"> </span><span class="str">&#39;&#39;</span><span class="pun">;</span><span class="pln">   </span><span class="com"># ...</span><span class="pln">
 </span><span class="pln">	</span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;w32cons_codep_out&#39;</span><span class="pun">}</span><span class="pln">      </span><span class="pun">=</span><span class="pln"> </span><span class="str">&#39;&#39;</span><span class="pun">;</span><span class="pln">   </span><span class="com"># ...</span><span class="pln">
 </span><span class="pln">	</span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;w32cons_buf_cols&#39;</span><span class="pun">}</span><span class="pln">       </span><span class="pun">=</span><span class="pln"> </span><span class="str">&#39;&#39;</span><span class="pun">;</span><span class="pln">   </span><span class="com"># (X/Col) Current size console buffer.</span><span class="pln">
@@ -978,200 +984,6 @@
 	</span><span class="kwd">return</span><span class="pln"> </span><span class="pun">(</span><span class="typ">$attr_combined</span><span class="pun">)</span><span class="pun">;</span><span class="pln">
 </span><span class="pun">}</span><span class="pln">
 </span><span class="pln">
-</span><span class="com"># Functions: Mouse event handlers.
-</span><span class="com">#
-</span><span class="com">#   ____		___________
-</span><span class="com">#   NAME		DESCRIPTION
-</span><span class="com">#   ____		___________
-</span><span class="com">#   lmouse()		Left  mouse button handler. Call function based upon context.
-</span><span class="com">#   rmouse()		Right mouse button handler. Call function based upon context.
-</span><span class="com">#   mouse_over()	Highlight character below mouse pointer, restore attributes to character at previous mouse position.
-</span><span class="pln">
-</span><span class="lit">sub</span><span class="pln"> </span><span class="typ">lmouse</span><span class="pln"> </span><span class="pun">{</span><span class="pln">
-</span><span class="pln">
-	</span><span class="kwd">my</span><span class="pln"> </span><span class="typ">$self</span><span class="pln"> </span><span class="pun">=</span><span class="pln"> </span><span class="kwd">shift</span><span class="pun">;</span><span class="pln">
-</span><span class="pln">
-	</span><span class="kwd">my</span><span class="pln"> </span><span class="typ">$objCursor</span><span class="pln">    </span><span class="pun">=</span><span class="pln"> </span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;obj&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;cursor&#39;</span><span class="pun">}</span><span class="pun">;</span><span class="pln">
-</span><span class="pln">	</span><span class="kwd">my</span><span class="pln"> </span><span class="typ">$objDisplay</span><span class="pln">   </span><span class="pun">=</span><span class="pln"> </span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;obj&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;display&#39;</span><span class="pun">}</span><span class="pun">;</span><span class="pln">
-</span><span class="pln">	</span><span class="kwd">my</span><span class="pln"> </span><span class="typ">$objEditor</span><span class="pln">    </span><span class="pun">=</span><span class="pln"> </span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;obj&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;editor&#39;</span><span class="pun">}</span><span class="pun">;</span><span class="pln">
-</span><span class="pln">	</span><span class="kwd">my</span><span class="pln"> </span><span class="typ">$objEventLoop</span><span class="pln"> </span><span class="pun">=</span><span class="pln"> </span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;obj&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;eventloop&#39;</span><span class="pun">}</span><span class="pun">;</span><span class="pln">
-</span><span class="pln">
-	</span><span class="kwd">my</span><span class="pln"> </span><span class="typ">$xpos</span><span class="pln"> </span><span class="pun">=</span><span class="pln"> </span><span class="typ">$objEventLoop</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;evt&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="pun">[</span><span class="atv">1</span><span class="pun">]</span><span class="pun">;</span><span class="pln">
-</span><span class="pln">	</span><span class="kwd">my</span><span class="pln"> </span><span class="typ">$ypos</span><span class="pln"> </span><span class="pun">=</span><span class="pln"> </span><span class="typ">$objEventLoop</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;evt&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="pun">[</span><span class="atv">2</span><span class="pun">]</span><span class="pun">;</span><span class="pln">
-</span><span class="pln">
-	</span><span class="kwd">my</span><span class="pln"> </span><span class="typ">@dsp_pos</span><span class="pun">;</span><span class="pln">
-</span><span class="pln">	</span><span class="lit">SEARCH_DSP_POS:</span><span class="pln"> 
-</span><span class="pln">	  </span><span class="kwd">foreach</span><span class="pln"> </span><span class="kwd">my</span><span class="pln"> </span><span class="typ">$pos</span><span class="pln"> 
-</span><span class="pln">	    </span><span class="pun">(</span><span class="typ">$objEditor</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;dsp_pos&#39;</span><span class="pun">}</span><span class="pln"> </span><span class="pun">..</span><span class="pln"> </span><span class="pun">(</span><span class="typ">$objEditor</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;dsp_pos&#39;</span><span class="pun">}</span><span class="pln"> </span><span class="pun">+</span><span class="pln"> 
-</span><span class="pln">	                                </span><span class="pun">(</span><span class="typ">$objEditor</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;sz_line&#39;</span><span class="pun">}</span><span class="pln"> </span><span class="pun">*</span><span class="pln"> 
-</span><span class="pln">	                                 </span><span class="typ">$objEditor</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;sz_column&#39;</span><span class="pun">}</span><span class="pun">)</span><span class="pun">)</span><span class="pun">)</span><span class="pln"> </span><span class="pun">{</span><span class="pln">
-</span><span class="pln">
-		</span><span class="kwd">my</span><span class="pln"> </span><span class="pun">(</span><span class="typ">$xc</span><span class="pun">,</span><span class="pln"> </span><span class="typ">$yc</span><span class="pun">)</span><span class="pln"> </span><span class="pun">=</span><span class="pln"> 
-</span><span class="pln">		  </span><span class="typ">$objCursor</span><span class="pun">-&gt;</span><span class="typ">dsp_coord</span><span class="pln"> 
-</span><span class="pln">		    </span><span class="pun">(</span><span class="pun">{</span><span class="pln"> </span><span class="str">&#39;curs_pos&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="typ">$pos</span><span class="pun">,</span><span class="pln"> 
-</span><span class="pln">		       </span><span class="str">&#39;dsp_pos&#39;</span><span class="pln">  </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="typ">$objEditor</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;dsp_pos&#39;</span><span class="pun">}</span><span class="pun">,</span><span class="pln"> 
-</span><span class="pln">		       </span><span class="str">&#39;dsp_ypad&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="typ">$objDisplay</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;dsp_xpad&#39;</span><span class="pun">}</span><span class="pun">,</span><span class="pln"> 
-</span><span class="pln">		       </span><span class="str">&#39;dsp_xpad&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="typ">$objDisplay</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;dsp_ypad&#39;</span><span class="pun">}</span><span class="pln"> </span><span class="pun">}</span><span class="pun">)</span><span class="pun">;</span><span class="pln">
-</span><span class="pln">
-		</span><span class="kwd">if</span><span class="pln"> </span><span class="pun">(</span><span class="pun">(</span><span class="pun">(</span><span class="typ">$xpos</span><span class="pln"> </span><span class="pun">==</span><span class="pln"> </span><span class="pun">(</span><span class="typ">$xc</span><span class="pln"> </span><span class="pun">+</span><span class="pln"> </span><span class="typ">$objDisplay</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;dsp_xpad&#39;</span><span class="pun">}</span><span class="pun">)</span><span class="pun">)</span><span class="pln"> </span><span class="pun">||</span><span class="pln"> 
-</span><span class="pln">		     </span><span class="pun">(</span><span class="typ">$xpos</span><span class="pln"> </span><span class="pun">==</span><span class="pln"> </span><span class="pun">(</span><span class="typ">$xc</span><span class="pln"> </span><span class="pun">+</span><span class="pln"> </span><span class="typ">$objDisplay</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;dsp_xpad&#39;</span><span class="pun">}</span><span class="pln"> </span><span class="pun">+</span><span class="pln"> </span><span class="atv">1</span><span class="pun">)</span><span class="pun">)</span><span class="pun">)</span><span class="pln"> </span><span class="pun">&amp;&amp;</span><span class="pln"> 
-</span><span class="pln">		     </span><span class="pun">(</span><span class="typ">$ypos</span><span class="pln"> </span><span class="pun">==</span><span class="pln"> </span><span class="pun">(</span><span class="typ">$yc</span><span class="pln"> </span><span class="pun">+</span><span class="pln"> </span><span class="typ">$objDisplay</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;dsp_ypad&#39;</span><span class="pun">}</span><span class="pun">)</span><span class="pun">)</span><span class="pun">)</span><span class="pln"> </span><span class="pun">{</span><span class="pln">
-</span><span class="pln">
-			</span><span class="kwd">if</span><span class="pln"> </span><span class="pun">(</span><span class="typ">$objCursor</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;curs_ctxt&#39;</span><span class="pun">}</span><span class="pln"> </span><span class="pun">==</span><span class="pln"> </span><span class="atv">0</span><span class="pun">)</span><span class="pln"> </span><span class="pun">{</span><span class="pln">
-</span><span class="pln">
-</span><span class="com">				# Cursor in &quot;line&quot; context: highlight line 
-</span><span class="com">				# beginning at align_line_boundary().
-</span><span class="pln">
-				</span><span class="kwd">my</span><span class="pln"> </span><span class="typ">$lb_pos</span><span class="pln"> </span><span class="pun">=</span><span class="pln"> </span><span class="typ">$objCursor</span><span class="pun">-&gt;</span><span class="typ">align_line_boundary</span><span class="pln"> </span><span class="pun">(</span><span class="pun">{</span><span class="pln"> </span><span class="str">&#39;pos&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="typ">$pos</span><span class="pln"> </span><span class="pun">}</span><span class="pun">)</span><span class="pun">;</span><span class="pln">
-</span><span class="pln">				</span><span class="kwd">if</span><span class="pln"> </span><span class="pun">(</span><span class="kwd">defined</span><span class="pln"> </span><span class="typ">$lb_pos</span><span class="pln"> </span><span class="pun">&amp;&amp;</span><span class="pln"> 
-</span><span class="pln">				            </span><span class="typ">$lb_pos</span><span class="pln"> </span><span class="pun">=~</span><span class="pln"> </span><span class="str">/^\d+?$/</span><span class="pun">)</span><span class="pln"> </span><span class="pun">{</span><span class="pln">
-</span><span class="pln">
-					</span><span class="typ">$objCursor</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;curs_pos&#39;</span><span class="pun">}</span><span class="pln"> </span><span class="pun">=</span><span class="pln"> </span><span class="typ">$lb_pos</span><span class="pun">;</span><span class="pln">
-</span><span class="pln">				</span><span class="pun">}</span><span class="pln">
-</span><span class="pln">			</span><span class="pun">}</span><span class="pln">
-</span><span class="pln">			</span><span class="kwd">elsif</span><span class="pln"> </span><span class="pun">(</span><span class="typ">$objCursor</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;curs_ctxt&#39;</span><span class="pun">}</span><span class="pln"> </span><span class="pun">==</span><span class="pln"> </span><span class="atv">1</span><span class="pun">)</span><span class="pln"> </span><span class="pun">{</span><span class="pln">
-</span><span class="pln">
-</span><span class="com">				# Cursor in &quot;word&quot; context: highlight word 
-</span><span class="com">				# beginning at align_word_boundary().
-</span><span class="pln">
-				</span><span class="kwd">my</span><span class="pln"> </span><span class="typ">$wb_pos</span><span class="pln"> </span><span class="pun">=</span><span class="pln"> </span><span class="typ">$objCursor</span><span class="pun">-&gt;</span><span class="typ">align_word_boundary</span><span class="pln"> </span><span class="pun">(</span><span class="pun">{</span><span class="pln"> </span><span class="str">&#39;pos&#39;</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="typ">$pos</span><span class="pln"> </span><span class="pun">}</span><span class="pun">)</span><span class="pun">;</span><span class="pln">
-</span><span class="pln">				</span><span class="kwd">if</span><span class="pln"> </span><span class="pun">(</span><span class="kwd">defined</span><span class="pln"> </span><span class="typ">$wb_pos</span><span class="pln"> </span><span class="pun">&amp;&amp;</span><span class="pln"> 
-</span><span class="pln">				            </span><span class="typ">$wb_pos</span><span class="pln"> </span><span class="pun">=~</span><span class="pln"> </span><span class="str">/^\d+?$/</span><span class="pun">)</span><span class="pln"> </span><span class="pun">{</span><span class="pln">
-</span><span class="pln">
-					</span><span class="typ">$objCursor</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;curs_pos&#39;</span><span class="pun">}</span><span class="pln"> </span><span class="pun">=</span><span class="pln"> </span><span class="typ">$wb_pos</span><span class="pun">;</span><span class="pln">
-</span><span class="pln">				</span><span class="pun">}</span><span class="pln">
-</span><span class="pln">			</span><span class="pun">}</span><span class="pln">
-</span><span class="pln">			</span><span class="kwd">elsif</span><span class="pln"> </span><span class="pun">(</span><span class="typ">$objCursor</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;curs_ctxt&#39;</span><span class="pun">}</span><span class="pln"> </span><span class="pun">==</span><span class="pln"> </span><span class="atv">2</span><span class="pun">)</span><span class="pln"> </span><span class="pun">{</span><span class="pln">
-</span><span class="pln">
-				</span><span class="typ">$objCursor</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;curs_pos&#39;</span><span class="pun">}</span><span class="pln"> </span><span class="pun">=</span><span class="pln"> </span><span class="typ">$pos</span><span class="pun">;</span><span class="pln">
-</span><span class="pln">			</span><span class="pun">}</span><span class="pln">
-</span><span class="pln">			</span><span class="kwd">else</span><span class="pln"> </span><span class="pun">{</span><span class="pln">
-</span><span class="pln">
-				</span><span class="kwd">return</span><span class="pln"> </span><span class="pun">(</span><span class="kwd">undef</span><span class="pun">)</span><span class="pun">;</span><span class="pln">
-</span><span class="pln">			</span><span class="pun">}</span><span class="pln">
-</span><span class="pln">
-			</span><span class="kwd">last</span><span class="pln"> </span><span class="pln">SEARCH_DSP_POS</span><span class="pun">;</span><span class="pln">
-</span><span class="pln">		</span><span class="pun">}</span><span class="pln">
-</span><span class="pln">	</span><span class="pun">}</span><span class="pln">
-</span><span class="pln">
-</span><span class="com">	# $self-&gt;{&#39;CONS&#39;}-&gt;FillAttr (($FG_BLACK | $BG_LIGHTMAGENTA), 1, $xpos, $ypos);
-</span><span class="pln">
-	</span><span class="kwd">return</span><span class="pln"> </span><span class="pun">(</span><span class="atv">1</span><span class="pun">)</span><span class="pun">;</span><span class="pln"> 
-</span><span class="pun">}</span><span class="pln">
-</span><span class="pln">
-</span><span class="lit">sub</span><span class="pln"> </span><span class="typ">rmouse</span><span class="pln"> </span><span class="pun">{</span><span class="pln">
-</span><span class="pln">
-	</span><span class="kwd">my</span><span class="pln"> </span><span class="typ">$self</span><span class="pln"> </span><span class="pun">=</span><span class="pln"> </span><span class="kwd">shift</span><span class="pun">;</span><span class="pln">
-</span><span class="pln">
-	</span><span class="kwd">my</span><span class="pln"> </span><span class="typ">$objEventLoop</span><span class="pln"> </span><span class="pun">=</span><span class="pln"> </span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;obj&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;eventloop&#39;</span><span class="pun">}</span><span class="pun">;</span><span class="pln">
-</span><span class="pln">
-	</span><span class="kwd">my</span><span class="pln"> </span><span class="typ">$xpos</span><span class="pln"> </span><span class="pun">=</span><span class="pln"> </span><span class="typ">$objEventLoop</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;evt&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="pun">[</span><span class="atv">1</span><span class="pun">]</span><span class="pun">;</span><span class="pln">
-</span><span class="pln">	</span><span class="kwd">my</span><span class="pln"> </span><span class="typ">$ypos</span><span class="pln"> </span><span class="pun">=</span><span class="pln"> </span><span class="typ">$objEventLoop</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;evt&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="pun">[</span><span class="atv">2</span><span class="pun">]</span><span class="pun">;</span><span class="pln">
-</span><span class="pln">
-	</span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;CONS&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="typ">FillAttr</span><span class="pln"> </span><span class="pun">(</span><span class="pun">(</span><span class="typ">$FG_BLACK</span><span class="pln"> </span><span class="pun">|</span><span class="pln"> </span><span class="typ">$BG_LIGHTBLUE</span><span class="pun">)</span><span class="pun">,</span><span class="pln"> </span><span class="atv">1</span><span class="pun">,</span><span class="pln"> </span><span class="typ">$xpos</span><span class="pun">,</span><span class="pln"> </span><span class="typ">$ypos</span><span class="pun">)</span><span class="pun">;</span><span class="pln">
-</span><span class="pln">
-	</span><span class="kwd">return</span><span class="pln"> </span><span class="pun">(</span><span class="atv">1</span><span class="pun">)</span><span class="pun">;</span><span class="pln">
-</span><span class="pun">}</span><span class="pln">
-</span><span class="pln">
-</span><span class="lit">sub</span><span class="pln"> </span><span class="typ">mouse_over</span><span class="pln"> </span><span class="pun">{</span><span class="pln">
-</span><span class="pln">
-	</span><span class="kwd">my</span><span class="pln"> </span><span class="typ">$self</span><span class="pln"> </span><span class="pun">=</span><span class="pln"> </span><span class="kwd">shift</span><span class="pun">;</span><span class="pln">
-</span><span class="pln">	</span><span class="kwd">my</span><span class="pln"> </span><span class="typ">$arg</span><span class="pln">  </span><span class="pun">=</span><span class="pln"> </span><span class="kwd">shift</span><span class="pun">;</span><span class="pln">
-</span><span class="pln">
-	</span><span class="kwd">if</span><span class="pln"> </span><span class="pun">(</span><span class="pun">!</span><span class="pln"> </span><span class="kwd">defined</span><span class="pln"> </span><span class="typ">$arg</span><span class="pln"> </span><span class="pun">||</span><span class="pln"> 
-</span><span class="pln">	      </span><span class="pun">!</span><span class="pln"> </span><span class="pun">(</span><span class="kwd">ref</span><span class="pln"> </span><span class="pun">(</span><span class="typ">$arg</span><span class="pun">)</span><span class="pln"> </span><span class="pun">eq</span><span class="pln"> </span><span class="str">&#39;HASH&#39;</span><span class="pun">)</span><span class="pun">)</span><span class="pln"> 
-</span><span class="pln">		</span><span class="pun">{</span><span class="pln"> </span><span class="kwd">die</span><span class="pln"> </span><span class="str">&quot;Call to mouse_over() failed, argument must be hash reference&quot;</span><span class="pun">;</span><span class="pln"> </span><span class="pun">}</span><span class="pln">
-</span><span class="pln">
-	</span><span class="kwd">if</span><span class="pln"> </span><span class="pun">(</span><span class="pun">!</span><span class="pln"> </span><span class="kwd">exists</span><span class="pln">  </span><span class="typ">$arg</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;mouse_over_x&#39;</span><span class="pun">}</span><span class="pln"> </span><span class="pun">||</span><span class="pln"> 
-</span><span class="pln">	    </span><span class="pun">!</span><span class="pln"> </span><span class="kwd">defined</span><span class="pln"> </span><span class="typ">$arg</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;mouse_over_x&#39;</span><span class="pun">}</span><span class="pln"> </span><span class="pun">||</span><span class="pln"> 
-</span><span class="pln">	           </span><span class="pun">!</span><span class="pln"> </span><span class="pun">(</span><span class="typ">$arg</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;mouse_over_x&#39;</span><span class="pun">}</span><span class="pln"> </span><span class="pun">=~</span><span class="pln"> </span><span class="str">/^\d\d?\d?$/</span><span class="pun">)</span><span class="pun">)</span><span class="pln"> 
-</span><span class="pln">		</span><span class="pun">{</span><span class="pln"> </span><span class="kwd">die</span><span class="pln"> </span><span class="str">&quot;Call to mouse_over() failed, value of key &#39;mouse_over_x&#39; must be numeric&quot;</span><span class="pun">;</span><span class="pln"> </span><span class="pun">}</span><span class="pln">
-</span><span class="pln">
-	</span><span class="kwd">if</span><span class="pln"> </span><span class="pun">(</span><span class="pun">!</span><span class="pln"> </span><span class="kwd">exists</span><span class="pln">  </span><span class="typ">$arg</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;mouse_over_y&#39;</span><span class="pun">}</span><span class="pln"> </span><span class="pun">||</span><span class="pln"> 
-</span><span class="pln">	    </span><span class="pun">!</span><span class="pln"> </span><span class="kwd">defined</span><span class="pln"> </span><span class="typ">$arg</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;mouse_over_y&#39;</span><span class="pun">}</span><span class="pln"> </span><span class="pun">||</span><span class="pln"> 
-</span><span class="pln">	           </span><span class="pun">!</span><span class="pln"> </span><span class="pun">(</span><span class="typ">$arg</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;mouse_over_y&#39;</span><span class="pun">}</span><span class="pln"> </span><span class="pun">=~</span><span class="pln"> </span><span class="str">/^\d\d?\d?$/</span><span class="pun">)</span><span class="pun">)</span><span class="pln"> 
-</span><span class="pln">		</span><span class="pun">{</span><span class="pln"> </span><span class="kwd">die</span><span class="pln"> </span><span class="str">&quot;Call to mouse_over() failed, value of key &#39;mouse_over_y&#39; must be numeric&quot;</span><span class="pun">;</span><span class="pln"> </span><span class="pun">}</span><span class="pln">
-</span><span class="pln">
-	</span><span class="kwd">if</span><span class="pln"> </span><span class="pun">(</span><span class="pun">!</span><span class="pln"> </span><span class="kwd">exists</span><span class="pln">  </span><span class="typ">$arg</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;mouse_over_x_prev&#39;</span><span class="pun">}</span><span class="pln"> </span><span class="pun">||</span><span class="pln"> 
-</span><span class="pln">	    </span><span class="pun">!</span><span class="pln"> </span><span class="kwd">defined</span><span class="pln"> </span><span class="typ">$arg</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;mouse_over_x_prev&#39;</span><span class="pun">}</span><span class="pln"> </span><span class="pun">||</span><span class="pln"> 
-</span><span class="pln">	           </span><span class="pun">!</span><span class="pln"> </span><span class="pun">(</span><span class="typ">$arg</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;mouse_over_x_prev&#39;</span><span class="pun">}</span><span class="pln"> </span><span class="pun">=~</span><span class="pln"> </span><span class="str">/^\d\d?\d?$/</span><span class="pun">)</span><span class="pun">)</span><span class="pln"> 
-</span><span class="pln">		</span><span class="pun">{</span><span class="pln"> </span><span class="kwd">die</span><span class="pln"> </span><span class="str">&quot;Call to mouse_over() failed, value of key &#39;mouse_over_x_prev&#39; must be numeric&quot;</span><span class="pun">;</span><span class="pln"> </span><span class="pun">}</span><span class="pln">
-</span><span class="pln">
-	</span><span class="kwd">if</span><span class="pln"> </span><span class="pun">(</span><span class="pun">!</span><span class="pln"> </span><span class="kwd">exists</span><span class="pln">  </span><span class="typ">$arg</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;mouse_over_y_prev&#39;</span><span class="pun">}</span><span class="pln"> </span><span class="pun">||</span><span class="pln"> 
-</span><span class="pln">	    </span><span class="pun">!</span><span class="pln"> </span><span class="kwd">defined</span><span class="pln"> </span><span class="typ">$arg</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;mouse_over_y_prev&#39;</span><span class="pun">}</span><span class="pln"> </span><span class="pun">||</span><span class="pln"> 
-</span><span class="pln">	           </span><span class="pun">!</span><span class="pln"> </span><span class="pun">(</span><span class="typ">$arg</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;mouse_over_y_prev&#39;</span><span class="pun">}</span><span class="pln"> </span><span class="pun">=~</span><span class="pln"> </span><span class="str">/^\d\d?\d?$/</span><span class="pun">)</span><span class="pun">)</span><span class="pln"> 
-</span><span class="pln">		</span><span class="pun">{</span><span class="pln"> </span><span class="kwd">die</span><span class="pln"> </span><span class="str">&quot;Call to mouse_over() failed, value of key &#39;mouse_over_y_prev&#39; must be numeric&quot;</span><span class="pun">;</span><span class="pln"> </span><span class="pun">}</span><span class="pln">
-</span><span class="pln">
-</span><span class="com">	# Restore original attributes to character at previous mouseover X,Y coordinate.
-</span><span class="pln">
-	</span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;CONS&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="typ">WriteAttr</span><span class="pln"> 
-</span><span class="pln">	  </span><span class="pun">(</span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;mouse_over_attr&#39;</span><span class="pun">}</span><span class="pun">,</span><span class="pln"> 
-</span><span class="pln">	   </span><span class="typ">$arg</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;mouse_over_x_prev&#39;</span><span class="pun">}</span><span class="pun">,</span><span class="pln"> 
-</span><span class="pln">	   </span><span class="typ">$arg</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;mouse_over_y_prev&#39;</span><span class="pun">}</span><span class="pun">)</span><span class="pun">;</span><span class="pln">
-</span><span class="pln">
-</span><span class="com">	# ReadChar [number, col, row]
-</span><span class="com">	#   Reads the specified *number* of consecutive characters, beginning at
-</span><span class="com">	#   *col*, *row*, from the console. Returns a string containing the
-</span><span class="com">	#   characters read, or &quot;undef&quot; on errors. You can then pass the
-</span><span class="com">	#   returned variable to &quot;WriteChar&quot; to restore the saved characters on
-</span><span class="com">	#   screen. See also: &quot;ReadAttr&quot;, &quot;ReadRect&quot;.
-</span><span class="com">	# 
-</span><span class="com">	#   Example:
-</span><span class="com">	#     $chars = $CONSOLE-&gt;ReadChar (80 * 25, 0, 0);
-</span><span class="pln">
-</span><span class="com">	# Read/store character underneath mouse pointer.
-</span><span class="pln">
-	</span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;mouse_over_char&#39;</span><span class="pun">}</span><span class="pln"> </span><span class="pun">=</span><span class="pln"> 
-</span><span class="pln">	  </span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;CONS&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="typ">ReadChar</span><span class="pln"> 
-</span><span class="pln">	    </span><span class="pun">(</span><span class="atv">1</span><span class="pun">,</span><span class="pln"> 
-</span><span class="pln">	     </span><span class="typ">$arg</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;mouse_over_x&#39;</span><span class="pun">}</span><span class="pun">,</span><span class="pln"> 
-</span><span class="pln">	     </span><span class="typ">$arg</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;mouse_over_y&#39;</span><span class="pun">}</span><span class="pun">)</span><span class="pun">;</span><span class="pln">
-</span><span class="pln">
-</span><span class="com">	# ReadAttr (number, col, row)
-</span><span class="com">	#   Reads the specified *number* of consecutive attributes, beginning at
-</span><span class="com">	#   *col*, *row*, from the console. Returns the attributes read (a
-</span><span class="com">	#   variable containing one character for each attribute), or &quot;undef&quot; on
-</span><span class="com">	#   errors. You can then pass the returned variable to &quot;WriteAttr&quot; to
-</span><span class="com">	#   restore the saved attributes on screen. See also: &quot;ReadChar&quot;,
-</span><span class="com">	#   &quot;ReadRect&quot;.
-</span><span class="com">	# 
-</span><span class="com">	#     Example:
-</span><span class="com">	#       $colors = $CONSOLE-&gt;ReadAttr(80*25, 0, 0);
-</span><span class="pln">
-</span><span class="com">	# Read/store attributes of character underneath mouse pointer
-</span><span class="pln">
-	</span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;mouse_over_attr&#39;</span><span class="pun">}</span><span class="pln"> </span><span class="pun">=</span><span class="pln"> 
-</span><span class="pln">	  </span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;CONS&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="typ">ReadAttr</span><span class="pln"> 
-</span><span class="pln">	    </span><span class="pun">(</span><span class="atv">1</span><span class="pun">,</span><span class="pln"> 
-</span><span class="pln">	     </span><span class="typ">$arg</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;mouse_over_x&#39;</span><span class="pun">}</span><span class="pun">,</span><span class="pln"> 
-</span><span class="pln">	     </span><span class="typ">$arg</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;mouse_over_y&#39;</span><span class="pun">}</span><span class="pun">)</span><span class="pun">;</span><span class="pln">
-</span><span class="pln">
-</span><span class="com">	# WriteAttr (attrs, col, row)
-</span><span class="com">	#   Writes the attributes in the string *attrs*, beginning at *col*,
-</span><span class="com">	#   *row*, without affecting the characters that are on screen. The
-</span><span class="com">	#   string attrs can be the result of a &quot;ReadAttr&quot; function, or you can
-</span><span class="com">	#   build your own attribute string; in this case, keep in mind that
-</span><span class="com">	#   every attribute is treated as a character, not a number (see
-</span><span class="com">	#   example). Returns the number of attributes written or &quot;undef&quot; on
-</span><span class="com">	#   errors. See also: &quot;Write&quot;, &quot;WriteChar&quot;, &quot;WriteRect&quot;.
-</span><span class="com">	# 
-</span><span class="com">	#   Example:
-</span><span class="com">	#     $CONSOLE-&gt;WriteAttr ($attrs, 0, 0);
-</span><span class="com">	# 
-</span><span class="com">	#   Note the use of chr()...
-</span><span class="com">	#     $attrs = chr ($FG_BLACK | $BG_WHITE) x 80;
-</span><span class="com">	#     $CONSOLE-&gt;WriteAttr ($attrs, 0, 0);
-</span><span class="pln">
-</span><span class="com">	# Hi-light character underneath mouse pointer.
-</span><span class="pln">
-	</span><span class="typ">$self</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;CONS&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="typ">WriteAttr</span><span class="pln"> 
-</span><span class="pln">	  </span><span class="pun">(</span><span class="kwd">chr</span><span class="pln"> </span><span class="pun">(</span><span class="typ">$FG_BLACK</span><span class="pln"> </span><span class="pun">|</span><span class="pln"> </span><span class="typ">$BG_LIGHTRED</span><span class="pun">)</span><span class="pun">,</span><span class="pln"> 
-</span><span class="pln">	   </span><span class="typ">$arg</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;mouse_over_x&#39;</span><span class="pun">}</span><span class="pun">,</span><span class="pln"> 
-</span><span class="pln">	   </span><span class="typ">$arg</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;mouse_over_y&#39;</span><span class="pun">}</span><span class="pun">)</span><span class="pun">;</span><span class="pln">
-</span><span class="pln">
-	</span><span class="kwd">return</span><span class="pln"> </span><span class="pun">(</span><span class="atv">1</span><span class="pun">)</span><span class="pun">;</span><span class="pln">
-</span><span class="pun">}</span><span class="pln">
-</span><span class="pln">
 </span><span class="pln">
 </span><span class="kwd">END</span><span class="pln"> </span><span class="pun">{</span><span class="pln"> </span><span class="kwd">undef</span><span class="pun">;</span><span class="pln"> </span><span class="pun">}</span><span class="pln">
 </span><span class="atv">1</span><span class="pun">;</span><span class="pln">
@@ -1182,15 +994,15 @@
 
 </span><span class="com">=head1 NAME
 
-ZHex::Console (ZHex/Console.pm) - Console Module, ZebraHex Editor.
+ZHex::Console (ZHex/Console.pm) - Console Module, ZHex Editor.
 
 =head1 VERSION
 
-Version 0.01
+Version 0.02
 
 =cut
 </span><span class="com">
-our $VERSION = &#39;0.01&#39;;
+our $VERSION = &#39;0.02&#39;;
 
 </span><span class="com">=head1 SYNOPSIS
 
@@ -1232,6 +1044,10 @@ Method lmouse()...
 
 =head2 mouse_over
 Method mouse_over()...
+= cut
+
+=head2 register_evt_callbacks
+Method register_evt_callbacks()...
 = cut
 
 =head2 rmouse

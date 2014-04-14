@@ -1,10 +1,9 @@
 #!/usr/bin/perl
 
 # ______________________________________________________________________
-# markup_zhex_src.pl                      Generate HTML markup from Perl 
-#                                        source code (w/ PPI::Prettify).
+# markup_zhex_src.pl
+# Generate HTML markup from Perl source code (w/ PPI::Prettify).
 # ______________________________________________________________________
-
 
 use warnings;
 use strict;
@@ -23,8 +22,10 @@ my @fn =
      ../ZHex/Display.pm 
      ../ZHex/Editor.pm 
      ../ZHex/Event.pm 
+     ../ZHex/EventHandler.pm 
      ../ZHex/EventLoop.pm 
-     ../ZHex/File.pm);
+     ../ZHex/File.pm
+     ../ZHex/Mouse.pm);
 
 my $template;
 READ_HTML_TEMPLATE: {
@@ -108,11 +109,11 @@ __DATA__
 <html>
 <head>
 	<meta charset="UTF-8">
-	<title>ZHex - ZebraHex Editor v0.01: Project Source Code</title>
+	<title>ZHex Editor v0.02: Project Source Code</title>
 	<link rel="stylesheet" type="text/css" href="desert.css"/>
 </head>
 <body>
-	<h2>ZHex - ZebraHex Editor v0.01</h2>
+	<h2>ZHex Editor v0.02</h2>
 	<p><FILENAME GOES HERE></p>
 	<div><SOURCE CODE GOES HERE></div>
 </body>

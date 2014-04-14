@@ -53,8 +53,6 @@ sub init {
 	return (1);
 }
 
-# ______________________________________________________________________________
-
 # Functions: That used to live in EventLoop.pm.
 #
 #   ____			___________
@@ -422,8 +420,6 @@ sub evt_dispatch {
 	}
 }
 
-# ______________________________________________________________________________
-
 
 END { undef; }
 1;
@@ -434,26 +430,28 @@ __END__
 
 =head1 NAME
 
-ZHex::Event (ZHex/Event.pm) - Event Module, ZebraHex Editor.
+ZHex::Event (ZHex/Event.pm) - Event Module, ZHex Editor.
 
 =head1 VERSION
 
-Version 0.01
+Version 0.02
 
 =cut
 
-our $VERSION = '0.01';
+our $VERSION = '0.02';
 
 =head1 SYNOPSIS
 
-ZHex::Event contains event handler callback subroutines for the ZebraHex 
-Editor. Events (in this context) are almost entirely related user 
-actions within the interface provided by the hex editor (accessed via 
-the console).
+ZHex::Event provides functions for registering callback subroutines to 
+handle various event types, and provides for the abstraction of 
+'context' which means that different callback subroutines will be called 
+based upon which context the hex editor is currently operating within. 
 
 Usage:
 
-f
+    use ZHex::Common qw(new obj_init $VERS);
+    my $objEvent = $self->{'obj'}->{'event'};
+    $objEvent->register_callback (@evt_array);
 
 =head1 EXPORT
 
@@ -461,8 +459,16 @@ No functions are exported.
 
 =head1 SUBROUTINES/METHODS
 
+=head2 new
+Method new()...
+= cut
+
 =head2 init
 Method init()...
+= cut
+
+=head2 obj_init
+Method obj_init()...
 = cut
 
 =head2 register_callback

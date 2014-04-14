@@ -8,6 +8,7 @@ use warnings FATAL => 'all';
 
 use ZHex::Common 
   qw(new 
+     init 
      obj_init 
      $VERS 
      EDT_CTXT_DEFAULT 
@@ -21,28 +22,12 @@ BEGIN { require Exporter;
 	our @EXPORT_OK = qw();
 }
 
-# Functions: Start-Up/Initialization.
-#
-#   _____________	___________
-#   Function Name	Description
-#   _____________	___________
-#   init()		Global variable declarations.
-
-sub init {
-
-	my $self = shift;
-
-	# ...
-
-	return (1);
-}
-
 # Functions: Event Handling Functions.
 #
 #   ____				___________
 #   NAME				DESCRIPTION
 #   ____				___________
-#   register_event_callbacks()		Define callback subroutines for named functions.
+#   register_evt_callbacks()		Define callback subroutines for named functions.
 
 sub register_evt_callbacks {
 
@@ -710,6 +695,31 @@ sub register_evt_callbacks {
 #   NAME			Event Name	DESCRIPTION
 #   ____			__________	___________
 #   quit()			QUIT		Break out of event_loop(), clean up, exit().
+#   w32cons_cursor_invisible	...		...
+#   w32cons_cursor_visible	...		...
+#   curs_move_beg		...		...
+#   curs_move_end		...		...
+#   curs_ctxt_incr		...		...
+#   curs_ctxt_decr		...		...
+#   curs_mv_back		...		...
+#   curs_mv_fwd			...		...
+#   curs_mv_up			...		...
+#   curs_mv_down		...		...
+#   curs_mv_left		...		...
+#   curs_mv_right		...		...
+#   debug_off			...		...
+#   debug_on			...		...
+#   vstretch			...		...
+#   vcompress			...		...
+#   scroll_up_1x_line		...		...
+#   scroll_up_1x_page		...		...
+#   scroll_down_1x_line		...		...
+#   scroll_down_1x_page		...		...
+#   insert_mode			...		...
+#   search_mode			...		...
+#   write_file			...		...
+#   lmouse			...		...
+#   rmouse			...		...
 
 sub quit {
 
@@ -1632,26 +1642,28 @@ __END__
 
 =head1 NAME
 
-ZHex::Event (ZHex/Event.pm) - Event Module, ZebraHex Editor.
+ZHex::EventHandler (ZHex/EventHandler.pm) - Event Handler Module, ZHex Editor.
 
 =head1 VERSION
 
-Version 0.01
+Version 0.02
 
 =cut
 
-our $VERSION = '0.01';
+our $VERSION = '0.02';
 
 =head1 SYNOPSIS
 
-ZHex::Event contains event handler callback subroutines for the ZebraHex 
-Editor. Events (in this context) are almost entirely related user 
+ZHex::EventHandler contains event handler callback subroutines for the 
+ZHex Editor. Events (in this context) are almost entirely related user 
 actions within the interface provided by the hex editor (accessed via 
-the console).
+the console). 
 
 Usage:
 
-f
+    use ZHex::Common qw(new obj_init $VERS);
+    my $objEventHandler = $self->{'obj'}->{'eventhandler'};
+    $objEventHandler->evt_read();
 
 =head1 EXPORT
 
@@ -1659,32 +1671,24 @@ No functions are exported.
 
 =head1 SUBROUTINES/METHODS
 
+=head2 new
+Method new()...
+= cut
+
+=head2 init
+Method init()...
+= cut
+
+=head2 obj_init
+Method obj_init()...
+= cut
+
 =head2 debug_off
 Method debug_off()...
 = cut
 
 =head2 debug_on
 Method debug_on()...
-= cut
-
-=head2 evt_map
-Method evt_map()...
-= cut
-
-=head2 gen_evt_array
-Method gen_evt_array()...
-= cut
-
-=head2 register_callback
-Method register_callback()...
-= cut
-
-=head2 register_evt_sig
-Method register_evt_sig()...
-= cut
-
-=head2 init
-Method init()...
 = cut
 
 =head2 insert_backspace
@@ -1765,6 +1769,86 @@ Method vstretch()...
 
 =head2 vcompress
 Method vcompress()...
+= cut
+
+=head2 curs_ctxt_decr
+Method curs_ctxt_decr()...
+= cut
+
+=head2 curs_ctxt_incr
+Method curs_ctxt_incr()...
+= cut
+
+=head2 curs_move_beg
+Method curs_move_beg()...
+= cut
+
+=head2 curs_move_end
+Method curs_move_end()...
+= cut
+
+=head2 curs_mv_back
+Method curs_mv_back()...
+= cut
+
+=head2 curs_mv_down
+Method curs_mv_down()...
+= cut
+
+=head2 curs_mv_fwd
+Method curs_mv_fwd()...
+= cut
+
+=head2 curs_mv_left
+Method curs_mv_left()...
+= cut
+
+=head2 curs_mv_right
+Method curs_mv_right()...
+= cut
+
+=head2 curs_mv_up
+Method curs_mv_up()...
+= cut
+
+=head2 insert_mode
+Method insert_mode()...
+= cut
+
+=head2 lmouse
+Method lmouse()...
+= cut
+
+=head2 rmouse
+Method rmouse()...
+= cut
+
+=head2 scroll_down_1x_line
+Method scroll_down_1x_line()...
+= cut
+
+=head2 scroll_down_1x_page
+Method scroll_down_1x_page()...
+= cut
+
+=head2 scroll_up_1x_line
+Method scroll_up_1x_line()...
+= cut
+
+=head2 scroll_up_1x_page
+Method scroll_up_1x_page()...
+= cut
+
+=head2 w32cons_cursor_invisible
+Method w32cons_cursor_invisible()...
+= cut
+
+=head2 w32cons_cursor_visible
+Method w32cons_cursor_visible()...
+= cut
+
+=head2 write_file
+Method write_file()...
 = cut
 
 =head1 AUTHOR

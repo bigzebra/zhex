@@ -17,7 +17,6 @@ use Test::More tests => 4;
 #   new()		IMPORTED FROM ZHex::Common.pm.
 #   obj_init()		IMPORTED FROM ZHex::Common.pm.
 # Member functions:
-#   check_file()
 #   file_bytes()
 #   file_len()
 #   init()
@@ -32,8 +31,7 @@ use_ok ('ZHex::File')
   or die "Call to use_ok() returned w/ failure (on module 'ZHex::File')";
 
 my @objFileSubs = 
-  ('check_file', 
-   'file_bytes', 
+  ('file_bytes', 
    'file_len', 
    'init', 
    'insert_str', 

@@ -233,15 +233,15 @@ __END__
 
 =head1 NAME
 
-ZHex::Common (ZHex/Common.pm) - Common Module, ZebraHex Editor.
+ZHex::Common (ZHex/Common.pm) - Common Module, ZHex Editor.
 
 =head1 VERSION
 
-Version 0.01
+Version 0.02
 
 =cut
 
-our $VERSION = '0.01';
+our $VERSION = '0.02';
 
 =head1 SYNOPSIS
 
@@ -262,8 +262,8 @@ Usage:
 
     ...
 
-    # Access function defined within a different submodule (ZHex/Editor.pm).
-    $self->{'obj'}->{'editor'}->scroll_up_1x_line();
+    # Access function defined within a different submodule (ZHex/EventHandler.pm).
+    $self->{'obj'}->{'eventhandler'}->scroll_up_1x_line();
 
 =head1 EXPORT
 

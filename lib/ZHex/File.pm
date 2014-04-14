@@ -256,14 +256,18 @@ sub file_bytes {
 	             ($arg->{'len'} eq '')) 
 		{ die "Call to file_bytes() failed, value associated w/ key 'len' was undef/empty string"; }
 
-	if (! exists  $arg->{'ofs'} || 
+	my $len = $self->file_len();
+
+	if (! defined $len || 
+	           ! ($len =~ /^\d+?$/) || 
+	    ! exists  $arg->{'ofs'} || 
 	    ! defined $arg->{'ofs'} || 
 	           ! ($arg->{'ofs'} =~ /^\d+?$/) || 
-	             ($arg->{'ofs'} > $self->file_len()) || 
+	             ($arg->{'ofs'} > $len) || 
 	    ! exists  $arg->{'len'} || 
 	    ! defined $arg->{'len'} || 
 	           ! ($arg->{'len'} =~ /^\d+?$/) || 
-	            (($arg->{'ofs'} + $arg->{'len'}) > $self->file_len())) {
+	            (($arg->{'ofs'} + $arg->{'len'}) > $len)) {
 
 		return (undef);
 	}
@@ -376,15 +380,15 @@ __END__
 
 =head1 NAME
 
-ZHex::File (ZHex/File.pm) - File Module, ZebraHex Editor.
+ZHex::File (ZHex/File.pm) - File Module, ZHex Editor.
 
 =head1 VERSION
 
-Version 0.01
+Version 0.02
 
 =cut
 
-our $VERSION = '0.01';
+our $VERSION = '0.02';
 
 =head1 SYNOPSIS
 

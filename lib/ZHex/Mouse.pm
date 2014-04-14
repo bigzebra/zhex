@@ -8,6 +8,7 @@ use warnings FATAL => 'all';
 
 use ZHex::Common 
   qw(new 
+     init 
      obj_init 
      $VERS 
      EDT_CTXT_DEFAULT 
@@ -21,25 +22,6 @@ BEGIN { require Exporter;
 	our @EXPORT    = qw();
 	our @EXPORT_OK = qw(); 
 }
-
-# Functions: Start-Up/Initialization.
-#
-#   _____________		___________
-#   Function Name		Description
-#   _____________		___________
-#   init()			Global variable declarations.
-#   register_evt_callbacks()	Register event handler callbacks w/ event loop.
-
-sub init {
-
-	my $self = shift;
-
-	# ...
-
-	return (1);
-}
-
-# ______________________________________________________________________________
 
 # Functions: Mouse event handlers.
 #
@@ -270,9 +252,6 @@ sub mouse_over {
 }
 
 
-# ______________________________________________________________________________
-
-
 END { undef; }
 1;
 
@@ -282,26 +261,25 @@ __END__
 
 =head1 NAME
 
-ZHex::File (ZHex/Mouse.pm) - File Module, ZebraHex Editor.
+ZHex::File (ZHex/Mouse.pm) - Mouse Module, ZHex Editor.
 
 =head1 VERSION
 
-Version 0.01
+Version 0.02
 
 =cut
 
-our $VERSION = '0.01';
+our $VERSION = '0.02';
 
 =head1 SYNOPSIS
 
-The ZHex::File module defines functions which provide checking, opening, 
-reading, and writing files which are being edited (within the hex editor).
+The ZHex::Mouse module defines functions which provide...
 
 Usage:
 
-    use ZHex::Common qw(new obj_init $VERS);
-    my $objFile = $self->{'obj'}->{'file'};
-    $objFile->stat_file ({'fn' => $abspath_w_filename});
+    use ZHex::Common qw(new init obj_init $VERS);
+    my $objMouse = $self->{'obj'}->{'mouse'};
+    $objMouse->lmouse();
 
 =head1 EXPORT
 
@@ -309,40 +287,28 @@ No functions are exported.
 
 =head1 SUBROUTINES/METHODS
 
-=head2 file_bytes
-Method file_bytes()...
-= cut
-
-=head2 file_len
-Method file_len()...
+=head2 new
+Method new()...
 = cut
 
 =head2 init
 Method init()...
 = cut
 
-=head2 insert_str
-Method insert_str()...
+=head2 obj_init
+Method obj_init()...
 = cut
 
-=head2 read_file
-Method read_file()...
+=head2 lmouse
+Method lmouse()...
 = cut
 
-=head2 register_evt_callbacks
-Method register_evt_callbacks()...
+=head2 mouse_over
+Method mouse_over()...
 = cut
 
-=head2 set_file
-Method set_file()...
-= cut
-
-=head2 stat_file
-Method stat_file()...
-= cut
-
-=head2 write_file
-Method write_file()...
+=head2 rmouse
+Method rmouse()...
 = cut
 
 =head1 AUTHOR

@@ -3,11 +3,11 @@
 <html>
 <head>
 	<meta charset="UTF-8">
-	<title>ZHex - ZebraHex Editor v0.01: Project Source Code</title>
+	<title>ZHex Editor v0.02: Project Source Code</title>
 	<link rel="stylesheet" type="text/css" href="desert.css"/>
 </head>
 <body>
-	<h2>ZHex - ZebraHex Editor v0.01</h2>
+	<h2>ZHex Editor v0.02</h2>
 	<p>ZHex Editor source code filename: ../ZHex/CharMap.pm</p>
 	<div><pre class="prettyprint"><span class="com">#!/usr/bin/perl
 </span><span class="pln">
@@ -17,7 +17,10 @@
 </span><span class="kwd">use</span><span class="pln"> </span><span class="kwd">strict</span><span class="pun">;</span><span class="pln">
 </span><span class="kwd">use</span><span class="pln"> </span><span class="kwd">warnings</span><span class="pln"> </span><span class="str">FATAL</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;all&#39;</span><span class="pun">;</span><span class="pln">
 </span><span class="pln">
-</span><span class="kwd">use</span><span class="pln"> </span><span class="pln">ZHex::Common</span><span class="pln"> </span><span class="str">qw(new obj_init $VERS)</span><span class="pun">;</span><span class="pln">
+</span><span class="kwd">use</span><span class="pln"> </span><span class="pln">ZHex::Common</span><span class="pln"> 
+</span><span class="pln">  </span><span class="str">qw(new 
+     obj_init 
+     $VERS)</span><span class="pun">;</span><span class="pln">
 </span><span class="pln">
 </span><span class="kwd">BEGIN</span><span class="pln"> </span><span class="pun">{</span><span class="pln"> </span><span class="kwd">require</span><span class="pln"> </span><span class="pln">Exporter</span><span class="pun">;</span><span class="pln">
 </span><span class="pln">	</span><span class="kwd">our</span><span class="pln"> </span><span class="typ">$VERSION</span><span class="pln">   </span><span class="pun">=</span><span class="pln"> </span><span class="typ">$VERS</span><span class="pun">;</span><span class="pln">
@@ -49,7 +52,7 @@
 </span><span class="com">#   _____________	___________
 </span><span class="com">#   chr_map_set()	...
 </span><span class="com">#   chr_map_hex_val()	...
-</span><span class="com">#   chr_map_ord_val()	...
+</span><span class="com">#   chr_map_ord_val()	...   &lt;--- Memoized...
 </span><span class="com">#   chr_map()		...
 </span><span class="pln">
 </span><span class="lit">sub</span><span class="pln"> </span><span class="typ">chr_map_set</span><span class="pln"> </span><span class="pun">{</span><span class="pln">
@@ -530,15 +533,15 @@
 
 </span><span class="com">=head1 NAME
 
-ZHex::CharMap (ZHex/CharMap.pm) - CharMap Module, ZebraHex Editor.
+ZHex::CharMap (ZHex/CharMap.pm) - CharMap Module, ZHex Editor.
 
 =head1 VERSION
 
-Version 0.01
+Version 0.02
 
 =cut
 </span><span class="com">
-our $VERSION = &#39;0.01&#39;;
+our $VERSION = &#39;0.02&#39;;
 
 </span><span class="com">=head1 SYNOPSIS
 
@@ -556,7 +559,7 @@ Usage:
     use ZHex::Common qw(new obj_init $VERS);
     my $objCharMap = $self-&gt;{&#39;obj&#39;}-&gt;{&#39;charmap&#39;};
     my $chr_map = $objCharMap-&gt;chr_map();
-    $objCharMap-&gt;chr_map ({&#39;chr_map&#39; =&gt; $chr_map});
+    $objCharMap-&gt;chr_map ({ &#39;chr_map&#39; =&gt; $chr_map });
 
 =head1 EXPORT
 

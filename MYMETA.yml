@@ -1,5 +1,5 @@
 ---
-abstract: 'Zebra Hex Editor.'
+abstract: unknown
 author:
   - 'Double Z <zacharyz@gmail.com>'
 build_requires:
@@ -23,4 +23,4 @@ requires:
   Time::HiRes: '0'
   Win32::Console: '0'
   perl: '5.006'
-version: '0.01'
+version: '0.02'

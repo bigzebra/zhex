@@ -3,11 +3,11 @@
 <html>
 <head>
 	<meta charset="UTF-8">
-	<title>ZHex - ZebraHex Editor v0.01: Project Source Code</title>
+	<title>ZHex Editor v0.02: Project Source Code</title>
 	<link rel="stylesheet" type="text/css" href="desert.css"/>
 </head>
 <body>
-	<h2>ZHex - ZebraHex Editor v0.01</h2>
+	<h2>ZHex Editor v0.02</h2>
 	<p>ZHex Editor source code filename: ../ZHex/Common.pm</p>
 	<div><pre class="prettyprint"><span class="com">#!/usr/bin/perl
 </span><span class="pln">
@@ -17,14 +17,59 @@
 </span><span class="kwd">use</span><span class="pln"> </span><span class="kwd">strict</span><span class="pun">;</span><span class="pln">
 </span><span class="kwd">use</span><span class="pln"> </span><span class="kwd">warnings</span><span class="pln"> </span><span class="str">FATAL</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;all&#39;</span><span class="pun">;</span><span class="pln">
 </span><span class="pln">
-</span><span class="kwd">BEGIN</span><span class="pln"> </span><span class="pun">{</span><span class="pln">
+</span><span class="kwd">BEGIN</span><span class="pln"> </span><span class="pun">{</span><span class="pln"> 
 </span><span class="pln">
-	</span><span class="kwd">use</span><span class="pln"> </span><span class="kwd">constant</span><span class="pln"> </span><span class="str">CURS_POS</span><span class="pln">  </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="atv">0</span><span class="pun">;</span><span class="pln">
-</span><span class="pln">	</span><span class="kwd">use</span><span class="pln"> </span><span class="kwd">constant</span><span class="pln"> </span><span class="str">CURS_CTXT</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="atv">0</span><span class="pun">;</span><span class="pln">
-</span><span class="pln">	</span><span class="kwd">use</span><span class="pln"> </span><span class="kwd">constant</span><span class="pln"> </span><span class="str">DSP_POS</span><span class="pln">   </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="atv">0</span><span class="pun">;</span><span class="pln">
-</span><span class="pln">	</span><span class="kwd">use</span><span class="pln"> </span><span class="kwd">constant</span><span class="pln"> </span><span class="str">SZ_WORD</span><span class="pln">   </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="atv">4</span><span class="pun">;</span><span class="pln">
+</span><span class="com">	# Constants used by more than one module:
+</span><span class="pln">
+	</span><span class="kwd">use</span><span class="pln"> </span><span class="kwd">constant</span><span class="pln"> </span><span class="str">SZ_WORD</span><span class="pln">   </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="atv">4</span><span class="pun">;</span><span class="pln">
 </span><span class="pln">	</span><span class="kwd">use</span><span class="pln"> </span><span class="kwd">constant</span><span class="pln"> </span><span class="str">SZ_LINE</span><span class="pln">   </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="atv">16</span><span class="pun">;</span><span class="pln">
 </span><span class="pln">	</span><span class="kwd">use</span><span class="pln"> </span><span class="kwd">constant</span><span class="pln"> </span><span class="str">SZ_COLUMN</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="atv">40</span><span class="pun">;</span><span class="pln">
+</span><span class="pln">	</span><span class="kwd">use</span><span class="pln"> </span><span class="kwd">constant</span><span class="pln"> </span><span class="str">SZ_READ</span><span class="pln">   </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="atv">1024</span><span class="pun">;</span><span class="pln">   </span><span class="com"># Number of bytes requested w/ calls to read().</span><span class="pln">
+</span><span class="pln">
+</span><span class="com">	# Console.pm constants:
+</span><span class="pln">
+	</span><span class="kwd">use</span><span class="pln"> </span><span class="kwd">constant</span><span class="pln"> </span><span class="str">W32CONS_TITLE</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;ZHex - Console Based Hex Editor v0.02&#39;</span><span class="pun">;</span><span class="pln">
+</span><span class="pln">
+</span><span class="com">	# Cursor.pm constants:
+</span><span class="pln">
+	</span><span class="kwd">use</span><span class="pln"> </span><span class="kwd">constant</span><span class="pln"> </span><span class="str">CURS_CTXT_LINE</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;0&#39;</span><span class="pun">;</span><span class="pln">   </span><span class="com"># Cursor highlights 16 bytes.</span><span class="pln">
+</span><span class="pln">	</span><span class="kwd">use</span><span class="pln"> </span><span class="kwd">constant</span><span class="pln"> </span><span class="str">CURS_CTXT_WORD</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;1&#39;</span><span class="pun">;</span><span class="pln">   </span><span class="com"># Cursor highlights  4 bytes.</span><span class="pln">
+</span><span class="pln">	</span><span class="kwd">use</span><span class="pln"> </span><span class="kwd">constant</span><span class="pln"> </span><span class="str">CURS_CTXT_BYTE</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;2&#39;</span><span class="pun">;</span><span class="pln">   </span><span class="com"># Cursor highlights  1 bytes.</span><span class="pln">
+</span><span class="pln">	</span><span class="kwd">use</span><span class="pln"> </span><span class="kwd">constant</span><span class="pln"> </span><span class="str">CURS_CTXT_INSR</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;3&#39;</span><span class="pun">;</span><span class="pln">   </span><span class="com"># Cursor hidden (console cursor becomes visible).</span><span class="pln">
+</span><span class="pln">	</span><span class="kwd">use</span><span class="pln"> </span><span class="kwd">constant</span><span class="pln"> </span><span class="str">CURS_CTXT</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="pln">CURS_CTXT_LINE</span><span class="pun">;</span><span class="pln">
+</span><span class="pln">	</span><span class="kwd">use</span><span class="pln"> </span><span class="kwd">constant</span><span class="pln"> </span><span class="str">CURS_POS</span><span class="pln">  </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="atv">0</span><span class="pun">;</span><span class="pln">
+</span><span class="pln">
+</span><span class="com">	# Display.pm constants:
+</span><span class="pln">
+	</span><span class="kwd">use</span><span class="pln"> </span><span class="kwd">constant</span><span class="pln"> </span><span class="str">DSP_WIDTH</span><span class="pln">  </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="atv">100</span><span class="pun">;</span><span class="pln">
+</span><span class="pln">	</span><span class="kwd">use</span><span class="pln"> </span><span class="kwd">constant</span><span class="pln"> </span><span class="str">DSP_HEIGHT</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="atv">40</span><span class="pun">;</span><span class="pln">
+</span><span class="pln">	</span><span class="kwd">use</span><span class="pln"> </span><span class="kwd">constant</span><span class="pln"> </span><span class="str">DSP_XPAD</span><span class="pln">   </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="atv">0</span><span class="pun">;</span><span class="pln">
+</span><span class="pln">	</span><span class="kwd">use</span><span class="pln"> </span><span class="kwd">constant</span><span class="pln"> </span><span class="str">DSP_YPAD</span><span class="pln">   </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="atv">0</span><span class="pun">;</span><span class="pln">
+</span><span class="pln">	</span><span class="kwd">use</span><span class="pln"> </span><span class="kwd">constant</span><span class="pln"> </span><span class="str">DSP_D_ELEMENTS</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;&#39;</span><span class="pun">;</span><span class="pln">
+</span><span class="pln">	</span><span class="kwd">use</span><span class="pln"> </span><span class="kwd">constant</span><span class="pln"> </span><span class="str">DSP_C_ELEMENTS</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;&#39;</span><span class="pun">;</span><span class="pln">
+</span><span class="pln">
+	</span><span class="kwd">my</span><span class="pln"> </span><span class="typ">$dsp_line</span><span class="pln"> </span><span class="pun">=</span><span class="pln"> </span><span class="pun">(</span><span class="str">&#39; &#39;</span><span class="pln"> </span><span class="pun">x</span><span class="pln"> </span><span class="pln">DSP_WIDTH</span><span class="pun">)</span><span class="pun">;</span><span class="pln">
+</span><span class="pln">	</span><span class="kwd">my</span><span class="pln"> </span><span class="typ">$dsp</span><span class="pln"> </span><span class="pun">=</span><span class="pln"> </span><span class="pun">[</span><span class="pun">]</span><span class="pun">;</span><span class="pln">
+</span><span class="pln">	</span><span class="kwd">for</span><span class="pln"> </span><span class="pun">(</span><span class="kwd">my</span><span class="pln"> </span><span class="typ">$i</span><span class="pln"> </span><span class="pun">=</span><span class="pln"> </span><span class="atv">0</span><span class="pun">;</span><span class="pln"> </span><span class="typ">$i</span><span class="pln"> </span><span class="pun">&lt;</span><span class="pln"> </span><span class="pln">DSP_HEIGHT</span><span class="pun">;</span><span class="pln"> </span><span class="typ">$i</span><span class="pun">++</span><span class="pun">)</span><span class="pln"> </span><span class="pun">{</span><span class="pln">
+</span><span class="pln">		</span><span class="kwd">push</span><span class="pln"> </span><span class="var">@</span><span class="pun">{</span><span class="pln"> </span><span class="typ">$dsp</span><span class="pln"> </span><span class="pun">}</span><span class="pun">,</span><span class="pln"> </span><span class="typ">$dsp_line</span><span class="pun">;</span><span class="pln">
+</span><span class="pln">	</span><span class="pun">}</span><span class="pln">
+</span><span class="pln">
+	</span><span class="kwd">use</span><span class="pln"> </span><span class="kwd">constant</span><span class="pln"> </span><span class="str">DSP</span><span class="pln">      </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="typ">$dsp</span><span class="pun">;</span><span class="pln">
+</span><span class="pln">	</span><span class="kwd">use</span><span class="pln"> </span><span class="kwd">constant</span><span class="pln"> </span><span class="str">DSP_PREV</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="pln">DSP</span><span class="pun">;</span><span class="pln">
+</span><span class="pln">
+</span><span class="com">	# Editor.pm constants:
+</span><span class="pln">
+	</span><span class="kwd">use</span><span class="pln"> </span><span class="kwd">constant</span><span class="pln"> </span><span class="str">EDT_HORIZ_RULE_CHAR</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;|&#39;</span><span class="pun">;</span><span class="pln">   </span><span class="com"># Word seperator: a vertical line used in display for readability.</span><span class="pln">
+</span><span class="pln">	</span><span class="kwd">use</span><span class="pln"> </span><span class="kwd">constant</span><span class="pln"> </span><span class="str">EDT_OOB_CHAR</span><span class="pln">        </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;-&#39;</span><span class="pun">;</span><span class="pln">   </span><span class="com"># Out-of-bounds character: displayed in place of non-displayable characters.</span><span class="pln">
+</span><span class="pln">	</span><span class="kwd">use</span><span class="pln"> </span><span class="kwd">constant</span><span class="pln"> </span><span class="str">EDT_CTXT_DEFAULT</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;0&#39;</span><span class="pun">;</span><span class="pln">
+</span><span class="pln">	</span><span class="kwd">use</span><span class="pln"> </span><span class="kwd">constant</span><span class="pln"> </span><span class="str">EDT_CTXT_INSERT</span><span class="pln">  </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;1&#39;</span><span class="pun">;</span><span class="pln">
+</span><span class="pln">	</span><span class="kwd">use</span><span class="pln"> </span><span class="kwd">constant</span><span class="pln"> </span><span class="str">EDT_CTXT_SEARCH</span><span class="pln">  </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="str">&#39;2&#39;</span><span class="pun">;</span><span class="pln">
+</span><span class="pln">	</span><span class="kwd">use</span><span class="pln"> </span><span class="kwd">constant</span><span class="pln"> </span><span class="str">EDT_CTXT</span><span class="pln"> </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="pln">EDT_CTXT_DEFAULT</span><span class="pun">;</span><span class="pln">
+</span><span class="pln">	</span><span class="kwd">use</span><span class="pln"> </span><span class="kwd">constant</span><span class="pln"> </span><span class="str">EDT_POS</span><span class="pln">  </span><span class="pun">=&gt;</span><span class="pln"> </span><span class="atv">0</span><span class="pun">;</span><span class="pln">
+</span><span class="pln">
+</span><span class="com">	# Event.pm constants:
+</span><span class="pln">
+</span><span class="com">	# ...
 </span><span class="pun">}</span><span class="pln">
 </span><span class="pln">
 </span><span class="kwd">BEGIN</span><span class="pln"> </span><span class="pun">{</span><span class="pln"> </span><span class="kwd">require</span><span class="pln"> </span><span class="pln">Exporter</span><span class="pun">;</span><span class="pln">
@@ -37,12 +82,36 @@
              init 
 	     obj_init 
 	     $VERS 
-	     CURS_POS 
-	     CURS_CTXT 
-	     DSP_POS 
+
+             CURS_CTXT_LINE 
+             CURS_CTXT_WORD 
+             CURS_CTXT_BYTE 
+             CURS_CTXT_INSR 
+             CURS_CTXT 
+             CURS_POS 
+
+	     DSP_WIDTH 
+	     DSP_HEIGHT 
+	     DSP_XPAD 
+	     DSP_YPAD 
+	     DSP_D_ELEMENTS 
+	     DSP_C_ELEMENTS 
+	     DSP 
+	     DSP_PREV 
+
+             EDT_HORIZ_RULE_CHAR 
+             EDT_OOB_CHAR 
+             EDT_CTXT_DEFAULT 
+             EDT_CTXT_INSERT 
+             EDT_CTXT_SEARCH 
+             EDT_CTXT 
+             EDT_POS 
+
 	     SZ_WORD 
 	     SZ_LINE 
-	     SZ_COLUMN)</span><span class="pun">;</span><span class="pln">
+	     SZ_COLUMN 
+	     SZ_READ 
+	     W32CONS_TITLE)</span><span class="pun">;</span><span class="pln">
 </span><span class="pun">}</span><span class="pln">
 </span><span class="pln">
 </span><span class="com"># Functions: Start-up/initialization.
@@ -98,17 +167,19 @@
 </span><span class="pln">
 </span><span class="com">	# Verify that obj hash defines correct key/value pairs:
 </span><span class="com">	#
-</span><span class="com">	#   Hash Key	Perl Module	Package
-</span><span class="com">	#   ________	___________	_______
-</span><span class="com">	#   charmap	CharMap.pm	ZHex::CharMap
-</span><span class="com">	#   console	Console.pm	ZHex::Console
-</span><span class="com">	#   cursor	Cursor.pm	ZHex::Cursor
-</span><span class="com">	#   debug	Debug.pm	ZHex::Debug
-</span><span class="com">	#   display	Display.pm	ZHex::Display
-</span><span class="com">	#   editor	Editor.pm	ZHex::Editor
-</span><span class="com">	#   event	Event.pm	ZHex::Event
-</span><span class="com">	#   eventloop	EventLoop.pm	ZHex::EventLoop
-</span><span class="com">	#   file	File.pm		ZHex::File
+</span><span class="com">	#   Hash Key		Perl Module		Package
+</span><span class="com">	#   ________		___________		_______
+</span><span class="com">	#   charmap		CharMap.pm		ZHex::CharMap
+</span><span class="com">	#   console		Console.pm		ZHex::Console
+</span><span class="com">	#   cursor		Cursor.pm		ZHex::Cursor
+</span><span class="com">	#   debug		Debug.pm		ZHex::Debug
+</span><span class="com">	#   display		Display.pm		ZHex::Display
+</span><span class="com">	#   editor		Editor.pm		ZHex::Editor
+</span><span class="com">	#   event		Event.pm		ZHex::Event
+</span><span class="com">	#   eventhandler	EventHandler.pm		ZHex::EventHandler
+</span><span class="com">	#   eventloop		EventLoop.pm		ZHex::EventLoop
+</span><span class="com">	#   file		File.pm			ZHex::File
+</span><span class="com">	#   mouse		Mouse.pm		ZHex::Mouse
 </span><span class="pln">
 	</span><span class="kwd">if</span><span class="pln"> </span><span class="pun">(</span><span class="pun">!</span><span class="pln"> </span><span class="kwd">exists</span><span class="pln">  </span><span class="typ">$arg</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;obj&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;charmap&#39;</span><span class="pun">}</span><span class="pln"> </span><span class="pun">||</span><span class="pln"> 
 </span><span class="pln">	    </span><span class="pun">!</span><span class="pln"> </span><span class="kwd">defined</span><span class="pln"> </span><span class="typ">$arg</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;obj&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;charmap&#39;</span><span class="pun">}</span><span class="pln"> </span><span class="pun">||</span><span class="pln"> 
@@ -138,13 +209,21 @@
 </span><span class="pln">	    </span><span class="pun">!</span><span class="pln"> </span><span class="kwd">defined</span><span class="pln"> </span><span class="typ">$arg</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;obj&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;event&#39;</span><span class="pun">}</span><span class="pln"> </span><span class="pun">||</span><span class="pln"> 
 </span><span class="pln">	      </span><span class="pun">!</span><span class="pln"> </span><span class="pun">(</span><span class="kwd">ref</span><span class="pln"> </span><span class="pun">(</span><span class="typ">$arg</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;obj&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;event&#39;</span><span class="pun">}</span><span class="pun">)</span><span class="pln"> </span><span class="pun">eq</span><span class="pln"> </span><span class="str">&#39;ZHex::Event&#39;</span><span class="pun">)</span><span class="pln"> </span><span class="pun">||</span><span class="pln"> 
 </span><span class="pln">
+	    </span><span class="pun">!</span><span class="pln"> </span><span class="kwd">exists</span><span class="pln">  </span><span class="typ">$arg</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;obj&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;eventhandler&#39;</span><span class="pun">}</span><span class="pln"> </span><span class="pun">||</span><span class="pln"> 
+</span><span class="pln">	    </span><span class="pun">!</span><span class="pln"> </span><span class="kwd">defined</span><span class="pln"> </span><span class="typ">$arg</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;obj&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;eventhandler&#39;</span><span class="pun">}</span><span class="pln"> </span><span class="pun">||</span><span class="pln"> 
+</span><span class="pln">	      </span><span class="pun">!</span><span class="pln"> </span><span class="pun">(</span><span class="kwd">ref</span><span class="pln"> </span><span class="pun">(</span><span class="typ">$arg</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;obj&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;eventhandler&#39;</span><span class="pun">}</span><span class="pun">)</span><span class="pln"> </span><span class="pun">eq</span><span class="pln"> </span><span class="str">&#39;ZHex::EventHandler&#39;</span><span class="pun">)</span><span class="pln"> </span><span class="pun">||</span><span class="pln"> 
+</span><span class="pln">
 	    </span><span class="pun">!</span><span class="pln"> </span><span class="kwd">exists</span><span class="pln">  </span><span class="typ">$arg</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;obj&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;eventloop&#39;</span><span class="pun">}</span><span class="pln"> </span><span class="pun">||</span><span class="pln"> 
 </span><span class="pln">	    </span><span class="pun">!</span><span class="pln"> </span><span class="kwd">defined</span><span class="pln"> </span><span class="typ">$arg</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;obj&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;eventloop&#39;</span><span class="pun">}</span><span class="pln"> </span><span class="pun">||</span><span class="pln"> 
 </span><span class="pln">	      </span><span class="pun">!</span><span class="pln"> </span><span class="pun">(</span><span class="kwd">ref</span><span class="pln"> </span><span class="pun">(</span><span class="typ">$arg</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;obj&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;eventloop&#39;</span><span class="pun">}</span><span class="pun">)</span><span class="pln"> </span><span class="pun">eq</span><span class="pln"> </span><span class="str">&#39;ZHex::EventLoop&#39;</span><span class="pun">)</span><span class="pln"> </span><span class="pun">||</span><span class="pln"> 
 </span><span class="pln">
 	    </span><span class="pun">!</span><span class="pln"> </span><span class="kwd">exists</span><span class="pln">  </span><span class="typ">$arg</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;obj&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;file&#39;</span><span class="pun">}</span><span class="pln"> </span><span class="pun">||</span><span class="pln"> 
 </span><span class="pln">	    </span><span class="pun">!</span><span class="pln"> </span><span class="kwd">defined</span><span class="pln"> </span><span class="typ">$arg</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;obj&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;file&#39;</span><span class="pun">}</span><span class="pln"> </span><span class="pun">||</span><span class="pln"> 
-</span><span class="pln">	      </span><span class="pun">!</span><span class="pln"> </span><span class="pun">(</span><span class="kwd">ref</span><span class="pln"> </span><span class="pun">(</span><span class="typ">$arg</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;obj&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;file&#39;</span><span class="pun">}</span><span class="pun">)</span><span class="pln"> </span><span class="pun">eq</span><span class="pln"> </span><span class="str">&#39;ZHex::File&#39;</span><span class="pun">)</span><span class="pun">)</span><span class="pln"> 
+</span><span class="pln">	      </span><span class="pun">!</span><span class="pln"> </span><span class="pun">(</span><span class="kwd">ref</span><span class="pln"> </span><span class="pun">(</span><span class="typ">$arg</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;obj&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;file&#39;</span><span class="pun">}</span><span class="pun">)</span><span class="pln"> </span><span class="pun">eq</span><span class="pln"> </span><span class="str">&#39;ZHex::File&#39;</span><span class="pun">)</span><span class="pln"> </span><span class="pun">||</span><span class="pln"> 
+</span><span class="pln">
+	    </span><span class="pun">!</span><span class="pln"> </span><span class="kwd">exists</span><span class="pln">  </span><span class="typ">$arg</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;obj&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;mouse&#39;</span><span class="pun">}</span><span class="pln"> </span><span class="pun">||</span><span class="pln"> 
+</span><span class="pln">	    </span><span class="pun">!</span><span class="pln"> </span><span class="kwd">defined</span><span class="pln"> </span><span class="typ">$arg</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;obj&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;mouse&#39;</span><span class="pun">}</span><span class="pln"> </span><span class="pun">||</span><span class="pln"> 
+</span><span class="pln">	      </span><span class="pun">!</span><span class="pln"> </span><span class="pun">(</span><span class="kwd">ref</span><span class="pln"> </span><span class="pun">(</span><span class="typ">$arg</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;obj&#39;</span><span class="pun">}</span><span class="pun">-&gt;</span><span class="pun">{</span><span class="str">&#39;mouse&#39;</span><span class="pun">}</span><span class="pun">)</span><span class="pln"> </span><span class="pun">eq</span><span class="pln"> </span><span class="str">&#39;ZHex::Mouse&#39;</span><span class="pun">)</span><span class="pun">)</span><span class="pln"> 
 </span><span class="pln">
 		</span><span class="pun">{</span><span class="pln"> </span><span class="kwd">die</span><span class="pln"> </span><span class="str">&quot;Call to obj_init() failed: argument &#39;obj&#39; missing one (or more) required key/value pairs&quot;</span><span class="pun">;</span><span class="pln"> </span><span class="pun">}</span><span class="pln">
 </span><span class="pln">
@@ -165,15 +244,15 @@
 
 </span><span class="com">=head1 NAME
 
-ZHex::Common (ZHex/Common.pm) - Common Module, ZebraHex Editor.
+ZHex::Common (ZHex/Common.pm) - Common Module, ZHex Editor.
 
 =head1 VERSION
 
-Version 0.01
+Version 0.02
 
 =cut
 </span><span class="com">
-our $VERSION = &#39;0.01&#39;;
+our $VERSION = &#39;0.02&#39;;
 
 </span><span class="com">=head1 SYNOPSIS
 
@@ -194,8 +273,8 @@ Usage:
 
     ...
 
-    # Access function defined within a different submodule (ZHex/Editor.pm).
-    $self-&gt;{&#39;obj&#39;}-&gt;{&#39;editor&#39;}-&gt;scroll_up_1x_line();
+    # Access function defined within a different submodule (ZHex/EventHandler.pm).
+    $self-&gt;{&#39;obj&#39;}-&gt;{&#39;eventhandler&#39;}-&gt;scroll_up_1x_line();
 
 =head1 EXPORT
 

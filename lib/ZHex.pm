@@ -463,26 +463,25 @@ __END__
 
 =head1 NAME
 
-ZHex - Zebra Hex Editor.
+ZHex (ZHex.pm) - Main Umbrella Module, ZHex Editor.
 
 =head1 VERSION
 
-Version 0.01
+Version 0.02
 
 =cut
 
-our $VERSION = '0.01';
-
+our $VERSION = '0.02';
 
 =head1 SYNOPSIS
 
-Quick summary of what the module does.
+The ZHex module defines functions which provide...
 
-Perhaps a little code snippet.
+Usage:
 
     use ZHex;
 
-    my $editorObj = ZHex->new();
+    my $ObjZHex = ZHex->new();
     ...
 
 =head1 EXPORT
@@ -491,6 +490,9 @@ No functions are exported.
 
 =head1 SUBROUTINES/METHODS
 
+=head2 new
+Method new()...
+= cut
 
 =head2 init
 Method init()...
@@ -508,6 +510,10 @@ Method init_cli_opts_main()...
 Method init_objects_main()...
 = cut
 
+=head2 init_console
+Method init_console()...
+= cut
+
 =head2 run
 Method run()...
 = cut
@@ -520,7 +526,6 @@ Method display_help_msg()...
 Method set_accessors_main()...
 = cut
 
-
 =head1 AUTHOR
 
 Double Z, C<< <zacharyz at gmail.com> >>
@@ -531,15 +536,11 @@ Please report any bugs or feature requests to C<bug-ZHex at rt.cpan.org>, or thr
 the web interface at L<http://rt.cpan.org/NoAuth/ReportBug.html?Queue=ZHex>.  I will be notified, and then you'll
 automatically be notified of progress on your bug as I make changes.
 
-
-
-
 =head1 SUPPORT
 
 You can find documentation for this module with the perldoc command.
 
     perldoc ZHex
-
 
 You can also look for information at:
 
@@ -563,9 +564,7 @@ L<http://search.cpan.org/dist/ZHex/>
 
 =back
 
-
 =head1 ACKNOWLEDGEMENTS
-
 
 =head1 LICENSE AND COPYRIGHT
 

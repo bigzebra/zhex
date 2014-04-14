@@ -1,5 +1,5 @@
 {
-   "abstract" : "Zebra Hex Editor.",
+   "abstract" : "unknown",
    "author" : [
       "Double Z <zacharyz@gmail.com>"
    ],
@@ -41,5 +41,5 @@
       }
    },
    "release_status" : "stable",
-   "version" : "0.01"
+   "version" : "0.02"
 }

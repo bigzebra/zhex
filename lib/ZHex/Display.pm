@@ -1152,15 +1152,15 @@ __END__
 
 =head1 NAME
 
-ZHex::Display (ZHex/Display.pm) - Display Module, ZebraHex Editor.
+ZHex::Display (ZHex/Display.pm) - Display Module, ZHex Editor.
 
 =head1 VERSION
 
-Version 0.01
+Version 0.02
 
 =cut
 
-our $VERSION = '0.01';
+our $VERSION = '0.02';
 
 =head1 SYNOPSIS
 
@@ -1178,7 +1178,7 @@ Usage:
 
     use ZHex::Common qw(new obj_init $VERS);
     my $objDisplay = $self->{'obj'}->{'display'};
-    $objDisplay->padding_set ('dsp_ypad' => 2, 'dsp_xpad' => 2);
+    $objDisplay->padding_set ({ 'dsp_ypad' => 2, 'dsp_xpad' => 2 });
 
 =head1 EXPORT
 

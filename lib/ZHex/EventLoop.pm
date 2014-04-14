@@ -334,24 +334,20 @@ __END__
 
 =head1 NAME
 
-ZHex::EventLoop (ZHex/EventLoop.pm) - EventLoop Module, ZebraHex Editor.
+ZHex::EventLoop (ZHex/EventLoop.pm) - Event Loop Module, ZHex Editor.
 
 =head1 VERSION
 
-Version 0.01
+Version 0.02
 
 =cut
 
-our $VERSION = '0.01';
+our $VERSION = '0.02';
 
 =head1 SYNOPSIS
 
 The ZHex::EventLoop module provides functions for event handling, 
-including the main event loop. This module also provides functions for 
-registering callback subroutines to handle various event types, and 
-provides for the abstraction of 'context' which simply means that 
-different callback subroutines will be called based upon which context 
-the hex editor is currently operating within.
+including the main event loop.
 
 Usage:
 
@@ -365,12 +361,20 @@ No functions are exported.
 
 =head1 SUBROUTINES/METHODS
 
-=head2 evt_loop
-Method evt_loop()...
+=head2 new
+Method new()...
 = cut
 
 =head2 init
 Method init()...
+= cut
+
+=head2 obj_init
+Method obj_init()...
+= cut
+
+=head2 evt_loop
+Method evt_loop()...
 = cut
 
 =head2 evt_read

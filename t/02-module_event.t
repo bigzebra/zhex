@@ -18,21 +18,11 @@ use Test::More tests => 4;
 #   obj_init()		IMPORTED FROM ZHex::Common.pm.
 # Member functions:
 #   init()
-#   insert_backspace()
-#   insert_char()
-#   insert_enter()
-#   insert_escape()
-#   insert_l_arrow()
-#   insert_r_arrow()
-#   quit()
-#   register_evt_callbacks()
-#   search_backspace()
-#   search_box()
-#   search_char()
-#   search_enter()
-#   search_escape()
-#   search_l_arrow()
-#   search_r_arrow()
+#   register_callback()		Register callback subroutine to handle event under certain context.
+#   register_evt_sig()		Register event signature (unique values of evt array that identify different keystrokes).
+#   gen_evt_array()		...
+#   evt_map()			...
+#   evt_dispatch()		...
 # Values exported: 
 #   <NONE>
 
@@ -41,23 +31,13 @@ use_ok ('ZHex::Event')
 
 my @objEventSubs = 
   ('init', 
-   'insert_backspace', 
-   'insert_char', 
-   'insert_enter', 
-   'insert_escape', 
-   'insert_l_arrow', 
-   'insert_r_arrow', 
    'new', 
    'obj_init', 
-   'quit', 
-   'register_evt_callbacks', 
-   'search_backspace', 
-   'search_box', 
-   'search_char', 
-   'search_enter', 
-   'search_escape', 
-   'search_l_arrow', 
-   'search_r_arrow');
+   'register_callback', 
+   'register_evt_sig', 
+   'gen_evt_array', 
+   'evt_map', 
+   'evt_dispatch');
 
 can_ok ('ZHex::Event', 'new');
 my $objEvent = ZHex::Event->new();

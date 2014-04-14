@@ -21,9 +21,6 @@ use Test::More tests => 4;
 #   colorize_display()
 #   colorize_reverse()
 #   init()
-#   lmouse()
-#   mouse_over()
-#   rmouse()
 #   w32cons_clear()
 #   w32cons_close()
 #   w32cons_cursor_bleft_dsp()
@@ -51,11 +48,8 @@ my @objConsoleSubs =
    'colorize_display', 
    'colorize_reverse', 
    'init', 
-   'lmouse', 
-   'mouse_over', 
    'new', 
    'obj_init', 
-   'rmouse', 
    'w32cons_clear', 
    'w32cons_close', 
    'w32cons_cursor_bleft_dsp', 

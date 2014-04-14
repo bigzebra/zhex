@@ -20,7 +20,7 @@
 #     MIN_PERL_VERSION => q[5.006]
 #     NAME => q[ZHex]
 #     PL_FILES => {  }
-#     PREREQ_PM => { Test::More=>q[0], Win32::Console=>q[0], IO::File=>q[0], Time::HiRes=>q[0], Getopt::Long=>q[0] }
+#     PREREQ_PM => { IO::File=>q[0], Test::More=>q[0], Getopt::Long=>q[0], Win32::Console=>q[0], Time::HiRes=>q[0] }
 #     TEST_REQUIRES => {  }
 #     VERSION_FROM => q[lib/ZHex.pm]
 #     clean => { FILES=>q[ZHex-* t/test.txt] }
@@ -67,11 +67,11 @@ DIRFILESEP = \\
 DFSEP = $(DIRFILESEP)
 NAME = ZHex
 NAME_SYM = ZHex
-VERSION = 0.01
+VERSION = 0.02
 VERSION_MACRO = VERSION
-VERSION_SYM = 0_01
+VERSION_SYM = 0_02
 DEFINE_VERSION = -D$(VERSION_MACRO)=\"$(VERSION)\"
-XS_VERSION = 0.01
+XS_VERSION = 0.02
 XS_VERSION_MACRO = XS_VERSION
 XS_DEFINE_VERSION = -D$(XS_VERSION_MACRO)=\"$(XS_VERSION)\"
 INST_ARCHLIB = blib\arch
@@ -178,8 +178,10 @@ MAN3PODS = lib/ZHex.pm \
 	lib/ZHex/Display.pm \
 	lib/ZHex/Editor.pm \
 	lib/ZHex/Event.pm \
+	lib/ZHex/EventHandler.pm \
 	lib/ZHex/EventLoop.pm \
-	lib/ZHex/File.pm
+	lib/ZHex/File.pm \
+	lib/ZHex/Mouse.pm
 
 # Where is the Config information that we are using/depend on
 CONFIGDEP = $(PERL_ARCHLIB)$(DFSEP)Config.pm $(PERL_INC)$(DFSEP)config.h
@@ -210,8 +212,10 @@ TO_INST_PM = lib/ZHex.pm \
 	lib/ZHex/Display.pm \
 	lib/ZHex/Editor.pm \
 	lib/ZHex/Event.pm \
+	lib/ZHex/EventHandler.pm \
 	lib/ZHex/EventLoop.pm \
 	lib/ZHex/File.pm \
+	lib/ZHex/Mouse.pm \
 	lib/html/desert.css \
 	lib/html/index.html \
 	lib/html/src-CharMap_pm.html \
@@ -221,9 +225,11 @@ TO_INST_PM = lib/ZHex.pm \
 	lib/html/src-Debug_pm.html \
 	lib/html/src-Display_pm.html \
 	lib/html/src-Editor_pm.html \
+	lib/html/src-EventHandler_pm.html \
 	lib/html/src-EventLoop_pm.html \
 	lib/html/src-Event_pm.html \
 	lib/html/src-File_pm.html \
+	lib/html/src-Mouse_pm.html \
 	lib/html/src-ZHex_pm.html \
 	lib/html/src-zhex_pl.html \
 	lib/html/sunburst.css \
@@ -250,10 +256,14 @@ PM_TO_BLIB = lib/ZHex.pm \
 	blib\lib\ZHex\Editor.pm \
 	lib/ZHex/Event.pm \
 	blib\lib\ZHex\Event.pm \
+	lib/ZHex/EventHandler.pm \
+	blib\lib\ZHex\EventHandler.pm \
 	lib/ZHex/EventLoop.pm \
 	blib\lib\ZHex\EventLoop.pm \
 	lib/ZHex/File.pm \
 	blib\lib\ZHex\File.pm \
+	lib/ZHex/Mouse.pm \
+	blib\lib\ZHex\Mouse.pm \
 	lib/html/desert.css \
 	blib\lib\html\desert.css \
 	lib/html/index.html \
@@ -272,12 +282,16 @@ PM_TO_BLIB = lib/ZHex.pm \
 	blib\lib\html\src-Display_pm.html \
 	lib/html/src-Editor_pm.html \
 	blib\lib\html\src-Editor_pm.html \
+	lib/html/src-EventHandler_pm.html \
+	blib\lib\html\src-EventHandler_pm.html \
 	lib/html/src-EventLoop_pm.html \
 	blib\lib\html\src-EventLoop_pm.html \
 	lib/html/src-Event_pm.html \
 	blib\lib\html\src-Event_pm.html \
 	lib/html/src-File_pm.html \
 	blib\lib\html\src-File_pm.html \
+	lib/html/src-Mouse_pm.html \
+	blib\lib\html\src-Mouse_pm.html \
 	lib/html/src-ZHex_pm.html \
 	blib\lib\html\src-ZHex_pm.html \
 	lib/html/src-zhex_pl.html \
@@ -359,7 +373,7 @@ RCS_LABEL = rcs -Nv$(VERSION_SYM): -q
 DIST_CP = best
 DIST_DEFAULT = tardist
 DISTNAME = ZHex
-DISTVNAME = ZHex-0.01
+DISTVNAME = ZHex-0.02
 
 
 # --- MakeMaker macro section:
@@ -522,8 +536,10 @@ manifypods : pure_all  \
 	lib/ZHex/Display.pm \
 	lib/ZHex/Editor.pm \
 	lib/ZHex/Event.pm \
+	lib/ZHex/EventHandler.pm \
 	lib/ZHex/EventLoop.pm \
-	lib/ZHex/File.pm
+	lib/ZHex/File.pm \
+	lib/ZHex/Mouse.pm
 	$(NOECHO) $(POD2MAN) --section=3 --perm_rw=$(PERM_RW) \
 	  lib/ZHex.pm $(INST_MAN3DIR)\ZHex.$(MAN3EXT) \
 	  lib/ZHex/CharMap.pm $(INST_MAN3DIR)\ZHex.CharMap.$(MAN3EXT) \
@@ -534,8 +550,10 @@ manifypods : pure_all  \
 	  lib/ZHex/Display.pm $(INST_MAN3DIR)\ZHex.Display.$(MAN3EXT) \
 	  lib/ZHex/Editor.pm $(INST_MAN3DIR)\ZHex.Editor.$(MAN3EXT) \
 	  lib/ZHex/Event.pm $(INST_MAN3DIR)\ZHex.Event.$(MAN3EXT) \
+	  lib/ZHex/EventHandler.pm $(INST_MAN3DIR)\ZHex.EventHandler.$(MAN3EXT) \
 	  lib/ZHex/EventLoop.pm $(INST_MAN3DIR)\ZHex.EventLoop.$(MAN3EXT) \
-	  lib/ZHex/File.pm $(INST_MAN3DIR)\ZHex.File.$(MAN3EXT) 
+	  lib/ZHex/File.pm $(INST_MAN3DIR)\ZHex.File.$(MAN3EXT) \
+	  lib/ZHex/Mouse.pm $(INST_MAN3DIR)\ZHex.Mouse.$(MAN3EXT) 
 
 
 
@@ -595,7 +613,7 @@ realclean_subdirs :
 # Delete temporary files (via clean) and also delete dist files
 realclean purge ::  clean realclean_subdirs
 	- $(RM_F) \
-	  $(FIRST_MAKEFILE) $(MAKEFILE_OLD) 
+	  $(MAKEFILE_OLD) $(FIRST_MAKEFILE) 
 	- $(RM_RF) \
 	  $(DISTVNAME) 
 
@@ -604,7 +622,7 @@ realclean purge ::  clean realclean_subdirs
 metafile : create_distdir
 	$(NOECHO) $(ECHO) Generating META.yml
 	$(NOECHO) $(ECHO) --- > META_new.yml
-	$(NOECHO) $(ECHO) "abstract: 'Zebra Hex Editor.'" >> META_new.yml
+	$(NOECHO) $(ECHO) "abstract: unknown" >> META_new.yml
 	$(NOECHO) $(ECHO) author: >> META_new.yml
 	$(NOECHO) $(ECHO) "  - 'Double Z <zacharyz@gmail.com>'" >> META_new.yml
 	$(NOECHO) $(ECHO) build_requires: >> META_new.yml
@@ -628,11 +646,11 @@ metafile : create_distdir
 	$(NOECHO) $(ECHO) "  Time::HiRes: '0'" >> META_new.yml
 	$(NOECHO) $(ECHO) "  Win32::Console: '0'" >> META_new.yml
 	$(NOECHO) $(ECHO) "  perl: '5.006'" >> META_new.yml
-	$(NOECHO) $(ECHO) "version: '0.01'" >> META_new.yml
+	$(NOECHO) $(ECHO) "version: '0.02'" >> META_new.yml
 	-$(NOECHO) $(MV) META_new.yml $(DISTVNAME)/META.yml
 	$(NOECHO) $(ECHO) Generating META.json
 	$(NOECHO) $(ECHO) {{ > META_new.json
-	$(NOECHO) $(ECHO) "   \"abstract\" : \"Zebra Hex Editor.\"," >> META_new.json
+	$(NOECHO) $(ECHO) "   \"abstract\" : \"unknown\"," >> META_new.json
 	$(NOECHO) $(ECHO) "   \"author\" : [" >> META_new.json
 	$(NOECHO) $(ECHO) "      \"Double Z ^<zacharyz^@gmail.com^>\"" >> META_new.json
 	$(NOECHO) $(ECHO) "   ]," >> META_new.json
@@ -674,7 +692,7 @@ metafile : create_distdir
 	$(NOECHO) $(ECHO) "      }}" >> META_new.json
 	$(NOECHO) $(ECHO) "   }}," >> META_new.json
 	$(NOECHO) $(ECHO) "   \"release_status\" : \"stable\"," >> META_new.json
-	$(NOECHO) $(ECHO) "   \"version\" : \"0.01\"" >> META_new.json
+	$(NOECHO) $(ECHO) "   \"version\" : \"0.02\"" >> META_new.json
 	$(NOECHO) $(ECHO) }} >> META_new.json
 	-$(NOECHO) $(MV) META_new.json $(DISTVNAME)/META.json
 
@@ -976,7 +994,7 @@ testdb_static :: testdb_dynamic
 # Creates a PPD (Perl Package Description) for a binary distribution.
 ppd :
 	$(NOECHO) $(ECHO) "<SOFTPKG NAME=\"$(DISTNAME)\" VERSION=\"$(VERSION)\">" > $(DISTNAME).ppd
-	$(NOECHO) $(ECHO) "    <ABSTRACT>Zebra Hex Editor.</ABSTRACT>" >> $(DISTNAME).ppd
+	$(NOECHO) $(ECHO) "    <ABSTRACT></ABSTRACT>" >> $(DISTNAME).ppd
 	$(NOECHO) $(ECHO) "    <AUTHOR>Double Z &lt;zacharyz@gmail.com&gt;</AUTHOR>" >> $(DISTNAME).ppd
 	$(NOECHO) $(ECHO) "    <IMPLEMENTATION>" >> $(DISTNAME).ppd
 	$(NOECHO) $(ECHO) "        <PERLCORE VERSION=\"5,006,0,0\" />" >> $(DISTNAME).ppd
@@ -1003,8 +1021,10 @@ pm_to_blib : $(FIRST_MAKEFILE) $(TO_INST_PM)
 	  lib/ZHex/Display.pm blib\lib\ZHex\Display.pm \
 	  lib/ZHex/Editor.pm blib\lib\ZHex\Editor.pm \
 	  lib/ZHex/Event.pm blib\lib\ZHex\Event.pm \
+	  lib/ZHex/EventHandler.pm blib\lib\ZHex\EventHandler.pm \
 	  lib/ZHex/EventLoop.pm blib\lib\ZHex\EventLoop.pm \
 	  lib/ZHex/File.pm blib\lib\ZHex\File.pm \
+	  lib/ZHex/Mouse.pm blib\lib\ZHex\Mouse.pm \
 	  lib/html/desert.css blib\lib\html\desert.css \
 	  lib/html/index.html blib\lib\html\index.html \
 	  lib/html/src-CharMap_pm.html blib\lib\html\src-CharMap_pm.html \
@@ -1014,11 +1034,13 @@ pm_to_blib : $(FIRST_MAKEFILE) $(TO_INST_PM)
 	  lib/html/src-Debug_pm.html blib\lib\html\src-Debug_pm.html \
 	  lib/html/src-Display_pm.html blib\lib\html\src-Display_pm.html \
 	  lib/html/src-Editor_pm.html blib\lib\html\src-Editor_pm.html \
-	  lib/html/src-EventLoop_pm.html blib\lib\html\src-EventLoop_pm.html \
+	  lib/html/src-EventHandler_pm.html blib\lib\html\src-EventHandler_pm.html \
+	  lib/html/src-EventLoop_pm.html blib\lib\html\src-EventLoop_pm.html 
+	$(NOECHO) $(ABSPERLRUN) -MExtUtils::Install -e "pm_to_blib({{@ARGV}}, '$(INST_LIB)\auto', q[$(PM_FILTER)], '$(PERM_DIR)')" -- \
 	  lib/html/src-Event_pm.html blib\lib\html\src-Event_pm.html \
 	  lib/html/src-File_pm.html blib\lib\html\src-File_pm.html \
-	  lib/html/src-ZHex_pm.html blib\lib\html\src-ZHex_pm.html 
-	$(NOECHO) $(ABSPERLRUN) -MExtUtils::Install -e "pm_to_blib({{@ARGV}}, '$(INST_LIB)\auto', q[$(PM_FILTER)], '$(PERM_DIR)')" -- \
+	  lib/html/src-Mouse_pm.html blib\lib\html\src-Mouse_pm.html \
+	  lib/html/src-ZHex_pm.html blib\lib\html\src-ZHex_pm.html \
 	  lib/html/src-zhex_pl.html blib\lib\html\src-zhex_pl.html \
 	  lib/html/sunburst.css blib\lib\html\sunburst.css \
 	  lib/html/zhex_src_to_html.pl blib\lib\html\zhex_src_to_html.pl \

@@ -17,10 +17,12 @@ use Test::More tests => 4;
 #   new()		IMPORTED FROM ZHex::Common.pm.
 #   obj_init()		IMPORTED FROM ZHex::Common.pm.
 # Member functions:
-#   event_loop()
 #   init()
-#   read_evt()
-#   register_callback()
+#   evt_read()
+#   evt_filter()
+#   evt_mouse()
+#   evt_loop()
+
 # Values exported: 
 #   <NONE>
 
@@ -28,12 +30,13 @@ use_ok ('ZHex::EventLoop')
   or die "Call to use_ok() returned w/ failure (on module 'ZHex::EventLoop')";
 
 my @objEventLoopSubs = 
-  ('event_loop', 
-   'init', 
+  ('init', 
    'new', 
    'obj_init', 
-   'read_evt', 
-   'register_callback');
+   'evt_read', 
+   'evt_filter', 
+   'evt_mouse', 
+   'evt_loop');
 
 can_ok ('ZHex::EventLoop', 'new');
 my $objEventLoop = ZHex::EventLoop->new();

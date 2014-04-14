@@ -548,15 +548,15 @@ __END__
 
 =head1 NAME
 
-ZHex::Debug (ZHex/Debug.pm) - Debug Module, ZebraHex Editor.
+ZHex::Debug (ZHex/Debug.pm) - Debug Module, ZHex Editor.
 
 =head1 VERSION
 
-Version 0.01
+Version 0.02
 
 =cut
 
-our $VERSION = '0.01';
+our $VERSION = '0.02';
 
 =head1 SYNOPSIS
 

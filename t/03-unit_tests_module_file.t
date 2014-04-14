@@ -34,8 +34,7 @@ BEGIN {
 }
 
 my @objFileSubs = 
-  ('check_file', 
-   'file_bytes', 
+  ('file_bytes', 
    'file_len', 
    'init', 
    'insert_str', 
@@ -61,7 +60,6 @@ subtest ('Clean up temporary test files' =>
 #
 #   Member Function	Test Description		Expected return value
 #   _______________	________________		_____________________
-#   check_file()	Test w/ non-existing file.	Returns 'undef' w/ bad 'fn' arguemnt.
 #   file_bytes()	Test w/ non-existing file.	Returns 'undef' w/ bad 'fn' arguemnt.
 #   file_len()		Test w/ non-existing file.	Returns 'undef' w/ bad 'fn' arguemnt.
 #   insert_str()	-
@@ -71,8 +69,8 @@ subtest ('Clean up temporary test files' =>
 
 CALL_CHECK_FILE_W_NONEXISTING: {
 
-	my $rv = $objFile->check_file ({'fn' => FN_TESTFILE});
-	is ($rv, undef, "Call check_file() w/ file name of non-existing file.");
+	my $rv = $objFile->stat_file ({'fn' => FN_TESTFILE});
+	is ($rv, undef, "Call stat_file() w/ file name of non-existing file.");
 }
 
 CALL_SET_FILE_W_NONEXISTING: {
@@ -162,7 +160,6 @@ is ($fc_rd, $fc_wr, "Verified test file '" . FN_TESTFILE . "' contains correct t
 #
 #   Member Function	Test Description		Expected return value			Additional testable results
 #   _______________	________________		_____________________			___________________________
-#   check_file()	Test w/ non-existing file.	Returns '1' w/ good 'fn' arguemnt.	-
 #   file_bytes()	Test w/ non-existing file.	Returns (sub)string of bytes requested.	Test substring from beginning/middle/end of file. Test whole file.
 #   file_len()		Test w/ non-existing file.	Returns size of file in bytes.		-
 #   insert_str()	...				...					...
@@ -172,8 +169,8 @@ is ($fc_rd, $fc_wr, "Verified test file '" . FN_TESTFILE . "' contains correct t
 
 CALL_CHECK_FILE_W_EXISTING: {
 
-	my $rv = $objFile->check_file ({'fn' => FN_TESTFILE});
-	is ($rv, 1, "Call check_file() w/ file name of existing file.");
+	my $rv = $objFile->stat_file ({'fn' => FN_TESTFILE});
+	is ($rv, 1, "Call stat_file() w/ file name of existing file.");
 }
 
 CALL_SET_FILE_W_EXISTING: {

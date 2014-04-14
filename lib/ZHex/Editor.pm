@@ -1113,15 +1113,15 @@ __END__
 
 =head1 NAME
 
-ZHex::Editor (ZHex/Editor.pm) - Editor Module, ZebraHex Editor.
+ZHex::Editor (ZHex/Editor.pm) - Editor Module, ZHex Editor.
 
 =head1 VERSION
 
-Version 0.01
+Version 0.02
 
 =cut
 
-our $VERSION = '0.01';
+our $VERSION = '0.02';
 
 =head1 SYNOPSIS
 
@@ -1235,6 +1235,18 @@ Method set_sz_line()...
 
 =head2 set_sz_word
 Method set_sz_word()...
+= cut
+
+=head2 set_edt_ctxt
+Method set_edt_ctxt()...
+= cut
+
+=head2 set_horiz_rule_char
+Method set_horiz_rule_char()...
+= cut
+
+=head2 set_oob_char
+Method set_oob_char()...
 = cut
 
 =head1 AUTHOR

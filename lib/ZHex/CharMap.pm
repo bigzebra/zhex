@@ -522,15 +522,15 @@ __END__
 
 =head1 NAME
 
-ZHex::CharMap (ZHex/CharMap.pm) - CharMap Module, ZebraHex Editor.
+ZHex::CharMap (ZHex/CharMap.pm) - CharMap Module, ZHex Editor.
 
 =head1 VERSION
 
-Version 0.01
+Version 0.02
 
 =cut
 
-our $VERSION = '0.01';
+our $VERSION = '0.02';
 
 =head1 SYNOPSIS
 
@@ -548,7 +548,7 @@ Usage:
     use ZHex::Common qw(new obj_init $VERS);
     my $objCharMap = $self->{'obj'}->{'charmap'};
     my $chr_map = $objCharMap->chr_map();
-    $objCharMap->chr_map ({'chr_map' => $chr_map});
+    $objCharMap->chr_map ({ 'chr_map' => $chr_map });
 
 =head1 EXPORT
 
