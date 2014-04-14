@@ -177,29 +177,6 @@ sub init {
 	return (1);
 }
 
-sub register_evt_callbacks {
-
-	my $self = shift;
-
-	my $objCharMap   = $self->{'obj'}->{'charmap'};
-	my $objEvent     = $self->{'obj'}->{'event'};
-	my $objEventLoop = $self->{'obj'}->{'eventloop'};
-
-	$objEvent->register_callback 
-	  ({'edt_ctxt' => EDT_CTXT_DEFAULT, 
-	    'evt_nm'   => 'CONSCURS_INVIS', 
-	    'evt_cb'   => sub { $self->w32cons_cursor_invisible(); }, 
-	    'evt' =>  [ $objEvent->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({'lname' => 'LATIN SMALL LETTER V'}) }) ] });
-
-	$objEvent->register_callback 
-	  ({'edt_ctxt' => EDT_CTXT_DEFAULT, 
-	    'evt_nm'   => 'CONSCURS_VIS', 
-	    'evt_cb'   => sub { $self->w32cons_cursor_visible(); }, 
-	    'evt' =>  [ $objEvent->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({'lname' => 'LATIN SMALL LETTER V'}) }) ] });
-
-	return (1);
-}
-
 # Functions: Win32::Console module wrappers.
 #
 #   _____________		___________						____________________________

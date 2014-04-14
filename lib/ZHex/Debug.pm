@@ -107,15 +107,18 @@ sub dbg_mouse_evt {
 	# Display mouse event debugging information: 
 	#   Character block area (17 chars wide x 10 chars high).
 
-	if (! defined $arg->{'evt'}->[0]               || 
-	    !        ($arg->{'evt'}->[0] ==  2)        ||   # Event Type: 2 (mouse event)
-	    ! defined $arg->{'evt'}->[3]               ||
-	    !       (($arg->{'evt'}->[3] ==  0)        ||   # Button State:  0 (no    mouse button)
-	             ($arg->{'evt'}->[3] ==  1)        ||   # Button State:  1 (left  mouse button)
-	             ($arg->{'evt'}->[3] ==  2)        ||   # Button State:  2 (right mouse button)
-	           ((($arg->{'evt'}->[3] ==  7864320)  ||   # Button State:  7864320 (mouse wheel roll upward)
+	if (! defined $arg->{'evt'}->[0] || 
+	             ($arg->{'evt'}->[0] eq '') || 
+	    !        ($arg->{'evt'}->[0] ==  2) ||          # Event Type: 2 (mouse event)
+	    ! defined $arg->{'evt'}->[3] || 
+	             ($arg->{'evt'}->[3] eq '') || 
+	    !       (($arg->{'evt'}->[3] ==  0) ||          # Button State:  0 (no    mouse button)
+	             ($arg->{'evt'}->[3] ==  1) ||          # Button State:  1 (left  mouse button)
+	             ($arg->{'evt'}->[3] ==  2) ||          # Button State:  2 (right mouse button)
+	           ((($arg->{'evt'}->[3] ==  7864320) ||    # Button State:  7864320 (mouse wheel roll upward)
                      ($arg->{'evt'}->[3] == -7864320)) &&   # Button State: -7864320 (mouse wheel roll downward)
-	      defined $arg->{'evt'}->[5]               && 
+	      defined $arg->{'evt'}->[5] && 
+	           ! ($arg->{'evt'}->[5] eq '') && 
 	             ($arg->{'evt'}->[5] ==  4)))) {
 
 		return (undef);
@@ -176,8 +179,10 @@ sub dbg_keybd_evt {
 	# Display keyboard event debugging information: 
 	#   Character block area (17 chars wide x 8 chars high).
 
-	if (! defined $arg->{'evt'}->[0]       || 
-	    ! defined $arg->{'evt'}->[1]       || 
+	if (! defined $arg->{'evt'}->[0] || 
+	             ($arg->{'evt'}->[0] eq '') || 
+	    ! defined $arg->{'evt'}->[1] || 
+	             ($arg->{'evt'}->[1] eq '') || 
 	           ! ($arg->{'evt'}->[0] == 1) ||   # Event_Type: 1 (keyboard event).
 	           ! ($arg->{'evt'}->[1] == 1)) {   # Key_Down:   1 (key pressed).
 
@@ -223,6 +228,7 @@ sub dbg_unmatched_evt {
 
 	my @lbl;
 	if (defined $arg->{'evt'}->[0] && 
+	         ! ($arg->{'evt'}->[0] eq '') && 
 	            $arg->{'evt'}->[0] == 1) {
 
 		@lbl = 
@@ -235,6 +241,7 @@ sub dbg_unmatched_evt {
 		   'CtrlKeyS');   # 7
 	}
 	elsif (defined $arg->{'evt'}->[0] && 
+	            ! ($arg->{'evt'}->[0] eq '') && 
 	               $arg->{'evt'}->[0] == 2) {
 
 		@lbl = 

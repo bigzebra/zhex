@@ -2,35 +2,28 @@
 
 package ZHex;
 
-my $singleton;
-
-BEGIN {
-
-	$singleton = {
-
-		attribute => 'value',
-		another   => 'something',
-	};
-
-	bless $singleton, "Name";
-}
-
-sub new {
-
-	my $class = shift;
-	return $singleton;
-}
-
 use 5.006;
 use strict;
 use warnings FATAL => 'all';
 
-use ZHex::Common 
-  qw(new 
-     init 
-     obj_init 
+my $class;
+my $version;
+my $singleton;
 
-     $VERS 
+BEGIN {
+
+	$class   = 'ZHex';
+	$version = '0.02';
+
+	$singleton = 
+	  { 'class_nm' => $class,       # <--- These are just examples of setting member variables at creation...
+	    'version'  => $version };   # <--- These are just examples of setting member variables at creation...
+
+	bless $singleton, $class;
+}
+
+use ZHex::Common 
+  qw($VERS 
 
      CURS_CTXT_LINE
      CURS_CTXT_WORD
@@ -85,9 +78,28 @@ BEGIN { require Exporter;
 }
 
 # Functions
-#   init_cli_opts_main()
 #
-#
+#   Name			Description
+#   ____			___________
+#   new()			...
+#   init_cli_opts_main()	...
+#   init_objects_main()		...
+#   set_accessors_main()	...
+#   run()
+
+sub new {
+
+	my $class_arg = shift;
+
+	if (ref ($singleton) eq $class) {
+
+		return $singleton;
+	}
+	else {
+
+		die "Expected class '" . $class . "', got arg '" . $class_arg . "'";
+	}
+}
 
 sub init_cli_opts_main {
 
@@ -176,35 +188,49 @@ sub init_objects_main {
 
 	my $self = shift;
 
-	my $obj;
-	INIT_OBJECTS: {
+	# Initialize objects provided by modules.
+	# Store references to all objects in obj hash.
+	# Store reference to obj hash in each object.
 
-		# Initialize objects provided by modules.
-		# Store references to all objects in obj hash.
-		# Store reference to obj hash in each object.
+	$self->{'obj'} = 
+	  { 'charmap'      => ZHex::CharMap->new(), 
+	    'console'      => ZHex::Console->new(), 
+	    'cursor'       => ZHex::Cursor->new(), 
+	    'debug'        => ZHex::Debug->new(), 
+	    'display'      => ZHex::Display->new(), 
+	    'editor'       => ZHex::Editor->new(), 
+	    'event'        => ZHex::Event->new(), 
+	    'eventhandler' => ZHex::EventHandler->new(), 
+	    'eventloop'    => ZHex::EventLoop->new(), 
+	    'file'         => ZHex::File->new(), 
+	    'mouse'        => ZHex::Mouse->new() };
 
-		$obj = 
-		  { 'charmap'   => ZHex::CharMap->new(), 
-		    'console'   => ZHex::Console->new(), 
-		    'cursor'    => ZHex::Cursor->new(), 
-		    'debug'     => ZHex::Debug->new(), 
-		    'display'   => ZHex::Display->new(), 
-		    'editor'    => ZHex::Editor->new(), 
-		    'event'     => ZHex::Event->new(), 
-		    'eventhandler' => ZHex::EventHandler->new(), 
-		    'eventloop' => ZHex::EventLoop->new(), 
-		    'file'      => ZHex::File->new(), 
-		    'mouse'     => ZHex::Mouse->new() };
+	foreach my $module (sort keys %{ $self->{'obj'} }) {
 
-		foreach my $module (sort keys %{ $obj }) {
-
-			if (! $obj->{$module}->obj_init ({ 'obj' => $obj })) 
-			  { die "Call to obj_init() within module '" . $module . "' returned w/ failure"; }
-		}
+		if (! $self->{'obj'}->{ $module }->obj_init ({ 'obj' => $self->{'obj'} })) 
+		  { die "Call to obj_init() within module '" . $module . "' returned w/ failure"; }
 	}
 
-	$self->{'obj'} = {};
-	$self->{'obj'} = $obj;
+	return (1);
+}
+
+sub init_console {
+
+	my $self = shift;
+
+	INIT_W32_CONSOLE: {
+
+		# Initialize the system console:
+		#
+		#   1) Initialize console object.
+		#   2) Store terminal settings/characteristics.
+
+		if (! ($self->{'obj'}->{'console'}->w32cons_init())) 
+			{ die "Call to w32cons_init() returned w/ failure"; }
+
+		if (! ($self->{'obj'}->{'console'}->w32cons_termcap())) 
+			{ die "Call to w32cons_termcap() returned w/ failure"; }
+	}
 
 	return (1);
 }
@@ -224,20 +250,38 @@ sub set_accessors_main {
 
 	# ___________________________
 	# Set variables in Display.pm.
+	#
+	#   1) Set width/height of editor display.
+	#   2) Set vertical/horizontal padding (space at the top/left of editor display).
 
-	$self->{'obj'}->{'display'}->dimensions_set ({ 'd_width'  => DSP_WIDTH, 'd_height' => DSP_HEIGHT });
-	$self->{'obj'}->{'display'}->padding_set    ({ 'dsp_xpad' => DSP_XPAD,  'dsp_ypad' => DSP_YPAD });
+	$self->{'obj'}->{'display'}->dimensions_set 
+	  ({ 'd_width'  => (($self->{'obj'}->{'console'}->{'w32cons_last_col'} + 1) - 
+			     DSP_XPAD), 
+	     'd_height' => (($self->{'obj'}->{'console'}->{'w32cons_bottom_row'} + 1) - 
+			     DSP_YPAD) });
 
-	# $self->{'obj'}->{'display'}->d_elements_set ({ 'd_elements' => ? });
-	# $self->{'obj'}->{'display'}->c_elements_set ({ 'c_elements' => ? });
+	$self->{'obj'}->{'display'}->padding_set
+	  ({ 'dsp_xpad' => DSP_XPAD,  
+	     'dsp_ypad' => DSP_YPAD });
+
+	# Initialize the editor display.
+	#   1) Initialize/store (blank) display_prev array.
 
 	my $dsp = 
 	  $self->{'obj'}->{'display'}->generate_blank_display 
-	    ({ 'd_width'  => DSP_WIDTH, 
-	       'd_height' => DSP_HEIGHT });
+	    ({ 'd_width'  => (($self->{'obj'}->{'console'}->{'w32cons_last_col'} + 1) - 
+			      DSP_XPAD), 
+	       'd_height' => (($self->{'obj'}->{'console'}->{'w32cons_bottom_row'} + 1) - 
+			      DSP_YPAD) });
 
 	$self->{'obj'}->{'display'}->dsp_set      ({ 'dsp'      => $dsp });
 	$self->{'obj'}->{'display'}->dsp_prev_set ({ 'dsp_prev' => $dsp });
+
+	# $self->{'obj'}->{'display'}->dsp_prev_set 
+	#   ({ 'dsp_prev' => 
+	# 	$self->{'obj'}->{'display'}->dsp_prev_init 
+	# 	  ({ 'd_width'  => $self->{'obj'}->{'display'}->{'d_width'}, 
+	# 	     'd_height' => $self->{'obj'}->{'display'}->{'d_height'} }) });
 
 	# ___________________________
 	# Set variables in Editor.pm.
@@ -271,35 +315,24 @@ sub run {
 		if (! ($self->{'obj'}->{'file'}->set_file ({ 'fn' => $self->{'opt'}->{'cla_fn'} }))) 
 			{ die "Call to set_file() returned w/ failure"; }
 
-		if (! ($self->{'obj'}->{'file'}->read_file ({ 'fn' => $self->{'opt'}->{'cla_fn'} }))) 
+		if (! ($self->{'obj'}->{'file'}->read_file ({ 'fn' => $self->{'obj'}->{'file'}->{'fn'} }))) 
 			{ die "Call to read_file() returned w/ failure"; }
 	}
 
-	INIT_W32_CONSOLE: {
-
-		# Initialize the system console:
-		#
-		#   1) Initialize console object.
-		#   2) Store terminal settings/characteristics.
-		#   3) Store value of display console title.
-
-		if (! ($self->{'obj'}->{'console'}->w32cons_init())) 
-			{ die "Call to w32cons_init() returned w/ failure"; }
-
-		if (! ($self->{'obj'}->{'console'}->w32cons_termcap())) 
-			{ die "Call to w32cons_termcap() returned w/ failure"; }
-
-		if (! ($self->{'obj'}->{'console'}->w32cons_title_get())) 
-			{ die "Call to w32cons_title_get() returned w/ failure"; }
+	PREPARE_W32_CONSOLE: {
 
 		# Prepare the display console for editor display:
 		#
-		#   1) Update display console title.
-		#   2) Clear  display console.
-		#   3) Set    display console to white text on black background.
-		#   4) Set    Win32   console cursor to invisible.
-		#   5) Move   Win32   console cursor to top left corner.
+		#   1) Store value of display console title.
+		#   2) Update display console title.
+		#   3) Clear  display console.
+		#   4) Set    display console to white text on black background.
+		#   5) Set    Win32   console cursor to invisible.
+		#   6) Move   Win32   console cursor to top left corner.
 		
+		if (! ($self->{'obj'}->{'console'}->w32cons_title_get())) 
+			{ die "Call to w32cons_title_get() returned w/ failure"; }
+
 		if (! ($self->{'obj'}->{'console'}->w32cons_title_set 
 			({ 'w32cons_title' => W32CONS_TITLE }))) 
 			{ die "Call to w32cons_title_set() returned w/ failure"; }
@@ -321,27 +354,6 @@ sub run {
 	}
 
 	INIT_EDITOR_DISPLAY: {
-
-		# Initialize the editor display.
-		#   1) Set width/height of editor display.
-		#   2) Set vertical/horizontal padding (space at the top/left of editor display).
-		#   3) Initialize/store (blank) display_prev array.
-
-		$self->{'obj'}->{'display'}->dimensions_set 
-		  ({ 'd_width'  => (($self->{'obj'}->{'console'}->{'w32cons_last_col'} + 1) - 
-		                     DSP_XPAD), 
-		     'd_height' => (($self->{'obj'}->{'console'}->{'w32cons_bottom_row'} + 1) - 
-		                     DSP_YPAD) });
-
-		$self->{'obj'}->{'display'}->padding_set 
-		  ({ 'dsp_ypad' => DSP_XPAD, 
-		     'dsp_xpad' => DSP_YPAD });
-
-		$self->{'obj'}->{'display'}->dsp_prev_set 
-		  ({ 'dsp_prev' => 
-			$self->{'obj'}->{'display'}->dsp_prev_init 
-			  ({ 'd_width'  => $self->{'obj'}->{'display'}->{'d_width'}, 
-			     'd_height' => $self->{'obj'}->{'display'}->{'d_height'} }) });
 
 		# Initialize editor display.
 		#   1) Initialize editor display elements: 
@@ -370,7 +382,8 @@ sub run {
 		# 2) Write editor display to display console.
 
 		$self->{'obj'}->{'display'}->dsp_set 
-		  ({ 'dsp' => $self->{'obj'}->{'display'}->generate_editor_display ({ 'evt' => \@{ [ '', '', '', '', '', '' ] } }) });
+		  ({ 'dsp' => $self->{'obj'}->{'display'}->generate_editor_display 
+		                ({ 'evt' => \@{ [ '', '', '', '', '', '' ] } }) });
 
 		$self->{'obj'}->{'console'}->w32cons_refresh_display 
 		  ({ 'dsp'      => $self->{'obj'}->{'display'}->{'dsp'}, 
@@ -408,13 +421,7 @@ sub run {
 
 		# Register event handler callback subroutines.
 
-		$self->{'obj'}->{'console'}->register_evt_callbacks();
-		$self->{'obj'}->{'cursor'}->register_evt_callbacks();
-		$self->{'obj'}->{'display'}->register_evt_callbacks();
-		$self->{'obj'}->{'editor'}->register_evt_callbacks();
 		$self->{'obj'}->{'eventhandler'}->register_evt_callbacks();
-		$self->{'obj'}->{'file'}->register_evt_callbacks();
-		$self->{'obj'}->{'mouse'}->register_evt_callbacks();
 	}
 
 	PROCESS_EVENTS_IN_MAIN_EVENT_LOOP: {

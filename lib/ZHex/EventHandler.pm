@@ -32,9 +32,7 @@ sub init {
 
 	my $self = shift;
 
-	# $self->{'search_str'} = '';
-	# $self->{'search_pos'} = 0;
-	# $self->{'curs_ctxt_prev'} = 0;
+	# ...
 
 	return (1);
 }
@@ -50,20 +48,314 @@ sub register_evt_callbacks {
 
 	my $self = shift;
 
-	my $objCharMap   = $self->{'obj'}->{'charmap'};
-	my $objConsole   = $self->{'obj'}->{'console'};
-	my $objDisplay   = $self->{'obj'}->{'display'};
-	my $objEditor    = $self->{'obj'}->{'editor'};
-	my $objEvent     = $self->{'obj'}->{'event'};
-	my $objEventLoop = $self->{'obj'}->{'eventloop'};
-	my $objFile      = $self->{'obj'}->{'file'};
-	my $objCursor    = $self->{'obj'}->{'cursor'};
+	my $objCharMap = $self->{'obj'}->{'charmap'};
+	my $objEvent   = $self->{'obj'}->{'event'};
+
+	# ______________________________________________________________________
+	# Event handlers for EDT_CTXT_DEFAULT (DEFAULT context events).
 
 	$objEvent->register_callback 
 	  ({'edt_ctxt' => EDT_CTXT_DEFAULT, 
 	    'evt_nm'   => 'QUIT', 
 	    'evt_cb'   => sub { $self->quit(); },
 	    'evt' =>  [ $objEvent->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({'lname' => 'LATIN SMALL LETTER Q'}) }) ] });
+
+	# Previously defined within Console.pm module.
+
+	$objEvent->register_callback 
+	  ({'edt_ctxt' => EDT_CTXT_DEFAULT, 
+	    'evt_nm'   => 'CONSCURS_INVIS', 
+	    'evt_cb'   => sub { $self->w32cons_cursor_invisible(); }, 
+	    'evt' =>  [ $objEvent->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({'lname' => 'LATIN SMALL LETTER V'}) }) ] });
+
+	$objEvent->register_callback 
+	  ({'edt_ctxt' => EDT_CTXT_DEFAULT, 
+	    'evt_nm'   => 'CONSCURS_VIS', 
+	    'evt_cb'   => sub { $self->w32cons_cursor_visible(); }, 
+	    'evt' =>  [ $objEvent->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({'lname' => 'LATIN CAPITAL LETTER V'}) }) ] });
+
+	# Previously defined within Cursor.pm module.
+
+	$objEvent->register_callback 
+	  ({'edt_ctxt' => EDT_CTXT_DEFAULT, 
+	    'evt_nm'   => 'MOVE_BEG', 
+	    'evt_cb'   => sub { $self->curs_move_beg(); }, 
+	     'evt' => [ $objEvent->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({'lname' => 'CIRCUMFLEX ACCENT'}) }) ] });
+
+	$objEvent->register_callback 
+	  ({'edt_ctxt' => EDT_CTXT_DEFAULT, 
+	    'evt_nm'   => 'MOVE_END', 
+	    'evt_cb'   => sub { $self->curs_move_end(); }, 
+	    'evt' =>  [ $objEvent->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({'lname' => 'DOLLAR SIGN'}) }) ] });
+
+	$objEvent->register_callback 
+	  ({'edt_ctxt' => EDT_CTXT_DEFAULT, 
+	    'evt_nm'   => 'INCR_CURS_CTXT', 
+	    'evt_cb'   => sub { $self->curs_ctxt_incr(); }, 
+	    'evt' =>  [ $objEvent->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({'lname' => 'CARRIAGE RETURN (CR)'}) }) ] });
+
+	$objEvent->register_callback 
+	  ({'edt_ctxt' => EDT_CTXT_DEFAULT, 
+	    'evt_nm'   => 'DECR_CURS_CTXT', 
+	    'evt_cb'   => sub { $self->curs_ctxt_decr(); }, 
+	    'evt' =>  [ $objEvent->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({'lname' => 'ESCAPE'}) }) ] });
+
+	$objEvent->register_callback 
+	  ({'edt_ctxt' => EDT_CTXT_DEFAULT, 
+	    'evt_nm'   => 'MOVE_CURS_FORWARD', 
+	    'evt_cb'   => sub { $self->curs_mv_fwd(); }, 
+	    'evt' =>  [ $objEvent->gen_evt_array 
+	                ({ '3' =>  9,     # 3
+			   '4' => 15,     # 4
+			   '5' =>  9,     # 5
+			   '6' => 32 }),  # 6
+			$objEvent->gen_evt_array 
+	                ({ '3' =>  9,     # 3
+			   '4' => 15,     # 4
+			   '5' =>  9,     # 5
+			   '6' =>  0 })   # 6
+	                ] });
+
+	$objEvent->register_callback 
+	  ({'edt_ctxt' => EDT_CTXT_DEFAULT, 
+	    'evt_nm'   => 'MOVE_CURS_BACK', 
+	    'evt_cb'   => sub { $self->curs_mv_back(); }, 
+	    'evt' =>  [ $objEvent->gen_evt_array 
+	                ({ '3' =>  9,     # 3
+			   '4' => 15,     # 4
+			   '5' =>  9,     # 5
+			   '6' => 48 }),  # 6
+			$objEvent->gen_evt_array 
+	                ({ '3' =>  9,     # 3
+			   '4' => 15,     # 4
+			   '5' =>  9,     # 5
+			   '6' => 16 })   # 6
+	                ] });
+
+	$objEvent->register_callback 
+	  ({'edt_ctxt' => EDT_CTXT_DEFAULT, 
+	    'evt_nm'   => 'MOVE_CURS_UP', 
+	    'evt_cb'   => sub { $self->curs_mv_up(); }, 
+	    'evt' =>  [ $objEvent->gen_evt_array 
+	                ({ '3' =>  38,     # 3
+			   '4' =>  72,     # 4
+			   '5' =>   0,     # 5
+			   '6' => 288 }),  # 6
+			$objEvent->gen_evt_array 
+	                ({ '3' =>  38,     # 3
+			   '4' =>  72,     # 4
+			   '5' =>   0,     # 5
+			   '6' => 256 })   # 6
+	                ] });
+
+	$objEvent->register_callback 
+	  ({'edt_ctxt' => EDT_CTXT_DEFAULT, 
+	    'evt_nm'   => 'MOVE_CURS_DOWN', 
+	    'evt_cb'   => sub { $self->curs_mv_down(); }, 
+	    'evt' =>  [ $objEvent->gen_evt_array 
+	                ({ '3' =>  40,     # 3
+			   '4' =>  80,     # 4
+			   '5' =>   0,     # 5
+			   '6' => 256 }),  # 6
+			$objEvent->gen_evt_array 
+	                ({ '3' =>  40,     # 3
+			   '4' =>  80,     # 4
+			   '5' =>   0,     # 5
+			   '6' => 288 })   # 6
+	                ] });
+
+	$objEvent->register_callback 
+	  ({'edt_ctxt' => EDT_CTXT_DEFAULT, 
+	    'evt_nm'   => 'MOVE_CURS_LEFT', 
+	    'evt_cb'   => sub { $self->curs_mv_left(); }, 
+	    'evt' =>  [ $objEvent->gen_evt_array 
+	                ({ '5' => $objCharMap->chr_map_ord_val ({'lname' => 'LATIN SMALL LETTER H'}) }), 
+	                $objEvent->gen_evt_array 
+	                ({ '3' =>  37,     # 3
+			   '4' =>  75,     # 4
+			   '5' =>   0,     # 5
+			   '6' => 288 }),  # 6
+			$objEvent->gen_evt_array 
+	                ({ '3' =>  37,     # 3
+			   '4' =>  75,     # 4
+			   '5' =>   0,     # 5
+			   '6' => 256 })   # 6
+	                ] });
+
+	$objEvent->register_callback 
+	  ({'edt_ctxt' => EDT_CTXT_DEFAULT, 
+	    'evt_nm'   => 'MOVE_CURS_RIGHT', 
+	    'evt_cb'   => sub { $self->curs_mv_right(); }, 
+	    'evt' =>  [ $objEvent->gen_evt_array 
+	                ({ '5' => $objCharMap->chr_map_ord_val ({'lname' => 'LATIN SMALL LETTER L'}) }), 
+	                $objEvent->gen_evt_array 
+	                ({ '3' =>  39,     # 3
+			   '4' =>  77,     # 4
+			   '5' =>   0,     # 5
+			   '6' => 288 }),  # 6
+			$objEvent->gen_evt_array 
+	                ({ '3' =>  39,     # 3
+			   '4' =>  77,     # 4
+			   '5' =>   0,     # 5
+			   '6' => 256 })   # 6
+	                ] });
+
+	# Previously defined within Display.pm module.
+
+	$objEvent->register_callback 
+	  ({'edt_ctxt' => EDT_CTXT_DEFAULT, 
+	    'evt_nm'   => 'DEBUG_OFF', 
+	    'evt_cb'   => sub { $self->debug_off(); }, 
+	    'evt' =>  [ $objEvent->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({'lname' => 'LATIN SMALL LETTER D'}) }) ]
+	   });
+
+	$objEvent->register_callback 
+	  ({'edt_ctxt' => EDT_CTXT_DEFAULT, 
+	    'evt_nm'   => 'DEBUG_ON', 
+	    'evt_cb'   => sub { $self->debug_on(); }, 
+	    'evt' =>  [ $objEvent->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({'lname' => 'LATIN CAPITAL LETTER D'}) }) ]
+	   });
+
+	# Previously defined within Editor.pm module.
+
+	$objEvent->register_callback 
+	  ({'edt_ctxt' => EDT_CTXT_DEFAULT, 
+	    'evt_nm'   => 'VSTRETCH', 
+	    'evt_cb'   => sub { $self->vstretch(); },
+	    'evt' =>  [ $objEvent->gen_evt_array 
+	                ({ '3' =>  38,     # 3
+			   '4' =>  72,     # 4
+			   '5' =>   0,     # 5
+			   '6' => 264 }),  # 6
+	                ] });
+
+	$objEvent->register_callback 
+	  ({'edt_ctxt' => EDT_CTXT_DEFAULT, 
+	    'evt_nm'   => 'VCOMPRESS', 
+	    'evt_cb'   => sub { $self->vcompress(); },
+	    'evt' =>  [ $objEvent->gen_evt_array 
+	                ({ '3' =>  40,     # 3
+			   '4' =>  80,     # 4
+			   '5' =>   0,     # 5
+			   '6' => 264 })   # 6
+	                ] });
+
+	$objEvent->register_callback 
+	  ({'edt_ctxt' => EDT_CTXT_DEFAULT, 
+	    'evt_nm'   => 'SCROLL_UP_1LN', 
+	    'evt_cb'   => sub { $self->scroll_up_1x_line(); }, 
+	    'evt' =>  [ $objEvent->gen_evt_array 
+	                ({ '5' => $objCharMap->chr_map_ord_val ({'lname' => 'LATIN SMALL LETTER K'}) }), 
+	                $objEvent->gen_evt_array 
+	                ({ '0' => 2,         # 0
+	                   '3' => 7864320,   # 3
+			   '5' => 4 })       # 6
+	                ] });
+
+	$objEvent->register_callback 
+	  ({'edt_ctxt' => EDT_CTXT_DEFAULT, 
+	    'evt_nm'   => 'SCROLL_UP_1PG', 
+	    'evt_cb'   => sub { $self->scroll_up_1x_page(); }, 
+	    'evt' =>  [ $objEvent->gen_evt_array 
+	                ({ '5' => $objCharMap->chr_map_ord_val ({'lname' => 'LATIN CAPITAL LETTER J'}) }), 
+	                $objEvent->gen_evt_array 
+	                ({ '3' =>  33,     # 3
+			   '4' =>  73,     # 4
+			   '5' =>   0,     # 5
+			   '6' => 288 }),  # 6
+			$objEvent->gen_evt_array 
+	                ({ '3' =>  33,     # 3
+			   '4' =>  73,     # 4
+			   '5' =>   0,     # 5
+			   '6' => 256 })   # 6
+	                ] });
+
+	$objEvent->register_callback 
+	  ({'edt_ctxt' => EDT_CTXT_DEFAULT, 
+	    'evt_nm'   => 'SCROLL_DOWN_1LN', 
+	    'evt_cb'   => sub { $self->scroll_down_1x_line(); },  
+	    'evt' =>  [ $objEvent->gen_evt_array 
+	                ({ '5' => $objCharMap->chr_map_ord_val ({'lname' => 'LATIN SMALL LETTER J'}) }), 
+	                $objEvent->gen_evt_array 
+	                ({ '0' => 2,          # 0
+			   '3' => -7864320,   # 3
+			   '5' => 4 }),       # 5
+	                ] });
+
+	$objEvent->register_callback 
+	  ({'edt_ctxt' => EDT_CTXT_DEFAULT, 
+	    'evt_nm'   => 'SCROLL_DOWN_1PG', 
+	    'evt_cb'   => sub { $self->scroll_down_1x_page(); },
+	    'evt' =>  [ $objEvent->gen_evt_array 
+	                ({ '5' => $objCharMap->chr_map_ord_val ({'lname' => 'LATIN CAPITAL LETTER K'}) }), 
+	                $objEvent->gen_evt_array 
+	                ({ '5' => $objCharMap->chr_map_ord_val ({'lname' => 'SPACE'}) }), 
+	                $objEvent->gen_evt_array 
+	                ({ '3' =>  34,     # 3
+			   '4' =>  81,     # 4
+			   '5' =>   0,     # 5
+			   '6' => 288 }),  # 6
+			$objEvent->gen_evt_array 
+	                ({ '3' =>  34,     # 3
+			   '4' =>  81,     # 4
+			   '5' =>   0,     # 5
+			   '6' => 256 })   # 6
+	                ] });
+
+	$objEvent->register_callback 
+	  ({'edt_ctxt' => EDT_CTXT_DEFAULT, 
+	    'evt_nm'   => 'INSERT_MODE', 
+	    'evt_cb'   => sub { $self->insert_mode(); },
+	    'evt' =>  [ $objEvent->gen_evt_array 
+	                ({ '5' => $objCharMap->chr_map_ord_val ({'lname' => 'LATIN SMALL LETTER I'}) }), 
+	                $objEvent->gen_evt_array 
+	                ({ '3' =>  45,     # 3
+			   '4' =>  82,     # 4
+			   '5' =>   0,     # 5
+			   '6' => 288 }),  # 6
+			$objEvent->gen_evt_array 
+	                ({ '3' =>  45,     # 3
+			   '4' =>  82,     # 4
+			   '5' =>   0,     # 5
+			   '6' => 256 })   # 6
+	                ] });
+
+	$objEvent->register_callback 
+	  ({'edt_ctxt' => EDT_CTXT_DEFAULT, 
+	    'evt_nm'   => 'SEARCH_MODE', 
+	    'evt_cb'   => sub { $self->search_mode(); },
+	    'evt' =>  [ $objEvent->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({'lname' => 'LATIN SMALL LETTER S'}) }) ] });
+
+	# Previously defined within File.pm module.
+
+	$objEvent->register_callback 
+	  ({'edt_ctxt' => EDT_CTXT_DEFAULT, 
+	    'evt_nm'   => 'WRITE_DISK', 
+	    'evt_cb'   => sub { $self->write_file(); },
+	    'evt'      => [ $objEvent->gen_evt_array 
+	                      ({ '5' => $objCharMap->chr_map_ord_val 
+	                                  ({'lname' => 'LATIN SMALL LETTER W'}) }) ] });
+
+	# Previously defined within Mouse.pm module.
+
+	$objEvent->register_callback 
+	  ({'edt_ctxt' => EDT_CTXT_DEFAULT, 
+	    'evt_nm'   => 'L_MOUSE_BUTTON', 
+	    'evt_cb'   => sub { $self->lmouse ({ 'evt' => $_[0]->{'evt'} }); }, 
+	    'evt' =>  [ $objEvent->gen_evt_array 
+	                ({ '0' => 2,
+	                   '3' => 1 }) ] });
+
+	$objEvent->register_callback 
+	  ({'edt_ctxt' => EDT_CTXT_DEFAULT, 
+	    'evt_nm'   => 'R_MOUSE_BUTTON', 
+	    'evt_cb'   => sub { $self->rmouse ({ 'evt' => $_[0]->{'evt'} }); }, 
+	    'evt' =>  [ $objEvent->gen_evt_array 
+	                ({ '0' => 2,
+	                   '3' => 2 }) ] });
+
+	# ______________________________________________________________________
+	# UNSUPPORTED
 
 	$objEvent->register_callback 
 	  ({'edt_ctxt' => EDT_CTXT_DEFAULT, 
@@ -95,9 +387,9 @@ sub register_evt_callbacks {
 	    'evt_cb'   => sub { return (0); },
 	    'evt' =>  [ $objEvent->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({'lname' => 'LATIN CAPITAL LETTER Z'}) }) ] });   # <--- Change to CTRL-Z
 
-	# _____________________________________________________________________________________________________
-	# EVENT DRIVEN FUNCTION TABLE: TABLE OF WRAPPER FUNCTIONS PROVIDING UNIFORM NAMES/API TO EVENT HANDLERS
-	#   'INSERT' Context Functions:
+	# ______________________________________________________________________
+	# Event handlers for EDT_CTXT_INSERT (INSERT context events).
+
 	# _______________   ___________________ _____________________ ____________________                       _________________ 
 	# FUNCTION NAME     KEYBOARD MAPPING    |CHAR|VKCD|VSCD|CTRL| FUNCTION DESCRIPTION                       INTERNAL FUNCTION 
 	# _______________   ___________________ |____|____|____|____| ____________________                       _________________ 
@@ -110,26 +402,26 @@ sub register_evt_callbacks {
 
 	$objEvent->register_callback 
 	  ({'edt_ctxt' => EDT_CTXT_INSERT, 
-	    'evt_nm' => 'INSERT_ESCAPE', 
-	    'evt_cb' => sub { $self->insert_escape(); },
+	    'evt_nm'   => 'INSERT_ESCAPE', 
+	    'evt_cb'   => sub { $self->insert_escape(); },
 	    'evt' =>  [ $objEvent->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({'lname' => 'ESCAPE'}) }) ] });
 
 	$objEvent->register_callback 
 	  ({'edt_ctxt' => EDT_CTXT_INSERT, 
-	    'evt_nm' => 'INSERT_BACKSPACE', 
-	    'evt_cb' => sub { $self->insert_backspace(); },
+	    'evt_nm'   => 'INSERT_BACKSPACE', 
+	    'evt_cb'   => sub { $self->insert_backspace(); },
 	    'evt' =>  [ $objEvent->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({'lname' => 'BACKSPACE'}) }) ] });
 
 	$objEvent->register_callback 
 	  ({'edt_ctxt' => EDT_CTXT_INSERT, 
-	    'evt_nm' => 'INSERT_ENTER', 
-	    'evt_cb' => sub { $self->insert_enter(); },
+	    'evt_nm'   => 'INSERT_ENTER', 
+	    'evt_cb'   => sub { $self->insert_enter(); },
 	    'evt' =>  [ $objEvent->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({'lname' => 'CARRIAGE RETURN (CR)'}) }) ] });
 
 	$objEvent->register_callback 
 	  ({'edt_ctxt' => EDT_CTXT_INSERT, 
-	    'evt_nm' => 'INSERT_L_ARROW', 
-	    'evt_cb' => sub { $self->insert_l_arrow(); },
+	    'evt_nm'   => 'INSERT_L_ARROW', 
+	    'evt_cb'   => sub { $self->insert_l_arrow(); },
 	    'evt' =>  [ $objEvent->gen_evt_array ({ '3' => 37, 
 	                                        '4' => 75, 
 	                                        '5' => 0, 
@@ -141,8 +433,8 @@ sub register_evt_callbacks {
 
 	$objEvent->register_callback 
 	  ({'edt_ctxt' => EDT_CTXT_INSERT, 
-	    'evt_nm' => 'INSERT_R_ARROW', 
-	    'evt_cb' => sub { $self->insert_r_arrow(); },
+	    'evt_nm'   => 'INSERT_R_ARROW', 
+	    'evt_cb'   => sub { $self->insert_r_arrow(); },
 	    'evt' =>  [ $objEvent->gen_evt_array ({ '3' => 39, 
 	                                        '4' => 77, 
 	                                        '5' => 0, 
@@ -154,8 +446,8 @@ sub register_evt_callbacks {
 
 	$objEvent->register_callback 
 	  ({'edt_ctxt' => EDT_CTXT_INSERT, 
-	    'evt_nm' => 'INSERT_CHAR', 
-	    'evt_cb' => sub { $self->insert_char(); },
+	    'evt_nm'   => 'INSERT_CHAR', 
+	    'evt_cb'   => sub { $self->insert_char(); },
 	    'evt' =>  [ $objEvent->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'SPACE' }) }),
 	                $objEvent->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'EXCLAMATION MARK' }) }),
 	                $objEvent->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'QUOTATION MARK' }) }),
@@ -252,9 +544,9 @@ sub register_evt_callbacks {
 	                $objEvent->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'RIGHT CURLY BRACKET' }) }),
 	                $objEvent->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({ 'lname' => 'TILDE' }) }) ] });
 
-	# _____________________________________________________________________________________________________
-	# EVENT DRIVEN FUNCTION TABLE: TABLE OF WRAPPER FUNCTIONS PROVIDING UNIFORM NAMES/API TO EVENT HANDLERS
-	#   EDT_CTXT_SEARCH Context Functions
+	# ______________________________________________________________________
+	# Event handlers for EDT_CTXT_SEARCH (SEARCH context events).
+
 	# _______________   ___________________ _____________________ ____________________                       _________________ 
 	# FUNCTION NAME     KEYBOARD MAPPING    |CHAR|VKCD|VSCD|CTRL| FUNCTION DESCRIPTION                       INTERNAL FUNCTION 
 	# _______________   ___________________ |____|____|____|____| ____________________                       _________________ 
@@ -412,7 +704,6 @@ sub register_evt_callbacks {
 	return (1);
 }
 
-
 # Functions: EDT_CTXT_DEFAULT context event handlers.
 #
 #   ____			__________	___________
@@ -427,6 +718,375 @@ sub quit {
 	my $objEventLoop = $self->{'obj'}->{'eventloop'};
 
 	$objEventLoop->{'FLAG_QUIT'} = 1;
+
+	return (1);
+}
+
+# ______________________________________________________________________________
+# Previously defined within Console.pm module.
+
+sub w32cons_cursor_invisible {
+
+	my $self = shift;
+
+	my $objConsole = $self->{'obj'}->{'console'};
+
+	$objConsole->w32cons_cursor_invisible();
+
+	return (1);
+}
+
+sub w32cons_cursor_visible {
+
+	my $self = shift;
+
+	my $objConsole = $self->{'obj'}->{'console'};
+
+	$objConsole->w32cons_cursor_visible();
+
+	return (1);
+}
+
+# ______________________________________________________________________________
+# Previously defined within Cursor.pm module.
+
+sub curs_move_beg {
+
+	my $self = shift;
+
+	my $objCursor = $self->{'obj'}->{'cursor'};
+	my $objEditor = $self->{'obj'}->{'editor'};
+
+	$objCursor->set_curs_pos 
+	  ({'curs_pos' => 0});
+	$objEditor->set_edt_pos 
+	  ({'edt_pos' => 0}); 
+
+	return (1);
+}
+
+sub curs_move_end { 
+
+	my $self = shift;
+
+	my $objCursor = $self->{'obj'}->{'cursor'};
+	my $objEditor = $self->{'obj'}->{'editor'};
+	my $objFile    = $self->{'obj'}->{'file'};
+
+	$objCursor->set_curs_ctxt 
+	  ({'curs_ctxt' => 2});
+	$objCursor->set_curs_pos 
+	  ({'curs_pos' => ($objFile->file_len() - 1)});
+	$objEditor->dsp_pos_adjust 
+	  ({'curs_pos' => $objCursor->{'curs_pos'} }); 
+
+	return (1);
+}
+
+sub curs_ctxt_incr {
+
+	my $self = shift;
+
+	my $objCursor = $self->{'obj'}->{'cursor'};
+
+	$objCursor->curs_ctxt_incr();
+
+	return (1);
+}
+
+sub curs_ctxt_decr {
+
+	my $self = shift;
+
+	my $objCursor = $self->{'obj'}->{'cursor'};
+
+	$objCursor->curs_ctxt_decr();
+
+	return (1);
+}
+
+sub curs_mv_back {
+
+	my $self = shift;
+
+	my $objCursor = $self->{'obj'}->{'cursor'};
+	my $objEditor = $self->{'obj'}->{'editor'};
+
+	$objCursor->curs_mv_back();
+	$objEditor->dsp_pos_adjust 
+	  ({'curs_pos' => $objCursor->{'curs_pos'} }); 
+
+	return (1);
+}
+
+sub curs_mv_fwd {
+
+	my $self = shift;
+
+	my $objCursor = $self->{'obj'}->{'cursor'};
+	my $objEditor = $self->{'obj'}->{'editor'};
+	my $objFile   = $self->{'obj'}->{'file'};
+
+	$objCursor->curs_mv_fwd ({'file_len' => $objFile->file_len()});
+	$objEditor->dsp_pos_adjust 
+	  ({'curs_pos' => $objCursor->{'curs_pos'} }); 
+
+	return (1);
+}
+
+sub curs_mv_up {
+
+	my $self = shift;
+
+	my $objCursor = $self->{'obj'}->{'cursor'};
+	my $objEditor = $self->{'obj'}->{'editor'};
+
+	$objCursor->curs_mv_up();
+	$objEditor->dsp_pos_adjust 
+	  ({'curs_pos' => $objCursor->{'curs_pos'} }); 
+
+	return (1);
+}
+
+sub curs_mv_down {
+
+	my $self = shift;
+
+	my $objCursor = $self->{'obj'}->{'cursor'};
+	my $objEditor = $self->{'obj'}->{'editor'};
+	my $objFile   = $self->{'obj'}->{'file'};
+
+	$objCursor->curs_mv_down ({'file_len' => $objFile->file_len()});
+	$objEditor->dsp_pos_adjust 
+	  ({'curs_pos' => $objCursor->{'curs_pos'} }); 
+
+	return (1);
+}
+
+sub curs_mv_left {
+
+	my $self = shift;
+
+	my $objCursor = $self->{'obj'}->{'cursor'};
+
+	$objCursor->curs_mv_left();
+
+	return (1);
+}
+
+sub curs_mv_right {
+
+	my $self = shift;
+
+	my $objCursor = $self->{'obj'}->{'cursor'};
+	my $objFile   = $self->{'obj'}->{'file'};
+
+	$objCursor->curs_mv_right ({'file_len' => $objFile->file_len()});
+
+	return (1);
+}
+
+# Previously defined within Display.pm module.
+
+sub debug_off {
+
+	my $self = shift;
+
+	my $objDisplay = $self->{'obj'}->{'display'};
+
+	$objDisplay->debug_off();
+
+	return (1);
+}
+
+sub debug_on {
+
+	my $self = shift;
+
+	my $objDisplay = $self->{'obj'}->{'display'};
+
+	$objDisplay->debug_on();
+
+	return (1);
+}
+
+# Previously defined within Editor.pm module.
+
+sub vstretch { 
+
+	my $self = shift;
+
+	my $objCursor  = $self->{'obj'}->{'cursor'};
+	my $objEditor  = $self->{'obj'}->{'editor'};
+	my $objDisplay = $self->{'obj'}->{'display'};
+	my $objFile    = $self->{'obj'}->{'file'};
+
+	$objEditor->vstretch 
+	  ({'max_columns' => $objDisplay->max_columns(), 
+	    'file_len'    => $objFile->file_len()});
+	$objCursor->set_sz_column 
+	  ({'sz_column' => $objEditor->{'sz_column'}});
+	$objDisplay->adjust_display(); 
+
+	return (1);
+}
+
+sub vcompress { 
+
+	my $self = shift;
+
+	my $objCursor  = $self->{'obj'}->{'cursor'};
+	my $objEditor  = $self->{'obj'}->{'editor'};
+	my $objDisplay = $self->{'obj'}->{'display'};
+	my $objFile    = $self->{'obj'}->{'file'};
+
+	$objEditor->vcompress();
+	$objCursor->set_sz_column 
+	  ({'sz_column' => $objEditor->{'sz_column'}});
+	$objCursor->curs_adjust 
+	  ({'edt_pos' => $objEditor->{'edt_pos'}});
+	$objDisplay->adjust_display(); 
+
+	return (1);
+}
+
+sub scroll_up_1x_line { 
+
+	my $self = shift;
+
+	my $objCursor  = $self->{'obj'}->{'cursor'};
+	my $objEditor  = $self->{'obj'}->{'editor'};
+
+	$objEditor->scroll_up_1x_line(); 
+	$objCursor->curs_adjust 
+	  ({'edt_pos' => $objEditor->{'edt_pos'}}); 
+
+	return (1);
+}
+
+sub scroll_up_1x_page { 
+
+	my $self = shift;
+
+	my $objCursor  = $self->{'obj'}->{'cursor'};
+	my $objEditor  = $self->{'obj'}->{'editor'};
+
+	$objEditor->scroll_up_1x_page();
+	$objCursor->curs_adjust 
+	  ({'edt_pos' => $objEditor->{'edt_pos'}}); 
+
+	return (1);
+}
+
+sub scroll_down_1x_line { 
+
+	my $self = shift;
+
+	my $objCursor  = $self->{'obj'}->{'cursor'};
+	my $objEditor  = $self->{'obj'}->{'editor'};
+	my $objFile    = $self->{'obj'}->{'file'};
+
+	$objEditor->scroll_down_1x_line
+	  ({'file_len' => $objFile->file_len()});
+	$objCursor->curs_adjust 
+	  ({'edt_pos' => $objEditor->{'edt_pos'}}); 
+
+	return (1);
+}
+
+sub scroll_down_1x_page { 
+
+	my $self = shift;
+
+	my $objCursor  = $self->{'obj'}->{'cursor'};
+	my $objEditor  = $self->{'obj'}->{'editor'};
+	my $objFile    = $self->{'obj'}->{'file'};
+
+	$objEditor->scroll_down_1x_page
+	  ({'file_len' => $objFile->file_len()});
+	$objCursor->curs_adjust 
+	  ({'edt_pos' => $objEditor->{'edt_pos'}}); 
+
+	return (1);
+}
+
+sub insert_mode { 
+
+	my $self = shift;
+
+	my $objEditor = $self->{'obj'}->{'editor'};
+
+	$objEditor->insert_mode(); 
+
+	return (1);
+}
+
+sub search_mode { 
+
+	my $self = shift;
+
+	my $objEditor = $self->{'obj'}->{'editor'};
+
+	$objEditor->search_mode(); 
+
+	return (1);
+}
+
+# Previously defined within File.pm module.
+
+sub write_file { 
+
+	my $self = shift;
+
+	my $objFile = $self->{'obj'}->{'file'};
+
+	$objFile->write_file ({'fn' => $objFile->{'fn'}});
+
+	return (1);
+}
+
+# Previously defined within Mouse.pm module.
+
+sub lmouse { 
+
+	my $self = shift;
+	my $arg  = shift;
+
+	if (! defined $arg || 
+	      ! (ref ($arg) eq 'HASH')) 
+		{ die "Call to lmouse() failed, argument must be hash reference"; }
+
+	if (! exists  $arg->{'evt'} || 
+	    ! defined $arg->{'evt'} || 
+	             ($arg->{'evt'} eq '') || 
+	      ! (ref ($arg->{'evt'}) eq 'ARRAY')) 
+		{ die "Call to lmouse() failed, value associated w/ key 'evt' must be array ref"; }
+
+	my $objMouse = $self->{'obj'}->{'mouse'};
+
+	$objMouse->lmouse ({ 'xpos'=>$arg->{'evt'}->[1], 'ypos'=>$arg->{'evt'}->[2] }); 
+
+	return (1);
+}
+
+sub rmouse { 
+
+	my $self = shift;
+	my $arg  = shift;
+
+	if (! defined $arg || 
+	      ! (ref ($arg) eq 'HASH')) 
+		{ die "Call to rmouse() failed, argument must be hash reference"; }
+
+	if (! exists  $arg->{'evt'} || 
+	    ! defined $arg->{'evt'} || 
+	             ($arg->{'evt'} eq '') || 
+	      ! (ref ($arg->{'evt'}) eq 'ARRAY')) 
+		{ die "Call to rmouse() failed, value associated w/ key 'evt' must be array ref"; }
+
+	my $objMouse = $self->{'obj'}->{'mouse'};
+
+	$objMouse->rmouse ({ 'xpos'=>$arg->{'evt'}->[1], 'ypos'=>$arg->{'evt'}->[2] }); 
 
 	return (1);
 }

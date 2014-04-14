@@ -413,7 +413,7 @@ sub evt_dispatch {
 
 		# Call the subroutine associated with this event (callback routine).
 
-		$self->{'cb'}->{ $arg->{'edt_ctxt'} }->{ $arg->{'evt_nm'} }->();
+		$self->{'cb'}->{ $arg->{'edt_ctxt'} }->{ $arg->{'evt_nm'} }->({ 'evt'=>$arg->{'evt'} });
 		return (1);
 	}
 	else {

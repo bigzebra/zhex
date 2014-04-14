@@ -39,33 +39,6 @@ sub init {
 	return (1);
 }
 
-sub register_evt_callbacks {
-
-	my $self = shift;
-
-	my $objCharMap   = $self->{'obj'}->{'charmap'};
-	my $objEvent     = $self->{'obj'}->{'event'};
-	my $objEventLoop = $self->{'obj'}->{'eventloop'};
-
-	$objEvent->register_callback 
-	  ({'edt_ctxt' => EDT_CTXT_DEFAULT, 
-	    'evt_nm'   => 'L_MOUSE_BUTTON', 
-	    'evt_cb'   => sub { $self->lmouse(); }, 
-	    'evt' =>  [ $objEvent->gen_evt_array 
-	                ({ '0' => 2,
-	                   '3' => 1 }) ] });
-
-	$objEvent->register_callback 
-	  ({'edt_ctxt' => EDT_CTXT_DEFAULT, 
-	    'evt_nm'   => 'R_MOUSE_BUTTON', 
-	    'evt_cb'   => sub { $self->rmouse(); }, 
-	    'evt' =>  [ $objEvent->gen_evt_array 
-	                ({ '0' => 2,
-	                   '3' => 2 }) ] });
-
-	return (1);
-}
-
 # ______________________________________________________________________________
 
 # Functions: Mouse event handlers.
@@ -80,6 +53,21 @@ sub register_evt_callbacks {
 sub lmouse {
 
 	my $self = shift;
+	my $arg  = shift;
+
+	if (! defined $arg || 
+	      ! (ref ($arg) eq 'HASH')) 
+		{ die "Call to lmouse() failed, argument must be hash reference"; }
+
+	if (! exists  $arg->{'xpos'} || 
+	    ! defined $arg->{'xpos'} || 
+	           ! ($arg->{'xpos'} =~ /^\d+?$/)) 
+		{ die "Call to lmouse() failed, value associated w/ key 'xpos' was undef/empty string"; }
+
+	if (! exists  $arg->{'ypos'} || 
+	    ! defined $arg->{'ypos'} || 
+	           ! ($arg->{'ypos'} =~ /^\d+?$/)) 
+		{ die "Call to lmouse() failed, value of key 'ypos' must be numeric"; }
 
 	my $objCursor    = $self->{'obj'}->{'cursor'};
 	my $objDisplay   = $self->{'obj'}->{'display'};
@@ -103,9 +91,9 @@ sub lmouse {
 		       'dsp_ypad' => $objDisplay->{'dsp_xpad'}, 
 		       'dsp_xpad' => $objDisplay->{'dsp_ypad'} });
 
-		if ((($xpos == ($xc + $objDisplay->{'dsp_xpad'})) || 
-		     ($xpos == ($xc + $objDisplay->{'dsp_xpad'} + 1))) && 
-		     ($ypos == ($yc + $objDisplay->{'dsp_ypad'}))) {
+		if ((($arg->{'xpos'} == ($xc + $objDisplay->{'dsp_xpad'})) || 
+		     ($arg->{'xpos'} == ($xc + $objDisplay->{'dsp_xpad'} + 1))) && 
+		     ($arg->{'ypos'} == ($yc + $objDisplay->{'dsp_ypad'}))) {
 
 			if ($objCursor->{'curs_ctxt'} == 0) {
 
@@ -144,7 +132,7 @@ sub lmouse {
 		}
 	}
 
-	# $self->{'CONS'}->FillAttr (($FG_BLACK | $BG_LIGHTMAGENTA), 1, $xpos, $ypos);
+	# $self->{'CONS'}->FillAttr (($FG_BLACK | $BG_LIGHTMAGENTA), 1, $arg->{'xpos'}, $arg->{'ypos'});
 
 	return (1); 
 }
@@ -152,6 +140,21 @@ sub lmouse {
 sub rmouse {
 
 	my $self = shift;
+	my $arg  = shift;
+
+	if (! defined $arg || 
+	      ! (ref ($arg) eq 'HASH')) 
+		{ die "Call to lmouse() failed, argument must be hash reference"; }
+
+	if (! exists  $arg->{'xpos'} || 
+	    ! defined $arg->{'xpos'} || 
+	           ! ($arg->{'xpos'} =~ /^\d+?$/)) 
+		{ die "Call to lmouse() failed, value associated w/ key 'xpos' was undef/empty string"; }
+
+	if (! exists  $arg->{'ypos'} || 
+	    ! defined $arg->{'ypos'} || 
+	           ! ($arg->{'ypos'} =~ /^\d+?$/)) 
+		{ die "Call to lmouse() failed, value of key 'ypos' must be numeric"; }
 
 	my $objConsole   = $self->{'obj'}->{'console'};
 	my $objEventLoop = $self->{'obj'}->{'eventloop'};
@@ -160,7 +163,7 @@ sub rmouse {
 	my $ypos = $objEventLoop->{'evt'}->[2];
 
 	$objConsole->{'CONS'}->FillAttr 
-	  (($objConsole->{'FG_BLACK'} | $objConsole->{'BG_LIGHTBLUE'}), 1, $xpos, $ypos);
+	  (($objConsole->{'FG_BLACK'} | $objConsole->{'BG_LIGHTBLUE'}), 1, $arg->{'xpos'}, $arg->{'ypos'});
 
 	return (1);
 }

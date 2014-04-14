@@ -35,6 +35,7 @@ sub init {
 	my $self = shift;
 
 	$self->{'FLAG_QUIT'} = 0;            # Flag controls exit from main event loop.
+
 	$self->{'mouse_over_char'}   = '';   # Mouse handling: position, character, attributes.
 	$self->{'mouse_over_attr'}   = '';   # Mouse handling: position, character, attributes.
 	$self->{'mouse_over_x'}      =  0;   # Mouse handling: position, character, attributes.
@@ -44,6 +45,7 @@ sub init {
 
 	$self->{'ct_evt_functional'} = 0;    # Counters: ...
 	$self->{'evt_history'} = [];         # Event history (makes 'undo' possible).
+	$self->{'evt'} = [];
 
 	return (1);
 }
@@ -263,7 +265,7 @@ sub evt_loop {
 			#   Debugging information display subroutines.
 			#   Event handlers (callback subroutines).
 
-			$self->{'evt'} = $evt;   # <--- TO DO: Feed this directly to Debug.pm...
+			# $self->{'evt'} = $evt;   # <--- TO DO: Feed this directly to Debug.pm...
 
 			if (! defined $evt_nm || 
 			              $evt_nm eq '' || 
@@ -298,8 +300,11 @@ sub evt_loop {
 
 				# Update the editor display/debugging information/cursor, write to the display console.
 
+				# $objDisplay->dsp_set 
+				#   ({ 'dsp' => $objDisplay->generate_editor_display ({ 'evt' => \@{ [ '', '', '', '', '', '' ] } }) });
+
 				$objDisplay->dsp_set 
-				  ({ 'dsp' => $objDisplay->generate_editor_display ({ 'evt' => \@{ [ '', '', '', '', '', '' ] } }) });
+				  ({ 'dsp' => $objDisplay->generate_editor_display ({ 'evt' => $evt }) });
 
 				$objConsole->w32cons_refresh_display 
 				  ({ 'dsp'      => $objDisplay->{'dsp'}, 

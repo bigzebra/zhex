@@ -45,31 +45,6 @@ sub init {
 	return (1);
 }
 
-sub register_evt_callbacks {
-
-	my $self = shift;
-
-	my $objCharMap   = $self->{'obj'}->{'charmap'};
-	my $objEvent     = $self->{'obj'}->{'event'};
-	my $objEventLoop = $self->{'obj'}->{'eventloop'};
-
-	$objEvent->register_callback 
-	  ({'edt_ctxt' => EDT_CTXT_DEFAULT, 
-	    'evt_nm'   => 'DEBUG_OFF', 
-	    'evt_cb'   => sub { $self->debug_off(); }, 
-	    'evt' =>  [ $objEvent->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({'lname' => 'LATIN SMALL LETTER D'}) }) ]
-	   });
-
-	$objEvent->register_callback 
-	  ({'edt_ctxt' => EDT_CTXT_DEFAULT, 
-	    'evt_nm'   => 'DEBUG_ON', 
-	    'evt_cb'   => sub { $self->debug_on(); }, 
-	    'evt' =>  [ $objEvent->gen_evt_array ({ '5' => $objCharMap->chr_map_ord_val ({'lname' => 'LATIN CAPITAL LETTER D'}) }) ]
-	   });
-
-	return (1);
-}
-
 # Accessor methods for member variables.
 #
 #   _____________		___________
@@ -308,9 +283,9 @@ sub d_elements_tbl {
 	    ['char_disp',         18,  $objEditor->{'sz_column'}, 1, 0, ['char_disp'],                                                                    sub {return ($objEditor->gen_char({'pos'=>$objEditor->{'edt_pos'},'sz_line'=>$objEditor->{'sz_line'},'sz_column'=>$objEditor->{'sz_column'},'f_size'=>$objFile->file_len()}));}], 
 	    ['line_num',          6,   $objEditor->{'sz_column'}, 2, 0, ['line_num'],                                                                     sub {return ($objEditor->gen_lnum({'pos'=>$objEditor->{'edt_pos'},'sz_line'=>$objEditor->{'sz_line'},'sz_column'=>$objEditor->{'sz_column'},'f_size'=>$objFile->file_len()}));}], 
 	    ['sep',               114, 1,                         0, 2, ['sep'],                                                                          sub {return ($objEditor->gen_sep({'d_elements'=>$self->{'d_elements'}}));}], 
-	    ['dbg_mouse_evt',     17,  10,                        2, 1, ['dbg_mouse_evt'],                                                                sub {return ($objDebug->dbg_mouse_evt({'evt'=> ${ $_[0] }->{'evt'} }));}], 
-	    ['dbg_keybd_evt',     17,  8,                         2, 1, [],                                                                               sub {return ($objDebug->dbg_keybd_evt({'evt'=> ${ $_[0] }->{'evt'} }));}], 
-	    ['dbg_unmatched_evt', 17,  8,                         2, 1, ['dbg_unmatched_evt'],                                                            sub {return ($objDebug->dbg_unmatched_evt({'evt'=> \@{ ${ $_[0] }->{'evt'} } }));}], 
+	    ['dbg_mouse_evt',     17,  10,                        2, 1, ['dbg_mouse_evt'],                                                                sub {return ($objDebug->dbg_mouse_evt({'evt'=>$_[0]->{'evt'}}));}], 
+	    ['dbg_keybd_evt',     17,  8,                         2, 1, [],                                                                               sub {return ($objDebug->dbg_keybd_evt({'evt'=>$_[0]->{'evt'}}));}], 
+	    ['dbg_unmatched_evt', 17,  8,                         2, 1, ['dbg_unmatched_evt'],                                                            sub {return ($objDebug->dbg_unmatched_evt({'evt'=>$_[0]->{'evt'}}));}], 
 	    ['dbg_curs',          23,  5,                         2, 1, [],                                                                               sub {return ($objDebug->dbg_curs());}], 
 	    ['dbg_display',       25,  12,                        2, 1, ['dbg_display'],                                                                  sub {return ($objDebug->dbg_display());}], 
 	    ['dbg_count',         19,  4,                         1, 1, [],                                                                               sub {return ($objDebug->dbg_count());}], 
@@ -959,13 +934,25 @@ sub generate_editor_display {
 
 		if (($nm eq 'dbg_mouse_evt') || 
 		    ($nm eq 'dbg_keybd_evt') ||
-		    ($nm eq 'dbg_unknown_evt')) {
+		    ($nm eq 'dbg_unmatched_evt')) {
 
-			$d_el->{'e_contents'} = $self->{'d_elements'}->{$nm}->{'subref'}-({'evt' => $arg->{'evt'} });
+			my $rv = $self->{'d_elements'}->{$nm}->{'subref'}->({'evt' => $arg->{'evt'}});
+
+			if (defined $rv && 
+			         ! ($rv eq '')) {
+
+				$d_el->{'e_contents'} = $rv;
+			}
 		}
 		else {
 
-			$d_el->{'e_contents'} = $self->{'d_elements'}->{$nm}->{'subref'}->();
+			my $rv = $self->{'d_elements'}->{$nm}->{'subref'}->();
+
+			if (defined $rv && 
+			         ! ($rv eq '')) {
+
+				$d_el->{'e_contents'} = $rv;
+			}
 		}
 
 		if (exists  $d_el->{'e_contents'} && 
