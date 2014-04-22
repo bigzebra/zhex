@@ -1,4 +1,4 @@
-#!/usr/bin/perl
+#!/usr/bin/perl -w
 
 package ZHex::CharMap;
 
@@ -9,6 +9,7 @@ use warnings FATAL => 'all';
 use ZHex::Common 
   qw(new 
      obj_init 
+     check_args 
      $VERS);
 
 BEGIN { require Exporter;
@@ -49,14 +50,11 @@ sub chr_map_set {
 	my $self = shift;
 	my $arg  = shift;
 
-	if (! defined $arg || 
-	      ! (ref ($arg) eq 'HASH')) 
-		{ die "Call to chr_map_set() failed, argument must be hash reference"; }
-
-	if (! exists  $arg->{'chr_map'} || 
-	    ! defined $arg->{'chr_map'} || 
-	      ! (ref ($arg->{'chr_map'}) eq 'HASH')) 
-		{ die "Call to chr_map_set() failed, value associated w/ key 'chr_map' must be hash reference"; }
+	$self->check_args 
+	  ({ 'arg'  => $arg,
+	     'func' => 'chr_map_set',
+	     'test' => 
+		[{'chr_map' => 'hashref'}] });
 
 	$self->{'chr_map'} = $arg->{'chr_map'};
 
@@ -68,14 +66,11 @@ sub chr_map_hex_val {
 	my $self = shift;
 	my $arg  = shift;
 
-	if (! defined $arg || 
-	      ! (ref ($arg) eq 'HASH')) 
-		{ die "Call to chr_map_hex_val() failed, argument must be hash reference"; }
-
-	if (! exists  $arg->{'lname'} || 
-	    ! defined $arg->{'lname'} || 
-	             ($arg->{'lname'} eq '')) 
-		{ die "Call to chr_map_hex_val() failed, value associated w/ key 'lname' may not be undef/empty"; }
+	$self->check_args 
+	  ({ 'arg'  => $arg,
+	     'func' => 'chr_map_hex_val',
+	     'test' => 
+		[{'lname' => 'string'}] });
 
 	if (exists  $self->{'chr_map'} && 
 	    defined $self->{'chr_map'} && 
@@ -97,14 +92,11 @@ sub chr_map_ord_val {
 	my $self = shift;
 	my $arg  = shift;
 
-	if (! defined $arg || 
-	      ! (ref ($arg) eq 'HASH')) 
-		{ die "Call to chr_map_ord_val() failed, argument must be hash reference"; }
-
-	if (! exists  $arg->{'lname'} || 
-	    ! defined $arg->{'lname'} || 
-	             ($arg->{'lname'} eq '')) 
-		{ die "Call to chr_map_ord_val() failed, value associated w/ key 'lname' may not be undef/empty"; }
+	$self->check_args 
+	  ({ 'arg'  => $arg, 
+	     'func' => 'chr_map_ord_val', 
+	     'test' => 
+		[{'lname' => 'string'}] });
 
 	if (exists  $self->{'chr_map'} && 
 	    defined $self->{'chr_map'} && 

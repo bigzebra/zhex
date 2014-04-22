@@ -1,4 +1,4 @@
-#!/usr/bin/perl
+#!/usr/bin/perl -w
 
 package ZHex::Mouse;
 
@@ -10,6 +10,7 @@ use ZHex::Common
   qw(new 
      init 
      obj_init 
+     check_args 
      $VERS 
      EDT_CTXT_DEFAULT 
      EDT_CTXT_INSERT 
@@ -37,19 +38,12 @@ sub lmouse {
 	my $self = shift;
 	my $arg  = shift;
 
-	if (! defined $arg || 
-	      ! (ref ($arg) eq 'HASH')) 
-		{ die "Call to lmouse() failed, argument must be hash reference"; }
-
-	if (! exists  $arg->{'xpos'} || 
-	    ! defined $arg->{'xpos'} || 
-	           ! ($arg->{'xpos'} =~ /^\d+?$/)) 
-		{ die "Call to lmouse() failed, value associated w/ key 'xpos' was undef/empty string"; }
-
-	if (! exists  $arg->{'ypos'} || 
-	    ! defined $arg->{'ypos'} || 
-	           ! ($arg->{'ypos'} =~ /^\d+?$/)) 
-		{ die "Call to lmouse() failed, value of key 'ypos' must be numeric"; }
+	$self->check_args 
+	  ({ 'arg'  => $arg,
+	     'func' => 'lmouse',
+	     'test' => 
+		[{'xpos' => 'digits'}, 
+	         {'ypos' => 'digits'}] });
 
 	my $objCursor    = $self->{'obj'}->{'cursor'};
 	my $objDisplay   = $self->{'obj'}->{'display'};
@@ -124,19 +118,12 @@ sub rmouse {
 	my $self = shift;
 	my $arg  = shift;
 
-	if (! defined $arg || 
-	      ! (ref ($arg) eq 'HASH')) 
-		{ die "Call to lmouse() failed, argument must be hash reference"; }
-
-	if (! exists  $arg->{'xpos'} || 
-	    ! defined $arg->{'xpos'} || 
-	           ! ($arg->{'xpos'} =~ /^\d+?$/)) 
-		{ die "Call to lmouse() failed, value associated w/ key 'xpos' was undef/empty string"; }
-
-	if (! exists  $arg->{'ypos'} || 
-	    ! defined $arg->{'ypos'} || 
-	           ! ($arg->{'ypos'} =~ /^\d+?$/)) 
-		{ die "Call to lmouse() failed, value of key 'ypos' must be numeric"; }
+	$self->check_args 
+	  ({ 'arg'  => $arg,
+	     'func' => 'rmouse',
+	     'test' => 
+		[{'xpos' => 'digits'}, 
+	         {'ypos' => 'digits'}] });
 
 	my $objConsole   = $self->{'obj'}->{'console'};
 	my $objEventLoop = $self->{'obj'}->{'eventloop'};
@@ -155,31 +142,16 @@ sub mouse_over {
 	my $self = shift;
 	my $arg  = shift;
 
+	$self->check_args 
+	  ({ 'arg'  => $arg,
+	     'func' => 'mouse_over',
+	     'test' => 
+		[{'mouse_over_x'      => 'digits'}, 
+	         {'mouse_over_y'      => 'digits'},
+	         {'mouse_over_x_prev' => 'digits'}, 
+	         {'mouse_over_y_prev' => 'digits'}] });
+
 	my $objConsole = $self->{'obj'}->{'console'};
-
-	if (! defined $arg || 
-	      ! (ref ($arg) eq 'HASH')) 
-		{ die "Call to mouse_over() failed, argument must be hash reference"; }
-
-	if (! exists  $arg->{'mouse_over_x'} || 
-	    ! defined $arg->{'mouse_over_x'} || 
-	           ! ($arg->{'mouse_over_x'} =~ /^\d\d?\d?$/)) 
-		{ die "Call to mouse_over() failed, value of key 'mouse_over_x' must be numeric"; }
-
-	if (! exists  $arg->{'mouse_over_y'} || 
-	    ! defined $arg->{'mouse_over_y'} || 
-	           ! ($arg->{'mouse_over_y'} =~ /^\d\d?\d?$/)) 
-		{ die "Call to mouse_over() failed, value of key 'mouse_over_y' must be numeric"; }
-
-	if (! exists  $arg->{'mouse_over_x_prev'} || 
-	    ! defined $arg->{'mouse_over_x_prev'} || 
-	           ! ($arg->{'mouse_over_x_prev'} =~ /^\d\d?\d?$/)) 
-		{ die "Call to mouse_over() failed, value of key 'mouse_over_x_prev' must be numeric"; }
-
-	if (! exists  $arg->{'mouse_over_y_prev'} || 
-	    ! defined $arg->{'mouse_over_y_prev'} || 
-	           ! ($arg->{'mouse_over_y_prev'} =~ /^\d\d?\d?$/)) 
-		{ die "Call to mouse_over() failed, value of key 'mouse_over_y_prev' must be numeric"; }
 
 	# Restore original attributes to character at previous mouseover X,Y coordinate.
 

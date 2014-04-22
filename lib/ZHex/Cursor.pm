@@ -1,4 +1,4 @@
-#!/usr/bin/perl
+#!/usr/bin/perl -w
 
 package ZHex::Cursor;
 
@@ -9,6 +9,7 @@ use warnings FATAL => 'all';
 use ZHex::Common 
   qw(new 
      obj_init 
+     check_args 
      $VERS
      CURS_CTXT_LINE 
      CURS_CTXT_WORD 
@@ -72,9 +73,11 @@ sub set_curs_ctxt {
 	my $self = shift;
 	my $arg  = shift;
 
-	if (! defined $arg || 
-	      ! (ref ($arg) eq 'HASH')) 
-		{ die "Call to set_curs_ctxt() failed, argument must be hash reference"; }
+	$self->check_args 
+	  ({ 'arg'  => $arg, 
+	     'func' => 'set_curs_ctxt', 
+	     'test' => 
+		[{'curs_ctxt' => 'string'}] });
 
 	if (! exists  $arg->{'curs_ctxt'} || 
 	    ! defined $arg->{'curs_ctxt'} || 
@@ -99,14 +102,11 @@ sub set_curs_pos {
 	my $self = shift;
 	my $arg  = shift;
 
-	if (! defined $arg || 
-	      ! (ref ($arg) eq 'HASH')) 
-		{ die "Call to set_curs_pos() failed, argument must be hash reference"; }
-
-	if (! exists  $arg->{'curs_pos'} || 
-	    ! defined $arg->{'curs_pos'} || 
-	           ! ($arg->{'curs_pos'} =~ /^\d+?$/)) 
-		{ die "Call to set_curs_pos() failed, value of key 'curs_pos' must be numeric"; }
+	$self->check_args 
+	  ({ 'arg'  => $arg, 
+	     'func' => 'set_curs_pos', 
+	     'test' => 
+		[{'curs_pos' => 'digits'}] });
 
 	$self->{'curs_pos'} = $arg->{'curs_pos'};
 
@@ -118,14 +118,11 @@ sub set_sz_word {
 	my $self = shift;
 	my $arg  = shift;
 
-	if (! defined $arg || 
-	      ! (ref ($arg) eq 'HASH')) 
-		{ die "Call to set_sz_word() failed, argument must be hash reference"; }
-
-	if (! exists  $arg->{'sz_word'} || 
-	    ! defined $arg->{'sz_word'} || 
-	           ! ($arg->{'sz_word'} =~ /^\d+?$/)) 
-		{ die "Call to set_sz_word() failed, value of key 'sz_word' must be numeric"; }
+	$self->check_args 
+	  ({ 'arg'  => $arg, 
+	     'func' => 'set_sz_word', 
+	     'test' => 
+		[{'sz_word' => 'digits'}] });
 
 	$self->{'sz_word'} = $arg->{'sz_word'};
 
@@ -137,14 +134,11 @@ sub set_sz_line {
 	my $self = shift;
 	my $arg  = shift;
 
-	if (! defined $arg || 
-	      ! (ref ($arg) eq 'HASH')) 
-		{ die "Call to set_sz_line() failed, argument must be hash reference"; }
-
-	if (! exists  $arg->{'sz_line'} || 
-	    ! defined $arg->{'sz_line'} || 
-	           ! ($arg->{'sz_line'} =~ /^\d+?$/)) 
-		{ die "Call to set_sz_line() failed, value of key 'sz_line' must be numeric"; }
+	$self->check_args 
+	  ({ 'arg'  => $arg, 
+	     'func' => 'set_sz_line', 
+	     'test' => 
+		[{'sz_line' => 'digits'}] });
 
 	$self->{'sz_line'} = $arg->{'sz_line'};
 
@@ -156,14 +150,11 @@ sub set_sz_column {
 	my $self = shift;
 	my $arg  = shift;
 
-	if (! defined $arg || 
-	      ! (ref ($arg) eq 'HASH')) 
-		{ die "Call to set_sz_column() failed, argument must be hash reference"; }
-
-	if (! exists  $arg->{'sz_column'} || 
-	    ! defined $arg->{'sz_column'} || 
-	           ! ($arg->{'sz_column'} =~ /^\d+?$/)) 
-		{ die "Call to set_sz_column() failed, value of key 'sz_column' must be numeric"; }
+	$self->check_args 
+	  ({ 'arg'  => $arg, 
+	     'func' => 'set_sz_column', 
+	     'test' => 
+		[{'sz_column' => 'digits'}] });
 
 	$self->{'sz_column'} = $arg->{'sz_column'};
 
@@ -189,29 +180,14 @@ sub dsp_coord {
 	my $self = shift;
 	my $arg  = shift;
 
-	if (! defined $arg || 
-	      ! (ref ($arg) eq 'HASH')) 
-		{ die "Call to dsp_coord() failed, argument must be hash reference"; }
-
-	if (! exists  $arg->{'curs_pos'} || 
-	    ! defined $arg->{'curs_pos'} || 
-	           ! ($arg->{'curs_pos'} =~ /^\d+?$/)) 
-		{ die "Call to dsp_coord() failed, value associated w/ key 'curs_pos' must be one or more digits"; }
-
-	if (! exists  $arg->{'edt_pos'} || 
-	    ! defined $arg->{'edt_pos'} || 
-	           ! ($arg->{'edt_pos'} =~ /^\d+?$/)) 
-		{ die "Call to dsp_coord() failed, value associated w/ key 'edt_pos' must be one or more digits"; }
-
-	if (! exists  $arg->{'dsp_xpad'} || 
-	    ! defined $arg->{'dsp_xpad'} || 
-	           ! ($arg->{'dsp_xpad'} =~ /^\d+?$/)) 
-		{ die "Call to dsp_coord() failed, value associated w/ key 'dsp_xpad' must be one or more digits"; }
-
-	if (! exists  $arg->{'dsp_ypad'} || 
-	    ! defined $arg->{'dsp_ypad'} || 
-	           ! ($arg->{'dsp_ypad'} =~ /^\d+?$/)) 
-		{ die "Call to dsp_coord() failed, value associated w/ key 'dsp_ypad' must be one or more digits"; }
+	$self->check_args 
+	  ({ 'arg'  => $arg, 
+	     'func' => 'dsp_coord', 
+	     'test' => 
+		[{'curs_pos' => 'digits'}, 
+	         {'edt_pos'  => 'digits'}, 
+	         {'dsp_xpad' => 'digits'}, 
+	         {'dsp_ypad' => 'digits'}] });
 
 	my $objDebug   = $self->{'obj'}->{'debug'};
 	my $objDisplay = $self->{'obj'}->{'display'};
@@ -289,19 +265,15 @@ sub curs_display {
 	my $self = shift;
 	my $arg  = shift;
 
-	if (! defined $arg || 
-	      ! (ref ($arg) eq 'HASH')) 
-		{ die "Call to colorize_display() failed, argument must be hash reference"; }
+	$self->check_args 
+	  ({ 'arg'  => $arg, 
+	     'func' => 'curs_display', 
+	     'test' => 
+		[{'dsp_xpad' => 'digits'}, 
+	         {'dsp_ypad' => 'digits'}, 
+	         {'force'    => 'digits'}] });
 
-	if (! exists  $arg->{'dsp_xpad'} || 
-	    ! defined $arg->{'dsp_xpad'} || 
-	           ! ($arg->{'dsp_xpad'} =~ /^\d\d?\d?$/)) 
-		{ die "Call to colorize_display() failed, value of key 'dsp_xpad' must be numeric"; }
-
-	if (! exists  $arg->{'dsp_ypad'} || 
-	    ! defined $arg->{'dsp_ypad'} || 
-	           ! ($arg->{'dsp_ypad'} =~ /^\d\d?\d?$/)) 
-		{ die "Call to colorize_display() failed, value of key 'dsp_ypad' must be numeric"; }
+	# NO TYPE CHECK FOR boolean YET...
 
 	if (! exists  $arg->{'force'} || 
 	    ! defined $arg->{'force'} || 
@@ -409,34 +381,15 @@ sub calc_coord_array {
 	my $self = shift;
 	my $arg  = shift;
 
-	if (! defined $arg || 
-	      ! (ref ($arg) eq 'HASH')) 
-		{ die "Call to calc_coord_array() failed, argument must be hash reference"; }
-
-	if (! exists  $arg->{'curs_ctxt'} || 
-	    ! defined $arg->{'curs_ctxt'} || 
-	           ! ($arg->{'curs_ctxt'} =~ /^\d+?$/)) 
-		{ die "Call to calc_coord_array() failed, value associated w/ key 'curs_ctxt' must be one or more digits"; }
-
-	if (! exists  $arg->{'curs_pos'} || 
-	    ! defined $arg->{'curs_pos'} || 
-	           ! ($arg->{'curs_pos'} =~ /^\d+?$/)) 
-		{ die "Call to calc_coord_array() failed, value associated w/ key 'curs_pos' must be one or more digits"; }
-
-	if (! exists  $arg->{'edt_pos'} || 
-	    ! defined $arg->{'edt_pos'} || 
-	           ! ($arg->{'edt_pos'} =~ /^\d+?$/)) 
-		{ die "Call to calc_coord_array() failed, value associated w/ key 'edt_pos' must be one or more digits"; }
-
-	if (! exists  $arg->{'dsp_xpad'} || 
-	    ! defined $arg->{'dsp_xpad'} || 
-	           ! ($arg->{'dsp_xpad'} =~ /^\d+?$/)) 
-		{ die "Call to calc_coord_array() failed, value associated w/ key 'dsp_xpad' must be one or more digits"; }
-
-	if (! exists  $arg->{'dsp_ypad'} || 
-	    ! defined $arg->{'dsp_ypad'} || 
-	           ! ($arg->{'dsp_ypad'} =~ /^\d+?$/)) 
-		{ die "Call to calc_coord_array() failed, value associated w/ key 'dsp_ypad' must be one or more digits"; }
+	$self->check_args 
+	  ({ 'arg'  => $arg, 
+	     'func' => 'calc_coord_array', 
+	     'test' => 
+	       [{'curs_ctxt' => 'digits'}, 
+	        {'curs_pos'  => 'digits'}, 
+	        {'edt_pos'   => 'digits'}, 
+	        {'dsp_xpad'  => 'digits'}, 
+	        {'dsp_ypad'  => 'digits'}] });
 
 	my $objDebug  = $self->{'obj'}->{'debug'};
 	my $objEditor = $self->{'obj'}->{'editor'};
@@ -495,19 +448,12 @@ sub comp_coord_arrays {
 	my $self = shift;
 	my $arg  = shift;
 
-	if (! defined $arg || 
-	      ! (ref ($arg) eq 'HASH')) 
-		{ die "Call to comp_coord_arrays() failed, argument must be hash reference"; }
-
-	if (! exists  $arg->{'array1'} || 
-	    ! defined $arg->{'array1'} || 
-	      ! (ref ($arg->{'array1'}) eq 'ARRAY')) 
-		{ die "Call to comp_coord_arrays() failed, value associated w/ key 'array1' must be array reference"; }
-
-	if (! exists  $arg->{'array2'} || 
-	    ! defined $arg->{'array2'} || 
-	      ! (ref ($arg->{'array2'}) eq 'ARRAY')) 
-		{ die "Call to comp_coord_arrays() failed, value associated w/ key 'array2' must be array reference"; }
+	$self->check_args 
+	  ({ 'arg'  => $arg, 
+	     'func' => 'comp_coord_arrays', 
+	     'test' => 
+	       [{'array1' => 'arrayref'}, 
+	        {'array2' => 'arrayref'}] });
 
 	# Compare two arrays (passed by reference):
 	#   Each array (array1 and array2) contains a list of array references:
@@ -546,15 +492,11 @@ sub calc_row_offset {
 	my $self = shift;
 	my $arg  = shift;
 
-	if (! defined $arg || 
-	      ! (ref ($arg) eq 'HASH')) 
-		{ die "Call to calc_row_offset() failed, argument must be hash reference"; }
-
-	if (! exists  $arg->{'pos'} || 
-	    ! defined $arg->{'pos'} || 
-	             ($arg->{'pos'} eq "") || 
-	           ! ($arg->{'pos'} =~ /^\d+?$/)) 
-		{ die "Call to calc_row_offset() failed, value associated w/ key 'pos' must be one or more digits"; }
+	$self->check_args 
+	  ({ 'arg'  => $arg, 
+	     'func' => 'calc_row_offset', 
+	     'test' => 
+	       [{'pos' => 'digits'}] });
 
 	if ($arg->{'pos'} == 0) 
 		{ return (0); }
@@ -576,15 +518,11 @@ sub align_word_boundary {
 	my $self = shift;
 	my $arg  = shift;
 
-	if (! defined $arg || 
-	      ! (ref ($arg) eq 'HASH')) 
-		{ die "Call to align_line_boundary() failed, argument must be hash reference"; }
-
-	if (! exists  $arg->{'pos'} || 
-	    ! defined $arg->{'pos'} || 
-	             ($arg->{'pos'} eq "") || 
-	           ! ($arg->{'pos'} =~ /^\d+?$/)) 
-		{ die "Call to align_line_boundary() failed, value associated w/ key 'pos' must be one or more digits"; }
+	$self->check_args 
+	  ({ 'arg'  => $arg, 
+	     'func' => 'align_word_boundary', 
+	     'test' => 
+	       [{'pos' => 'digits'}] });
 
 	if (($arg->{'pos'} >= 0) &&
 	    ($arg->{'pos'} < $self->{'sz_word'})) {
@@ -604,15 +542,11 @@ sub align_line_boundary {
 	my $self = shift;
 	my $arg  = shift;
 
-	if (! defined $arg || 
-	      ! (ref ($arg) eq 'HASH')) 
-		{ die "Call to align_line_boundary() failed, argument must be hash reference"; }
-
-	if (! exists  $arg->{'pos'} || 
-	    ! defined $arg->{'pos'} || 
-	             ($arg->{'pos'} eq "") || 
-	           ! ($arg->{'pos'} =~ /^\d+?$/)) 
-		{ die "Call to align_line_boundary() failed, value associated w/ key 'pos' must be one or more digits"; }
+	$self->check_args 
+	  ({ 'arg'  => $arg, 
+	     'func' => 'align_line_boundary', 
+	     'test' => 
+	       [{'pos' => 'digits'}] });
 
 	if ($arg->{'pos'} < 0) {
 
@@ -674,15 +608,11 @@ sub curs_mv_fwd {
 	my $self = shift;
 	my $arg  = shift;
 
-	if (! defined $arg || 
-	      ! (ref ($arg) eq 'HASH')) 
-		{ die "Call to curs_mv_fwd() failed, argument must be hash reference"; }
-
-	if (! exists  $arg->{'file_len'} || 
-	    ! defined $arg->{'file_len'} || 
-	             ($arg->{'file_len'} eq "") || 
-	           ! ($arg->{'file_len'} =~ /^\d+?$/)) 
-		{ die "Call to curs_mv_fwd() failed, value associated w/ key 'file_len' must be one or more digits"; }
+	$self->check_args 
+	  ({ 'arg'  => $arg, 
+	     'func' => 'curs_mv_fwd', 
+	     'test' => 
+	       [{'file_len' => 'digits'}] });
 
 	if (($self->{'curs_ctxt'} == 0) && 
 	    ($self->{'curs_pos'} < ($arg->{'file_len'} - $self->{'sz_line'} - 1))) {
@@ -723,15 +653,11 @@ sub curs_mv_down {
 	my $self = shift;
 	my $arg  = shift;
 
-	if (! defined $arg || 
-	      ! (ref ($arg) eq 'HASH')) 
-		{ die "Call to curs_mv_down() failed, argument must be hash reference"; }
-
-	if (! exists  $arg->{'file_len'} || 
-	    ! defined $arg->{'file_len'} || 
-	             ($arg->{'file_len'} eq "") || 
-	           ! ($arg->{'file_len'} =~ /^\d+?$/)) 
-		{ die "Call to curs_mv_down() failed, value associated w/ key 'file_len' must be one or more digits"; }
+	$self->check_args 
+	  ({ 'arg'  => $arg, 
+	     'func' => 'curs_mv_down', 
+	     'test' => 
+	       [{'file_len' => 'digits'}] });
 
 	# Error here when scrolling to last line, last byte...
 
@@ -779,15 +705,11 @@ sub curs_mv_right {
 	my $self = shift;
 	my $arg  = shift;
 
-	if (! defined $arg || 
-	      ! (ref ($arg) eq 'HASH')) 
-		{ die "Call to curs_mv_right() failed, argument must be hash reference"; }
-
-	if (! exists  $arg->{'file_len'} || 
-	    ! defined $arg->{'file_len'} || 
-	             ($arg->{'file_len'} eq "") || 
-	           ! ($arg->{'file_len'} =~ /^\d+?$/)) 
-		{ die "Call to curs_mv_right() failed, value associated w/ key 'file_len' must be one or more digits"; }
+	$self->check_args 
+	  ({ 'arg'  => $arg, 
+	     'func' => 'curs_mv_right', 
+	     'test' => 
+	       [{'file_len' => 'digits'}] });
 
 	my $ofs = $self->calc_row_offset ({ 'pos' => $self->{'curs_pos'} });
 
@@ -886,15 +808,11 @@ sub curs_adjust {
 	my $self = shift;
 	my $arg  = shift;
 
-	if (! defined $arg || 
-	      ! (ref ($arg) eq 'HASH')) 
-		{ die "Call to curs_adjust() failed, argument must be hash reference"; }
-
-	if (! exists  $arg->{'edt_pos'} || 
-	    ! defined $arg->{'edt_pos'} || 
-	             ($arg->{'edt_pos'} eq '') || 
-	           ! ($arg->{'edt_pos'} =~ /^\d+?$/)) 
-		{ die "Call to curs_adjust() failed, value associated w/ key 'edt_pos' must be one or more digits"; }
+	$self->check_args 
+	  ({ 'arg'  => $arg, 
+	     'func' => 'curs_adjust', 
+	     'test' => 
+	       [{'edt_pos' => 'digits'}] });
 
 	# If cursor is OOB: update cursor position [below bottom line in editor display].
 

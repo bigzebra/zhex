@@ -1,4 +1,4 @@
-#!/usr/bin/perl
+#!/usr/bin/perl -w
 
 package ZHex::EventLoop;
 
@@ -9,6 +9,7 @@ use warnings FATAL => 'all';
 use ZHex::Common 
   qw(new 
      obj_init 
+     check_args 
      $VERS 
      EDT_CTXT_DEFAULT 
      EDT_CTXT_INSERT 
@@ -65,15 +66,11 @@ sub evt_read {
 	my $self = shift;
 	my $arg  = shift;
 
-	if (! defined $arg || 
-	      ! (ref ($arg) eq 'HASH')) 
-		{ die "Call to evt_read() failed, argument must be hash reference"; }
-
-	if (! exists  $arg->{'evt_stack'} || 
-	    ! defined $arg->{'evt_stack'} || 
-	             ($arg->{'evt_stack'} eq '') || 
-	      ! (ref ($arg->{'evt_stack'}) eq 'ARRAY')) 
-		{ die "Call to evt_read() failed, value associated w/ key 'evt_stack' must be array ref"; }
+	$self->check_args 
+	  ({ 'arg'  => $arg,
+	     'func' => 'evt_read',
+	     'test' => 
+		[{'evt_stack' => 'arrayref'}] });
 
 	my $objConsole = $self->{'obj'}->{'console'};
 
@@ -122,15 +119,11 @@ sub evt_filter {
 	my $self = shift;
 	my $arg  = shift;
 
-	if (! defined $arg || 
-	      ! (ref ($arg) eq 'HASH')) 
-		{ die "Call to evt_mouse() failed, argument must be hash reference"; }
-
-	if (! exists  $arg->{'evt'} || 
-	    ! defined $arg->{'evt'} || 
-	             ($arg->{'evt'} eq '') || 
-	      ! (ref ($arg->{'evt'}) eq 'ARRAY')) 
-		{ die "Call to evt_filter() failed, value associated w/ key 'evt' must be array ref"; }
+	$self->check_args 
+	  ({ 'arg'  => $arg,
+	     'func' => 'evt_filter',
+	     'test' => 
+		[{'evt' => 'arrayref'}] });
 
 	# Check for keyboard "key up" events:
 	#   These events cloud the debugging display, filter them from event stream.
@@ -149,15 +142,11 @@ sub evt_mouse {
 	my $self = shift;
 	my $arg  = shift;
 
-	if (! defined $arg || 
-	      ! (ref ($arg) eq 'HASH')) 
-		{ die "Call to evt_mouse() failed, argument must be hash reference"; }
-
-	if (! exists  $arg->{'evt'} || 
-	    ! defined $arg->{'evt'} || 
-	             ($arg->{'evt'} eq '') || 
-	      ! (ref ($arg->{'evt'}) eq 'ARRAY')) 
-		{ die "Call to evt_mouse() failed, value associated w/ key 'evt' must be array ref"; }
+	$self->check_args 
+	  ({ 'arg'  => $arg,
+	     'func' => 'evt_mouse',
+	     'test' => 
+		[{'evt' => 'arrayref'}] });
 
 	my $objConsole = $self->{'obj'}->{'console'};
 	my $objMouse   = $self->{'obj'}->{'mouse'};
@@ -277,9 +266,10 @@ sub evt_loop {
 
 			# Dispatch the event callback routine registered to handle this event.
 
-			if ($objEvent->evt_dispatch ({ 'evt_nm'   => $evt_nm, 
-			                               'edt_ctxt' => $objEditor->{'edt_ctxt'}, 
-			                               'evt'      => $evt })) {
+			if ($objEvent->evt_dispatch 
+			      ({ 'evt_nm'   => $evt_nm, 
+			         'edt_ctxt' => $objEditor->{'edt_ctxt'}, 
+			         'evt'      => $evt })) {
 
 				$objDebug->errmsg ("Call to evt_dispatch w/ argument '" . $evt_nm . "' returned w/ success.");
 			}

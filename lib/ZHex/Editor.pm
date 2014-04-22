@@ -1,4 +1,4 @@
-#!/usr/bin/perl
+#!/usr/bin/perl -w
 
 package ZHex::Editor;
 
@@ -9,6 +9,7 @@ use warnings FATAL => 'all';
 use ZHex::Common 
   qw(new 
      obj_init 
+     check_args 
      $VERS 
      EDT_CTXT_DEFAULT 
      EDT_CTXT_INSERT 
@@ -67,14 +68,11 @@ sub set_horiz_rule_char {
 	my $self = shift;
 	my $arg  = shift;
 
-	if (! defined $arg || 
-	      ! (ref ($arg) eq 'HASH')) 
-		{ die "Call to set_horiz_rule_char() failed, argument must be hash reference"; }
-
-	if (! exists  $arg->{'char'} || 
-	    ! defined $arg->{'char'} || 
-	             ($arg->{'char'} eq '')) 
-		{ die "Call to set_horiz_rule_char() failed, value of key 'char' may not be undef/empty"; }
+	$self->check_args 
+	  ({ 'arg'  => $arg,
+	     'func' => 'set_horiz_rule_char',
+	     'test' => 
+		[{'char' => 'string'}] });
 
 	$self->{'horiz_rule_char'} = $arg->{'char'};
 
@@ -86,14 +84,11 @@ sub set_oob_char {
 	my $self = shift;
 	my $arg  = shift;
 
-	if (! defined $arg || 
-	      ! (ref ($arg) eq 'HASH')) 
-		{ die "Call to set_oob_char() failed, argument must be hash reference"; }
-
-	if (! exists  $arg->{'char'} || 
-	    ! defined $arg->{'char'} || 
-	             ($arg->{'char'} eq '')) 
-		{ die "Call to set_oob_char() failed, value of key 'char' may not be undef/empty"; }
+	$self->check_args 
+	  ({ 'arg'  => $arg,
+	     'func' => 'set_oob_char',
+	     'test' => 
+		[{'char' => 'string'}] });
 
 	$self->{'oob_char'} = $arg->{'char'};
 
@@ -105,14 +100,11 @@ sub set_edt_ctxt {
 	my $self = shift;
 	my $arg  = shift;
 
-	if (! defined $arg || 
-	      ! (ref ($arg) eq 'HASH')) 
-		{ die "Call to set_edt_ctxt() failed, argument must be hash reference"; }
-
-	if (! exists  $arg->{'edt_ctxt'} || 
-	    ! defined $arg->{'edt_ctxt'} || 
-	             ($arg->{'edt_ctxt'} eq '')) 
-		{ die "Call to set_edt_ctxt() failed, value of key 'edt_ctxt' may not be undef/empty"; }
+	$self->check_args 
+	  ({ 'arg'  => $arg,
+	     'func' => 'set_edt_ctxt',
+	     'test' => 
+		[{'edt_ctxt' => 'string'}] });
 
 	$self->{'edt_ctxt'} = $arg->{'edt_ctxt'};
 
@@ -124,34 +116,27 @@ sub set_edt_pos {
 	my $self = shift;
 	my $arg  = shift;
 
-	if (! defined $arg || 
-	      ! (ref ($arg) eq 'HASH')) 
-		{ die "Call to set_edt_pos() failed, argument must be hash reference"; }
-
-	if (! exists  $arg->{'edt_pos'} || 
-	    ! defined $arg->{'edt_pos'} || 
-	           ! ($arg->{'edt_pos'} =~ /^\d+?$/)) 
-		{ die "Call to set_edt_pos() failed, value of key 'edt_pos' must be numeric"; }
+	$self->check_args 
+	  ({ 'arg'  => $arg,
+	     'func' => 'set_edt_pos',
+	     'test' => 
+		[{'edt_pos' => 'digits'}] });
 
 	$self->{'edt_pos'} = $arg->{'edt_pos'};
 
 	return (1);
 }
 
-
 sub set_sz_word {
 
 	my $self = shift;
 	my $arg  = shift;
 
-	if (! defined $arg || 
-	      ! (ref ($arg) eq 'HASH')) 
-		{ die "Call to set_sz_word() failed, argument must be hash reference"; }
-
-	if (! exists  $arg->{'sz_word'} || 
-	    ! defined $arg->{'sz_word'} || 
-	           ! ($arg->{'sz_word'} =~ /^\d+?$/)) 
-		{ die "Call to set_sz_word() failed, value of key 'sz_word' must be numeric"; }
+	$self->check_args 
+	  ({ 'arg'  => $arg,
+	     'func' => 'set_sz_word',
+	     'test' => 
+		[{'sz_word' => 'digits'}] });
 
 	$self->{'sz_word'} = $arg->{'sz_word'};
 
@@ -163,14 +148,11 @@ sub set_sz_line {
 	my $self = shift;
 	my $arg  = shift;
 
-	if (! defined $arg || 
-	      ! (ref ($arg) eq 'HASH')) 
-		{ die "Call to set_sz_line() failed, argument must be hash reference"; }
-
-	if (! exists  $arg->{'sz_line'} || 
-	    ! defined $arg->{'sz_line'} || 
-	           ! ($arg->{'sz_line'} =~ /^\d+?$/)) 
-		{ die "Call to set_sz_line() failed, value of key 'sz_line' must be numeric"; }
+	$self->check_args 
+	  ({ 'arg'  => $arg,
+	     'func' => 'set_sz_line',
+	     'test' => 
+		[{'sz_line' => 'digits'}] });
 
 	$self->{'sz_line'} = $arg->{'sz_line'};
 
@@ -182,14 +164,11 @@ sub set_sz_column {
 	my $self = shift;
 	my $arg  = shift;
 
-	if (! defined $arg || 
-	      ! (ref ($arg) eq 'HASH')) 
-		{ die "Call to set_sz_column() failed, argument must be hash reference"; }
-
-	if (! exists  $arg->{'sz_column'} || 
-	    ! defined $arg->{'sz_column'} || 
-	           ! ($arg->{'sz_column'} =~ /^\d+?$/)) 
-		{ die "Call to set_sz_column() failed, value of key 'sz_column' must be numeric"; }
+	$self->check_args 
+	  ({ 'arg'  => $arg,
+	     'func' => 'set_sz_column',
+	     'test' => 
+		[{'sz_column' => 'digits'}] });
 
 	$self->{'sz_column'} = $arg->{'sz_column'};
 
@@ -214,15 +193,11 @@ sub gen_hdr {
 	my $self = shift;
 	my $arg  = shift;
 
-	if (! defined $arg || 
-	      ! (ref ($arg) eq 'HASH')) 
-		{ die "Call to gen_sep() failed, argument must be hash reference"; }
-
-	if (! exists  $arg->{'d_elements'} || 
-	    ! defined $arg->{'d_elements'} || 
-	             ($arg->{'d_elements'} eq '') || 
-	      ! (ref ($arg->{'d_elements'}) eq 'HASH')) 
-		{ die "Call to gen_sep() failed, value associated w/ key 'd_elements' must be hash reference"; }
+	$self->check_args 
+	  ({ 'arg'  => $arg,
+	     'func' => 'gen_hdr',
+	     'test' => 
+		[{'d_elements' => 'hashref'}] });
 
 	# Generate column descriptors: 
 	#   - Headlines over top of columns which describe contents of each column.
@@ -332,33 +307,14 @@ sub gen_ofs_hex {
 	my $self = shift;
 	my $arg  = shift;
 
-	if (! defined $arg || 
-	      ! (ref ($arg) eq 'HASH')) 
-		{ die "Call to gen_ofs_hex() failed, argument must be hash reference"; }
-
-	if (! exists  $arg->{'pos'} || 
-	    ! defined $arg->{'pos'} || 
-	             ($arg->{'pos'} eq '') || 
-	           ! ($arg->{'pos'} =~ /^\d+?$/)) 
-		{ die "Call to gen_ofs_hex() failed, value associated w/ key 'pos' must be one or more digits"; }
-
-	if (! exists  $arg->{'sz_line'} || 
-	    ! defined $arg->{'sz_line'} || 
-	             ($arg->{'sz_line'} eq '') || 
-	           ! ($arg->{'sz_line'} =~ /^\d+?$/)) 
-		{ die "Call to gen_ofs_hex() failed, value associated w/ key 'sz_line' must be one or more digits"; }
-
-	if (! exists  $arg->{'sz_column'} || 
-	    ! defined $arg->{'sz_column'} || 
-	             ($arg->{'sz_column'} eq '') || 
-	           ! ($arg->{'sz_column'} =~ /^\d+?$/)) 
-		{ die "Call to gen_ofs_hex() failed, value associated w/ key 'sz_column' must be one or more digits"; }
-
-	if (! exists  $arg->{'f_size'} || 
-	    ! defined $arg->{'f_size'} || 
-	             ($arg->{'f_size'} eq '') || 
-	           ! ($arg->{'f_size'} =~ /^\d+?$/)) 
-		{ die "Call to gen_ofs_hex() failed, value associated w/ key 'f_size' must be one or more digits"; }
+	$self->check_args 
+	  ({ 'arg'  => $arg,
+	     'func' => 'gen_ofs_hex',
+	     'test' => 
+		[{'pos'       => 'digits'}, 
+	         {'sz_line'   => 'digits'},
+	         {'sz_column' => 'digits'},
+	         {'f_size'    => 'digits'}] });
 
 	my @lines;
 	for (my $ofs =  $arg->{'pos'}; 
@@ -385,33 +341,14 @@ sub gen_ofs_dec {
 	my $self = shift;
 	my $arg  = shift;
 
-	if (! defined $arg || 
-	      ! (ref ($arg) eq 'HASH')) 
-		{ die "Call to gen_ofs_dec() failed, argument must be hash reference"; }
-
-	if (! exists  $arg->{'pos'} || 
-	    ! defined $arg->{'pos'} || 
-	             ($arg->{'pos'} eq '') || 
-	           ! ($arg->{'pos'} =~ /^\d+?$/)) 
-		{ die "Call to gen_ofs_dec() failed, value associated w/ key 'pos' must be one or more digits"; }
-
-	if (! exists  $arg->{'sz_line'} || 
-	    ! defined $arg->{'sz_line'} || 
-	             ($arg->{'sz_line'} eq '') || 
-	           ! ($arg->{'sz_line'} =~ /^\d+?$/)) 
-		{ die "Call to gen_ofs_dec() failed, value associated w/ key 'sz_line' must be one or more digits"; }
-
-	if (! exists  $arg->{'sz_column'} || 
-	    ! defined $arg->{'sz_column'} || 
-	             ($arg->{'sz_column'} eq '') || 
-	           ! ($arg->{'sz_column'} =~ /^\d+?$/)) 
-		{ die "Call to gen_ofs_dec() failed, value associated w/ key 'sz_column' must be one or more digits"; }
-
-	if (! exists  $arg->{'f_size'} || 
-	    ! defined $arg->{'f_size'} || 
-	             ($arg->{'f_size'} eq '') || 
-	           ! ($arg->{'f_size'} =~ /^\d+?$/)) 
-		{ die "Call to gen_ofs_dec() failed, value associated w/ key 'f_size' must be one or more digits"; }
+	$self->check_args 
+	  ({ 'arg'  => $arg,
+	     'func' => 'gen_ofs_dec',
+	     'test' => 
+		[{'pos'       => 'digits'}, 
+	         {'sz_line'   => 'digits'},
+	         {'sz_column' => 'digits'},
+	         {'f_size'    => 'digits'}] });
 
 	my @lines;
 	for (my $ofs =  $arg->{'pos'}; 
@@ -447,33 +384,14 @@ sub gen_hex {
 	my $self = shift;
 	my $arg  = shift;
 
-	if (! defined $arg || 
-	      ! (ref ($arg) eq 'HASH')) 
-		{ die "Call to gen_hex() failed, argument must be hash reference"; }
-
-	if (! exists  $arg->{'pos'} || 
-	    ! defined $arg->{'pos'} || 
-	             ($arg->{'pos'} eq '') || 
-	           ! ($arg->{'pos'} =~ /^\d+?$/)) 
-		{ die "Call to gen_hex() failed, value associated w/ key 'pos' must be one or more digits"; }
-
-	if (! exists  $arg->{'sz_line'} || 
-	    ! defined $arg->{'sz_line'} || 
-	             ($arg->{'sz_line'} eq '') || 
-	           ! ($arg->{'sz_line'} =~ /^\d+?$/)) 
-		{ die "Call to gen_hex() failed, value associated w/ key 'sz_line' must be one or more digits"; }
-
-	if (! exists  $arg->{'sz_column'} || 
-	    ! defined $arg->{'sz_column'} || 
-	             ($arg->{'sz_column'} eq '') || 
-	           ! ($arg->{'sz_column'} =~ /^\d+?$/)) 
-		{ die "Call to gen_hex() failed, value associated w/ key 'sz_column' must be one or more digits"; }
-
-	if (! exists  $arg->{'f_size'} || 
-	    ! defined $arg->{'f_size'} || 
-	             ($arg->{'f_size'} eq '') || 
-	           ! ($arg->{'f_size'} =~ /^\d+?$/)) 
-		{ die "Call to gen_hex() failed, value associated w/ key 'f_size' must be one or more digits"; }
+	$self->check_args 
+	  ({ 'arg'  => $arg,
+	     'func' => 'gen_hex',
+	     'test' => 
+		[{'pos'       => 'digits'}, 
+	         {'sz_line'   => 'digits'},
+	         {'sz_column' => 'digits'},
+	         {'f_size'    => 'digits'}] });
 
 	my $objFile = $self->{'obj'}->{'file'};
 
@@ -521,39 +439,17 @@ sub gen_hex_cols {
 	my $self = shift;
 	my $arg  = shift;
 
-	if (! defined $arg || 
-	      ! (ref ($arg) eq 'HASH')) 
-		{ die "Call to gen_hex_cols() failed, argument must be hash reference"; }
-
-	if (! exists  $arg->{'pos'} || 
-	    ! defined $arg->{'pos'} || 
-	             ($arg->{'pos'} eq '') || 
-	           ! ($arg->{'pos'} =~ /^\d+?$/)) 
-		{ die "Call to gen_hex_cols() failed, value associated w/ key 'pos' must be one or more digits"; }
-
-	if (! exists  $arg->{'sz_line'} || 
-	    ! defined $arg->{'sz_line'} || 
-	             ($arg->{'sz_line'} eq '') || 
-	           ! ($arg->{'sz_line'} =~ /^\d+?$/)) 
-		{ die "Call to gen_hex_cols() failed, value associated w/ key 'sz_line' must be one or more digits"; }
-
-	if (! exists  $arg->{'sz_column'} || 
-	    ! defined $arg->{'sz_column'} || 
-	             ($arg->{'sz_column'} eq '') || 
-	           ! ($arg->{'sz_column'} =~ /^\d+?$/)) 
-		{ die "Call to gen_hex_cols() failed, value associated w/ key 'sz_column' must be one or more digits"; }
-
-	if (! exists  $arg->{'f_size'} || 
-	    ! defined $arg->{'f_size'} || 
-	             ($arg->{'f_size'} eq '') || 
-	           ! ($arg->{'f_size'} =~ /^\d+?$/)) 
-		{ die "Call to gen_hex_cols() failed, value associated w/ key 'f_size' must be one or more digits"; }
-
-	if (! exists  $arg->{'col_ct'} || 
-	    ! defined $arg->{'col_ct'} || 
-	             ($arg->{'col_ct'} eq '') || 
-	           ! ($arg->{'col_ct'} =~ /^\d+?$/)) 
-		{ die "Call to gen_hex_cols() failed, value associated w/ key 'f_size' must be one or more digits"; }
+	$self->check_args 
+	  ({ 'arg'  => $arg,
+	     'func' => 'gen_hex_cols',
+	     'test' => 
+		[{'pos'       => 'digits'}, 
+	         {'sz_line'   => 'digits'},
+	         {'sz_column' => 'digits'},
+	         {'f_size'    => 'digits'}, 
+	         {'col_ct'    => 'digits'},
+	         {'hpad'      => 'digits'}, 
+	         {'prefix'    => 'string'}] });
 
 	if ($arg->{'col_ct'} < 1) 
 		{ die "Call to gen_hex_cols() failed, value associated w/ key 'col_ct' may not be lower than 1"; }
@@ -565,16 +461,6 @@ sub gen_hex_cols {
 	           ($remainder =~ /^\d+?$/) && 
 	         ! ($remainder == 0)) 
 		{ die "Call to gen_hex_cols() failed, argument 'sz_line' divided by argument 'col_ct' may not leave a remainder"; }
-
-	if (! exists  $arg->{'hpad'} || 
-	    ! defined $arg->{'hpad'} || 
-	             ($arg->{'hpad'} eq '') || 
-	           ! ($arg->{'hpad'} =~ /^\d+?$/)) 
-		{ die "Call to gen_hex_cols() failed, value associated w/ key 'hpad' must be one or more digits"; }
-
-	if (! exists  $arg->{'prefix'} || 
-	    ! defined $arg->{'prefix'})
-		{ die "Call to gen_hex_cols() failed, value associated w/ key 'prefix' must be defined"; }
 
 	my $gen_hex_lines = 
 	  $self->gen_hex 
@@ -617,33 +503,14 @@ sub gen_char {
 	my $self = shift;
 	my $arg  = shift;
 
-	if (! defined $arg || 
-	      ! (ref ($arg) eq 'HASH')) 
-		{ die "Call to gen_char() failed, argument must be hash reference"; }
-
-	if (! exists  $arg->{'pos'} || 
-	    ! defined $arg->{'pos'} || 
-	             ($arg->{'pos'} eq '') || 
-	           ! ($arg->{'pos'} =~ /^\d+?$/)) 
-		{ die "Call to gen_char() failed, value associated w/ key 'pos' must be one or more digits"; }
-
-	if (! exists  $arg->{'sz_line'} || 
-	    ! defined $arg->{'sz_line'} || 
-	             ($arg->{'sz_line'} eq '') || 
-	           ! ($arg->{'sz_line'} =~ /^\d+?$/)) 
-		{ die "Call to gen_char() failed, value associated w/ key 'sz_line' must be one or more digits"; }
-
-	if (! exists  $arg->{'sz_column'} || 
-	    ! defined $arg->{'sz_column'} || 
-	             ($arg->{'sz_column'} eq '') || 
-	           ! ($arg->{'sz_column'} =~ /^\d+?$/)) 
-		{ die "Call to gen_char() failed, value associated w/ key 'sz_column' must be one or more digits"; }
-
-	if (! exists  $arg->{'f_size'} || 
-	    ! defined $arg->{'f_size'} || 
-	             ($arg->{'f_size'} eq '') || 
-	           ! ($arg->{'f_size'} =~ /^\d+?$/)) 
-		{ die "Call to gen_char() failed, value associated w/ key 'f_size' must be one or more digits"; }
+	$self->check_args 
+	  ({ 'arg'  => $arg,
+	     'func' => 'gen_char',
+	     'test' => 
+		[{'pos'       => 'digits'}, 
+	         {'sz_line'   => 'digits'},
+	         {'sz_column' => 'digits'},
+	         {'f_size'    => 'digits'}] });
 
 	my $objFile = $self->{'obj'}->{'file'};
 
@@ -697,33 +564,14 @@ sub gen_lnum {
 	my $self = shift;
 	my $arg  = shift;
 
-	if (! defined $arg || 
-	      ! (ref ($arg) eq 'HASH')) 
-		{ die "Call to gen_lnum() failed, argument must be hash reference"; }
-
-	if (! exists  $arg->{'pos'} || 
-	    ! defined $arg->{'pos'} || 
-	             ($arg->{'pos'} eq '') || 
-	           ! ($arg->{'pos'} =~ /^\d+?$/)) 
-		{ die "Call to gen_lnum() failed, value associated w/ key 'pos' must be one or more digits"; }
-
-	if (! exists  $arg->{'sz_line'} || 
-	    ! defined $arg->{'sz_line'} || 
-	             ($arg->{'sz_line'} eq '') || 
-	           ! ($arg->{'sz_line'} =~ /^\d+?$/)) 
-		{ die "Call to gen_lnum() failed, value associated w/ key 'sz_line' must be one or more digits"; }
-
-	if (! exists  $arg->{'sz_column'} || 
-	    ! defined $arg->{'sz_column'} || 
-	             ($arg->{'sz_column'} eq '') || 
-	           ! ($arg->{'sz_column'} =~ /^\d+?$/)) 
-		{ die "Call to gen_lnum() failed, value associated w/ key 'sz_column' must be one or more digits"; }
-
-	if (! exists  $arg->{'f_size'} || 
-	    ! defined $arg->{'f_size'} || 
-	             ($arg->{'f_size'} eq '') || 
-	           ! ($arg->{'f_size'} =~ /^\d+?$/)) 
-		{ die "Call to gen_lnum() failed, value associated w/ key 'f_size' must be one or more digits"; }
+	$self->check_args 
+	  ({ 'arg'  => $arg,
+	     'func' => 'gen_lnum',
+	     'test' => 
+		[{'pos'       => 'digits'}, 
+	         {'sz_line'   => 'digits'},
+	         {'sz_column' => 'digits'},
+	         {'f_size'    => 'digits'}] });
 
 	my @lines;
 	for (my $ofs =  $arg->{'pos'}; 
@@ -748,15 +596,11 @@ sub gen_sep {
 	my $self = shift;
 	my $arg  = shift;
 
-	if (! defined $arg || 
-	      ! (ref ($arg) eq 'HASH')) 
-		{ die "Call to gen_sep() failed, argument must be hash reference"; }
-
-	if (! exists  $arg->{'d_elements'} || 
-	    ! defined $arg->{'d_elements'} || 
-	             ($arg->{'d_elements'} eq '') || 
-	      ! (ref ($arg->{'d_elements'}) eq 'HASH')) 
-		{ die "Call to gen_sep() failed, value associated w/ key 'd_elements' must be hash reference"; }
+	$self->check_args 
+	  ({ 'arg'  => $arg,
+	     'func' => 'set_horiz_rule_char',
+	     'test' => 
+		[{'d_elements' => 'hashref'}] });
 
 	# Generate horizontal rule (seperator) to break up long columns of data.
 
@@ -849,15 +693,11 @@ sub scroll_down_1x_line {
 	my $self = shift;
 	my $arg  = shift;
 
-	if (! defined $arg || 
-	      ! (ref ($arg) eq 'HASH')) 
-		{ die "Call to scroll_down_1x_line() failed, argument must be hash reference"; }
-
-	if (! exists  $arg->{'file_len'} || 
-	    ! defined $arg->{'file_len'} || 
-	             ($arg->{'file_len'} eq '') || 
-	           ! ($arg->{'file_len'} =~ /^\d+?$/)) 
-		{ die "Call to scroll_down_1x_line() failed, value associated w/ key 'file_len' must be one or more digits"; }
+	$self->check_args 
+	  ({ 'arg'  => $arg,
+	     'func' => 'scroll_down_1x_line',
+	     'test' => 
+		[{'file_len' => 'digits'}] });
 
 	if ($self->{'edt_pos'} > ($arg->{'file_len'} - ($self->{'sz_line'} * $self->{'sz_column'}))) 
 		{ return (undef); }
@@ -885,15 +725,11 @@ sub scroll_down_1x_page {
 	my $self = shift;
 	my $arg  = shift;
 
-	if (! defined $arg || 
-	      ! (ref ($arg) eq 'HASH')) 
-		{ die "Call to scroll_down_1x_page() failed, argument must be hash reference"; }
-
-	if (! exists  $arg->{'file_len'} || 
-	    ! defined $arg->{'file_len'} || 
-	             ($arg->{'file_len'} eq '') || 
-	           ! ($arg->{'file_len'} =~ /^\d+?$/)) 
-		{ die "Call to scroll_down_1x_page() failed, value associated w/ key 'file_len' must be one or more digits"; }
+	$self->check_args 
+	  ({ 'arg'  => $arg,
+	     'func' => 'scroll_down_1x_page',
+	     'test' => 
+		[{'file_len' => 'digits'}] });
 
 	if (($self->{'edt_pos'} + ($self->{'sz_line'} * $self->{'sz_column'})) < 
 	       ($arg->{'file_len'} - ($self->{'sz_line'} * $self->{'sz_column'}))) {
@@ -923,21 +759,12 @@ sub vstretch {
 	my $self = shift;
 	my $arg  = shift;
 
-	if (! defined $arg || 
-	      ! (ref ($arg) eq 'HASH')) 
-		{ die "Call to vstretch() failed, argument must be hash reference"; }
-
-	if (! exists  $arg->{'max_columns'} || 
-	    ! defined $arg->{'max_columns'} || 
-	             ($arg->{'max_columns'} eq '') || 
-	           ! ($arg->{'max_columns'} =~ /^\d+?$/)) 
-		{ die "Call to vstretch() failed, value associated w/ key 'max_columns' must be one or more digits"; }
-
-	if (! exists  $arg->{'file_len'} || 
-	    ! defined $arg->{'file_len'} || 
-	             ($arg->{'file_len'} eq '') || 
-	           ! ($arg->{'file_len'} =~ /^\d+?$/)) 
-		{ die "Call to vstretch() failed, value associated w/ key 'file_len' must be one or more digits"; }
+	$self->check_args 
+	  ({ 'arg'  => $arg,
+	     'func' => 'vstretch',
+	     'test' => 
+		[{'max_columns' => 'digits'}, 
+	         {'file_len'    => 'digits'}] });
 
 	if ($self->{'sz_column'} < $arg->{'max_columns'}) {
 
@@ -976,15 +803,11 @@ sub dsp_pos_adjust {
 	my $self = shift;
 	my $arg  = shift;
 
-	if (! defined $arg || 
-	      ! (ref ($arg) eq 'HASH')) 
-		{ die "Call to dsp_pos_adjust() failed, argument must be hash reference"; }
-
-	if (! exists  $arg->{'curs_pos'} || 
-	    ! defined $arg->{'curs_pos'} || 
-	             ($arg->{'curs_pos'} eq '') || 
-	           ! ($arg->{'curs_pos'} =~ /^\d+?$/)) 
-		{ die "Call to dsp_pos_adjust() failed, value associated w/ key 'curs_pos' must be one or more digits"; }
+	$self->check_args 
+	  ({ 'arg'  => $arg,
+	     'func' => 'dsp_pos_adjust',
+	     'test' => 
+		[{'curs_pos' => 'digits'}] });
 
 	# If curs_pos is OOB: adjust display position [curs_mv_up].
 

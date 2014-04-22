@@ -1,4 +1,4 @@
-#!/usr/bin/perl
+#!/usr/bin/perl -w
 
 package ZHex::Event;
 
@@ -9,6 +9,7 @@ use warnings FATAL => 'all';
 use ZHex::Common 
   qw(new 
      obj_init 
+     check_args 
      $VERS 
      EDT_CTXT_DEFAULT 
      EDT_CTXT_INSERT 
@@ -69,29 +70,14 @@ sub register_callback {
 	my $self = shift;
 	my $arg  = shift;
 
-	if (! defined $arg || 
-	      ! (ref ($arg) eq 'HASH')) 
-		{ die "Call to register_callback() failed, argument must be hash reference"; }
-
-	if (! exists  $arg->{'edt_ctxt'} || 
-	    ! defined $arg->{'edt_ctxt'} || 
-	             ($arg->{'edt_ctxt'} eq '')) 
-		{ die "Call to register_callback() failed, value associated w/ key 'edt_ctxt' was undef/empty string"; }
-
-	if (! exists  $arg->{'evt_nm'} || 
-	    ! defined $arg->{'evt_nm'} || 
-	             ($arg->{'evt_nm'} eq '')) 
-		{ die "Call to register_callback() failed, value associated w/ key 'evt_nm' was undef/empty string"; }
-
-	if (! exists  $arg->{'evt_cb'} || 
-	    ! defined $arg->{'evt_cb'} || 
-	      ! (ref ($arg->{'evt_cb'}) eq 'CODE')) 
-		{ die "Call to register_callback() failed, value associated w/ key 'evt_cb' must be code reference"; }
-
-	if (! exists  $arg->{'evt'} || 
-	    ! defined $arg->{'evt'} || 
-	      ! (ref ($arg->{'evt'}) eq 'ARRAY')) 
-		{ die "Call to register_callback() failed, value associated w/ key 'evt' must be array reference"; }   # <--- Change back to die...
+	$self->check_args 
+	  ({ 'arg'  => $arg,
+	     'func' => 'register_callback',
+	     'test' => 
+		[{'edt_ctxt' => 'string'}, 
+	         {'evt_nm'   => 'string'}, 
+	         {'evt_cb'   => 'coderef'}, 
+	         {'evt'      => 'arrayref'}] });
 
 	# Store callback in callback hash: $self->{'cb'}.
 
@@ -118,25 +104,13 @@ sub register_evt_sig {
 	my $self = shift;
 	my $arg  = shift;
 
-	if (! defined $arg || 
-	      ! (ref ($arg) eq 'HASH')) 
-		{ die "Call to register_evt_sig() failed, argument must be hash reference"; }
-
-	if (! exists  $arg->{'edt_ctxt'} || 
-	    ! defined $arg->{'edt_ctxt'} || 
-	             ($arg->{'edt_ctxt'} eq '')) 
-		{ die "Call to register_evt_sig() failed, value associated w/ key 'edt_ctxt' must not be undef/empty"; }
-
-	if (! exists  $arg->{'evt_nm'} || 
-	    ! defined $arg->{'evt_nm'} || 
-	             ($arg->{'evt_nm'} eq '')) 
-		{ die "Call to register_evt_sig() failed, value associated w/ key 'evt_nm' must not be undef/empty"; }
-
-	if (! exists  $arg->{'evt'} || 
-	    ! defined $arg->{'evt'} || 
-	             ($arg->{'evt'} eq '') || 
-	      ! (ref ($arg->{'evt'}) eq 'ARRAY')) 
-		{ die "Call to register_evt_sig() failed, value associated w/ key 'evt' must be array ref"; }
+	$self->check_args 
+	  ({ 'arg'  => $arg,
+	     'func' => 'register_evt_sig',
+	     'test' => 
+		[{'edt_ctxt' => 'string'}, 
+	         {'evt_nm'   => 'string'}, 
+	         {'evt'      => 'arrayref'}] });
 
 	# Register a set of callback matching criteria.
 
@@ -184,9 +158,11 @@ sub gen_evt_array {
 	my $self = shift;
 	my $arg  = shift;
 
-	if (! defined $arg || 
-	      ! (ref ($arg) eq 'HASH')) 
-		{ die "Call to gen_evt_array() failed, argument must be hash reference"; }
+	$self->check_args 
+	  ({ 'arg'  => $arg,
+	     'func' => 'gen_evt_array',
+	     'test' => 
+		[] });
 
 	my $evt_array = [];
 
@@ -240,20 +216,12 @@ sub evt_map {
 	my $self = shift;
 	my $arg  = shift;
 
-	if (! defined $arg || 
-	      ! (ref ($arg) eq 'HASH')) 
-		{ die "Call to evt_map() failed, argument must be hash reference"; }
-
-	if (! exists  $arg->{'edt_ctxt'} || 
-	    ! defined $arg->{'edt_ctxt'} || 
-	             ($arg->{'edt_ctxt'} eq '')) 
-		{ die "Call to evt_map() failed, value associated w/ key 'edt_ctxt' was undef or empty string"; }
-
-	if (! exists  $arg->{'evt'} || 
-	    ! defined $arg->{'evt'} || 
-	             ($arg->{'evt'} eq '') || 
-	      ! (ref ($arg->{'evt'}) eq 'ARRAY')) 
-		{ die "Call to evt_map() failed, value associated w/ key 'evt' must be array ref"; }
+	$self->check_args 
+	  ({ 'arg'  => $arg,
+	     'func' => 'evt_map',
+	     'test' => 
+		[{'edt_ctxt' => 'string'}, 
+	         {'evt'      => 'arrayref'}] });
 
 	my $objCharMap = $self->{'obj'}->{'charmap'};
 	my $objDebug   = $self->{'obj'}->{'debug'};
@@ -375,25 +343,13 @@ sub evt_dispatch {
 	my $self = shift;
 	my $arg  = shift;
 
-	if (! defined $arg || 
-	      ! (ref ($arg) eq 'HASH')) 
-		{ die "Call to evt_dispatch() failed, argument must be hash reference"; }
-
-	if (! exists  $arg->{'evt_nm'} || 
-	    ! defined $arg->{'evt_nm'} || 
-	             ($arg->{'evt_nm'} eq '')) 
-		{ die "Call to evt_dispatch() failed, value associated w/ key 'evt_nm' must be array ref"; }
-
-	if (! exists  $arg->{'edt_ctxt'} || 
-	    ! defined $arg->{'edt_ctxt'} || 
-	             ($arg->{'edt_ctxt'} eq '')) 
-		{ die "Call to evt_dispatch() failed, value associated w/ key 'edt_ctxt' was undef or empty string"; }
-
-	if (! exists  $arg->{'evt'} || 
-	    ! defined $arg->{'evt'} || 
-	             ($arg->{'evt'} eq '') || 
-	      ! (ref ($arg->{'evt'}) eq 'ARRAY')) 
-		{ die "Call to evt_dispatch() failed, value associated w/ key 'evt' must be array ref"; }
+	$self->check_args 
+	  ({ 'arg'  => $arg,
+	     'func' => 'evt_dispatch',
+	     'test' => 
+		[{'evt_nm'   => 'string'}, 
+	         {'edt_ctxt' => 'string'}, 
+	         {'evt'      => 'arrayref'}] });
 
 	my $objCharMap = $self->{'obj'}->{'charmap'};
 	my $objDebug   = $self->{'obj'}->{'debug'};

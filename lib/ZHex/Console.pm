@@ -1,4 +1,4 @@
-#!/usr/bin/perl
+#!/usr/bin/perl -w
 
 package ZHex::Console;
 
@@ -9,6 +9,7 @@ use warnings FATAL => 'all';
 use ZHex::Common 
   qw(new 
      obj_init 
+     check_args 
      $VERS 
      EDT_CTXT_DEFAULT 
      EDT_CTXT_INSERT 
@@ -385,14 +386,11 @@ sub w32cons_title_set {
 	my $self = shift;
 	my $arg  = shift;
 
-	if (! defined $arg || 
-	      ! (ref ($arg) eq 'HASH')) 
-		{ die "Call to w32cons_title_set() failed, argument must be hash reference"; }
-
-	if (! exists  $arg->{'w32cons_title'} || 
-	    ! defined $arg->{'w32cons_title'} || 
-	             ($arg->{'w32cons_title'} eq '')) 
-		{ die "Call to w32cons_title_set() failed, value associated w/ key 'w32cons_title' is undef/empty string"; }
+	$self->check_args 
+	  ({ 'arg'  => $arg, 
+	     'func' => 'w32cons_title_set', 
+	     'test' => 
+		[{'w32cons_title' => 'string'}] });
 
 	# This function defines keys:
 	#
@@ -417,27 +415,13 @@ sub w32cons_write {
 	my $self = shift;
 	my $arg  = shift;
 
-	if (! defined $arg || 
-	      ! (ref ($arg) eq 'HASH')) 
-		{ die "Call to w32cons_write() failed, argument must be hash reference"; }
-
-	if (! exists  $arg->{'ref'} || 
-	    ! defined $arg->{'ref'} || 
-	             ($arg->{'ref'} eq '') || 
-	      ! (ref ($arg->{'ref'}) eq 'ARRAY')) 
-		{ die "Call to w32cons_write() failed, value associated w/ key 'ref' is must be array reference"; }
-
-	if (! exists  $arg->{'xpos'} || 
-	    ! defined $arg->{'xpos'} || 
-	             ($arg->{'xpos'} eq '') || 
-	           ! ($arg->{'ypos'} =~ /^\d+?$/)) 
-		{ die "Call to w32cons_write() failed, value associated w/ key 'xpos' is must be one or more digits"; }
-
-	if (! exists  $arg->{'ypos'} || 
-	    ! defined $arg->{'ypos'} || 
-	             ($arg->{'ypos'} eq '') || 
-	           ! ($arg->{'ypos'} =~ /^\d+?$/)) 
-		{ die "Call to w32cons_write() failed, value associated w/ key 'ypos' is must be one or more digits"; }
+	$self->check_args 
+	  ({ 'arg'  => $arg, 
+	     'func' => 'w32cons_write', 
+	     'test' => 
+		[{'ref'  => 'arrayref'}, 
+	         {'xpos' => 'digits'}, 
+	         {'ypos' => 'digits'}] });
 
 	my $ct = 1;
 
@@ -466,34 +450,15 @@ sub w32cons_refresh_display {
 	my $self = shift;
 	my $arg  = shift;
 
-	if (! defined $arg || 
-	      ! (ref ($arg) eq 'HASH')) 
-		{ die "Call to w32cons_refresh_display() failed, argument must be hash reference"; }
-
-	if (! exists  $arg->{'dsp'} || 
-	    ! defined $arg->{'dsp'} || 
-	      ! (ref ($arg->{'dsp'}) eq 'ARRAY')) 
-		{ die "Call to w32cons_refresh_display() failed, value associated w/ key 'dsp' must be array reference"; }
-
-	if (! exists  $arg->{'dsp_prev'} || 
-	    ! defined $arg->{'dsp_prev'} || 
-	      ! (ref ($arg->{'dsp_prev'}) eq 'ARRAY')) 
-		{ die "Call to w32cons_refresh_display() failed, value associated w/ key 'dsp_prev' must be array reference"; }
-
-	if (! exists  $arg->{'dsp_xpad'} || 
-	    ! defined $arg->{'dsp_xpad'} || 
-	           ! ($arg->{'dsp_xpad'} =~ /^\d\d?\d?$/)) 
-		{ die "Call to w32cons_refresh_display() failed, value of key 'dsp_xpad' must be numeric"; }
-
-	if (! exists  $arg->{'dsp_ypad'} || 
-	    ! defined $arg->{'dsp_ypad'} || 
-	           ! ($arg->{'dsp_ypad'} =~ /^\d\d?\d?$/)) 
-		{ die "Call to w32cons_refresh_display() failed, value of key 'dsp_ypad' must be numeric"; }
-
-	if (! exists  $arg->{'d_width'} || 
-	    ! defined $arg->{'d_width'} || 
-	           ! ($arg->{'d_width'} =~ /^\d\d?\d?$/)) 
-		{ die "Call to w32cons_refresh_display() failed, value of key 'd_width' must be numeric"; }
+	$self->check_args 
+	  ({ 'arg'  => $arg, 
+	     'func' => 'w32cons_refresh_display', 
+	     'test' => 
+		[{'dsp'      => 'arrayref'}, 
+	         {'dsp_prev' => 'arrayref'}, 
+	         {'dsp_xpad' => 'digits'}, 
+	         {'dsp_ypad' => 'digits'}, 
+	         {'d_width'  => 'digits'}] });
 
 	LINE_BY_LINE: 
 	  for my $lnum (0 .. (scalar (@{ $arg->{'dsp'} }) -1)) {
@@ -674,19 +639,12 @@ sub w32cons_cursor_move {
 	my $self = shift;
 	my $arg  = shift;
 
-	if (! defined $arg || 
-	      ! (ref ($arg) eq 'HASH')) 
-		{ die "Call to w32cons_cursor_move() failed, argument must be hash reference"; }
-
-	if (! exists  $arg->{'xpos'} || 
-	    ! defined $arg->{'xpos'} || 
-	           ! ($arg->{'xpos'} =~ /^\d+?$/)) 
-		{ die "Call to w32cons_cursor_move() failed, value of key 'xpos' must be numeric"; }
-
-	if (! exists  $arg->{'ypos'} || 
-	    ! defined $arg->{'ypos'} || 
-	           ! ($arg->{'ypos'} =~ /^\d+?$/)) 
-		{ die "Call to w32cons_cursor_move() failed, value of key 'ypos' must be numeric"; }
+	$self->check_args 
+	  ({ 'arg'  => $arg, 
+	     'func' => 'w32cons_cursor_move', 
+	     'test' => 
+		[{'xpos' => 'digits'}, 
+	         {'ypos' => 'digits'}] });
 
 	if (exists  $self->{'w32cons_curs_xpos'} && 
 	    defined $self->{'w32cons_curs_xpos'} && 
@@ -790,24 +748,13 @@ sub colorize_display {
 	my $self = shift;
 	my $arg  = shift;
 
-	if (! defined $arg || 
-	      ! (ref ($arg) eq 'HASH')) 
-		{ die "Call to colorize_display() failed, argument must be hash reference"; }
-
-	if (! exists  $arg->{'c_elements'} || 
-	    ! defined $arg->{'c_elements'} || 
-	           ! (ref ($arg->{'c_elements'}) eq 'ARRAY')) 
-		{ die "Call to colorize_display() failed, value associated with 'c_elements' key must be a hash reference"; }
-
-	if (! exists  $arg->{'dsp_xpad'} || 
-	    ! defined $arg->{'dsp_xpad'} || 
-	           ! ($arg->{'dsp_xpad'} =~ /^\d\d?\d?$/)) 
-		{ die "Call to colorize_display() failed, value of key 'dsp_xpad' must be numeric"; }
-
-	if (! exists  $arg->{'dsp_ypad'} || 
-	    ! defined $arg->{'dsp_ypad'} || 
-	           ! ($arg->{'dsp_ypad'} =~ /^\d\d?\d?$/)) 
-		{ die "Call to colorize_display() failed, value of key 'dsp_ypad' must be numeric"; }
+	$self->check_args 
+	  ({ 'arg'  => $arg, 
+	     'func' => 'colorize_display', 
+	     'test' => 
+		[{'c_elements' => 'arrayref'}, 
+	         {'dsp_xpad'   => 'digits'}, 
+	         {'dsp_ypad'   => 'digits'}] });
 
 	for my $lnum (0 .. $self->{'w32cons_bottom_row'}) {
 
@@ -833,44 +780,25 @@ sub colorize_reverse {
 	my $self = shift;
 	my $arg  = shift;
 
-	if (! defined $arg || 
-	      ! (ref ($arg) eq 'HASH')) 
-		{ die "Call to colorize_reverse() failed, argument must be hash reference"; }
+	$self->check_args 
+	  ({ 'arg'  => $arg, 
+	     'func' => 'colorize_reverse', 
+	     'test' => 
+		[{'c_elements' => 'arrayref'}, 
+	         {'xc'         => 'digits'}, 
+	         {'yc'         => 'digits'}, 
+	         {'width'      => 'digits'}, 
+	         {'action'     => 'string'}, 
+	         {'dsp_xpad'   => 'digits'}, 
+	         {'dsp_ypad'   => 'digits'}] });
 
-	if (! exists  $arg->{'c_elements'} || 
-	    ! defined $arg->{'c_elements'} || 
-	           ! (ref ($arg->{'c_elements'}) eq 'ARRAY')) 
-		{ die "Call to colorize_reverse() failed, value associated with 'c_elements' key must be a hash reference"; }
-
-	if (! exists  $arg->{'xc'} || 
-	    ! defined $arg->{'xc'} || 
-	           ! ($arg->{'xc'} =~ /^\d\d?\d?$/)) 
-		{ die "Call to colorize_reverse() failed, value of key 'xc' must be numeric"; }
-
-	if (! exists  $arg->{'yc'} || 
-	    ! defined $arg->{'yc'} || 
-	           ! ($arg->{'yc'} =~ /^\d\d?\d?$/)) 
-		{ die "Call to colorize_reverse() failed, value of key 'yc' must be numeric"; }
-
-	if (! exists  $arg->{'width'} || 
-	    ! defined $arg->{'width'} || 
-	           ! ($arg->{'width'} =~ /^\d\d?\d?$/)) 
-		{ die "Call to colorize_reverse() failed, value of key 'width' must be numeric"; }
+	# NO TYPE CHECK FOR on/off YET...
 
 	if (! exists  $arg->{'action'} || 
 	    ! defined $arg->{'action'} || 
-	          ! (($arg->{'action'} eq 'on') || ($arg->{'action'} eq 'off'))) 
+	          ! (($arg->{'action'} eq 'on') || 
+                    ($arg->{'action'} eq 'off'))) 
 		{ die "Call to colorize_reverse() failed, value of key 'action' must be 'on' or 'off'"; }
-
-	if (! exists  $arg->{'dsp_xpad'} || 
-	    ! defined $arg->{'dsp_xpad'} || 
-	           ! ($arg->{'dsp_xpad'} =~ /^\d\d?\d?$/)) 
-		{ die "Call to colorize_reverse() failed, value of key 'dsp_xpad' must be numeric"; }
-
-	if (! exists  $arg->{'dsp_ypad'} || 
-	    ! defined $arg->{'dsp_ypad'} || 
-	           ! ($arg->{'dsp_ypad'} =~ /^\d\d?\d?$/)) 
-		{ die "Call to colorize_reverse() failed, value of key 'dsp_ypad' must be numeric"; }
 
 	# Function colorize():
 	#   ________	___________
@@ -931,41 +859,32 @@ sub colorize_combine_attrs {
 	my $self = shift;
 	my $arg  = shift;
 
-	if (! defined $arg || 
-	      ! (ref ($arg) eq 'HASH')) 
-		{ die "Call to colorize_combine_attrs() failed, argument must be hash reference"; }
-
-	if (! exists  $arg->{'c_element_attr'} || 
-	    ! defined $arg->{'c_element_attr'} || 
-	           ! (ref ($arg->{'c_element_attr'}) eq 'ARRAY')) 
-		{ die "Call to colorize_combine_attrs() failed, value associated with 'c_element_attr' key must be array reference"; }
+	$self->check_args 
+	  ({ 'arg'  => $arg, 
+	     'func' => 'colorize_combine_attrs', 
+	     'test' => 
+		[{'c_element_attr' => 'arrayref'}] });
 
 	my $attr_combined;
 
-	if (exists  $arg->{'c_element_attr'} && 
-	    defined $arg->{'c_element_attr'} && 
-		 ! ($arg->{'c_element_attr'} eq '') && 
-	      (ref ($arg->{'c_element_attr'}) eq 'ARRAY')) {
+	for my $idx (0 .. (scalar (@{ $arg->{'c_element_attr'} }) - 1)) {
 
-		for my $idx (0 .. (scalar (@{ $arg->{'c_element_attr'} }) - 1)) {
+		if (exists  $arg->{'c_element_attr'}->[$idx] && 
+		    defined $arg->{'c_element_attr'}->[$idx] && 
+			 ! ($arg->{'c_element_attr'}->[$idx] eq '') && 
+		    exists  $self->{ $arg->{'c_element_attr'}->[$idx] } && 
+		    defined $self->{ $arg->{'c_element_attr'}->[$idx] } && 
+			 ! ($self->{ $arg->{'c_element_attr'}->[$idx] } eq '')) {
 
-			if (exists  $arg->{'c_element_attr'}->[$idx] && 
-			    defined $arg->{'c_element_attr'}->[$idx] && 
-				 ! ($arg->{'c_element_attr'}->[$idx] eq '') && 
-			    exists  $self->{ $arg->{'c_element_attr'}->[$idx] } && 
-			    defined $self->{ $arg->{'c_element_attr'}->[$idx] } && 
-				 ! ($self->{ $arg->{'c_element_attr'}->[$idx] } eq '')) {
+			if ($idx == 0) {
 
-				if ($idx == 0) {
+				$attr_combined = 
+				  $self->{ $arg->{'c_element_attr'}->[$idx] };
+			}
+			else {
 
-					$attr_combined = 
-					  $self->{ $arg->{'c_element_attr'}->[$idx] };
-				}
-				else {
-
-					$attr_combined = 
-					  ($attr_combined | $self->{ $arg->{'c_element_attr'}->[$idx] });
-				}
+				$attr_combined = 
+				  ($attr_combined | $self->{ $arg->{'c_element_attr'}->[$idx] });
 			}
 		}
 	}

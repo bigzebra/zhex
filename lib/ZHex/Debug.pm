@@ -1,4 +1,4 @@
-#!/usr/bin/perl
+#!/usr/bin/perl -w
 
 package ZHex::Debug;
 
@@ -10,6 +10,7 @@ use ZHex::Common
   qw(new 
      init 
      obj_init 
+     check_args 
      $VERS);
 
 use constant DBG_LEVEL => 1;
@@ -41,20 +42,12 @@ sub dbg_box {
 	my $self = shift;
 	my $arg  = shift;
 
-	if (! defined $arg || 
-	      ! (ref ($arg) eq 'HASH')) 
-		{ die "Call to dbg_box() failed, argument must be hash reference"; }
-
-	if (! exists  $arg->{'title'} || 
-	    ! defined $arg->{'title'} || 
-	             ($arg->{'title'} eq '')) 
-		{ die "Call to dbg_box() failed, value associated w/ key 'title' was undef or empty string"; }
-
-	if (! exists  $arg->{'pairs'} || 
-	    ! defined $arg->{'pairs'} || 
-	             ($arg->{'pairs'} eq '') || 
-	      ! (ref ($arg->{'pairs'}) eq 'HASH')) 
-		{ die "Call to dbg_box() failed, value associated w/ key 'pairs' must be hash reference"; }
+	$self->check_args 
+	  ({ 'arg'  => $arg,
+	     'func' => 'dbg_box',
+	     'test' => 
+		[{'title' => 'string'}, 
+	         {'pairs' => 'hashref'}] });
 
 	my $max_len_key = 0;
 	my $max_len_val = 0;
@@ -92,15 +85,11 @@ sub dbg_mouse_evt {
 	my $self = shift;
 	my $arg  = shift;
 
-	if (! defined $arg || 
-	      ! (ref ($arg) eq 'HASH')) 
-		{ die "Call to dbg_mouse_evt() failed, argument must be hash reference"; }
-
-	if (! exists  $arg->{'evt'} || 
-	    ! defined $arg->{'evt'} || 
-	             ($arg->{'evt'} eq '') || 
-	      ! (ref ($arg->{'evt'}) eq 'ARRAY')) 
-		{ die "Call to dbg_mouse_evt() failed, value associated w/ key 'evt' must be array ref"; }
+	$self->check_args 
+	  ({ 'arg'  => $arg,
+	     'func' => 'dbg_mouse_evt',
+	     'test' => 
+		[{'evt' => 'arrayref'}] });
 
 	my $objEventLoop = $self->{'obj'}->{'eventloop'};
 
@@ -166,15 +155,11 @@ sub dbg_keybd_evt {
 	my $self = shift;
 	my $arg  = shift;
 
-	if (! defined $arg || 
-	      ! (ref ($arg) eq 'HASH')) 
-		{ die "Call to dbg_keybd_evt() failed, argument must be hash reference"; }
-
-	if (! exists  $arg->{'evt'} || 
-	    ! defined $arg->{'evt'} || 
-	             ($arg->{'evt'} eq '') || 
-	      ! (ref ($arg->{'evt'}) eq 'ARRAY')) 
-		{ die "Call to dbg_keybd_evt() failed, value associated w/ key 'evt' must be array ref"; }
+	$self->check_args 
+	  ({ 'arg'  => $arg,
+	     'func' => 'dbg_keybd_evt',
+	     'test' => 
+		[{'evt' => 'arrayref'}] });
 
 	# Display keyboard event debugging information: 
 	#   Character block area (17 chars wide x 8 chars high).
@@ -213,15 +198,11 @@ sub dbg_unmatched_evt {
 	my $self = shift;
 	my $arg  = shift;
 
-	if (! defined $arg || 
-	      ! (ref ($arg) eq 'HASH')) 
-		{ die "Call to dbg_unmatched_evt() failed, argument must be hash reference"; }
-
-	if (! exists  $arg->{'evt'} || 
-	    ! defined $arg->{'evt'} || 
-	             ($arg->{'evt'} eq '') || 
-	      ! (ref ($arg->{'evt'}) eq 'ARRAY')) 
-		{ die "Call to dbg_unmatched_evt() failed, value associated w/ key 'evt' must be array ref"; }
+	$self->check_args 
+	  ({ 'arg'  => $arg,
+	     'func' => 'dbg_unmatched_evt',
+	     'test' => 
+		[{'evt' => 'arrayref'}] });
 
 	# Display unmatched event debug info: 
 	#   Character block area (17 chars wide x 8 chars high).

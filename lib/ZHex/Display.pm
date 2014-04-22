@@ -1,4 +1,4 @@
-#!/usr/bin/perl
+#!/usr/bin/perl -w
 
 package ZHex::Display;
 
@@ -9,6 +9,7 @@ use warnings FATAL => 'all';
 use ZHex::Common 
   qw(new 
      obj_init 
+     check_args 
      $VERS 
      EDT_CTXT_DEFAULT 
      EDT_CTXT_INSERT 
@@ -63,19 +64,12 @@ sub dimensions_set {
 	my $self = shift;
 	my $arg  = shift;
 
-	if (! defined $arg || 
-	      ! (ref ($arg) eq 'HASH')) 
-		{ die "Call to dimensions_set() failed, argument must be hash reference"; }
-
-	if (! exists  $arg->{'d_width'} || 
-	    ! defined $arg->{'d_width'} || 
-	           ! ($arg->{'d_width'} =~ /^\d+?$/)) 
-		{ die "Call to dimensions_set() failed, value of key 'd_width' must be numeric"; }
-
-	if (! exists  $arg->{'d_height'} || 
-	    ! defined $arg->{'d_height'} || 
-	           ! ($arg->{'d_height'} =~ /^\d+?$/)) 
-		{ die "Call to dimensions_set() failed, value of key 'd_height' must be numeric"; }
+	$self->check_args 
+	  ({ 'arg'  => $arg,
+	     'func' => 'dimensions_set',
+	     'test' => 
+		[{'d_width'  => 'digits'},
+	         {'d_height' => 'digits'}] });
 
 	$self->{'d_width'}  = $arg->{'d_width'};    # Display width:  Number of characters in display console (horizontally).
 	$self->{'d_height'} = $arg->{'d_height'};   # Display height: Number of characters in display console (vertically).
@@ -88,19 +82,12 @@ sub padding_set {
 	my $self = shift;
 	my $arg  = shift;
 
-	if (!defined $arg || 
-	     ! (ref ($arg) eq 'HASH')) 
-		{ die "Call to padding_set() failed, argument must be hash reference"; }
-
-	if (! exists  $arg->{'dsp_xpad'} || 
-	    ! defined $arg->{'dsp_xpad'} || 
-	           ! ($arg->{'dsp_xpad'} =~ /^\d+?$/)) 
-		{ die "Call to padding_set() failed, value associated w/ key 'dsp_xpad' must be numeric"; }
-
-	if (! exists  $arg->{'dsp_ypad'} || 
-	    ! defined $arg->{'dsp_ypad'} || 
-	           ! ($arg->{'dsp_ypad'} =~ /^\d+?$/)) 
-		{ die "Call to padding_set() failed, value associated w/ key 'dsp_ypad' must be numeric"; }
+	$self->check_args 
+	  ({ 'arg'  => $arg,
+	     'func' => 'padding_set',
+	     'test' => 
+		[{'dsp_xpad' => 'digits'},
+	         {'dsp_ypad' => 'digits'}] });
 
 	$self->{'dsp_ypad'} = $arg->{'dsp_ypad'};   # Display padding (Top margin):  number of chars padding the editor display vertically   from top.
 	$self->{'dsp_xpad'} = $arg->{'dsp_xpad'};   # Display padding (Left margin): number of chars padding the editor display horizontally from left.
@@ -113,14 +100,11 @@ sub d_elements_set {
 	my $self = shift;
 	my $arg  = shift;
 
-	if (! defined $arg || 
-	      ! (ref ($arg) eq 'HASH')) 
-		{ die "Call to d_elements_set() failed, argument must be hash reference"; }
-
-	if (! exists  $arg->{'d_elements'} || 
-	    ! defined $arg->{'d_elements'} || 
-	      ! (ref ($arg->{'d_elements'}) eq 'HASH')) 
-		{ die "Call to d_elements_set() failed, value associated w/ key 'd_elements' must hash reference"; }
+	$self->check_args 
+	  ({ 'arg'  => $arg,
+	     'func' => 'd_elements_set',
+	     'test' => 
+		[{'d_elements' => 'hashref'}] });
 
 	$self->{'d_elements'} = $arg->{'d_elements'};
 
@@ -132,14 +116,11 @@ sub c_elements_set {
 	my $self = shift;
 	my $arg  = shift;
 
-	if (! defined $arg || 
-	      ! (ref ($arg) eq 'HASH')) 
-		{ die "Call to c_elements_set() failed, argument must be hash reference"; }
-
-	if (! exists  $arg->{'c_elements'} || 
-	    ! defined $arg->{'c_elements'} || 
-	      ! (ref ($arg->{'c_elements'}) eq 'HASH')) 
-		{ die "Call to c_elements_set() failed, value associated w/ key 'c_elements' must be a hash reference"; }
+	$self->check_args 
+	  ({ 'arg'  => $arg,
+	     'func' => 'c_elements_set',
+	     'test' => 
+		[{'c_elements' => 'hashref'}] });
 
 	$self->{'c_elements'} = $arg->{'c_elements'};
 
@@ -151,14 +132,11 @@ sub dsp_set {
 	my $self = shift;
 	my $arg  = shift;
 
-	if (! defined $arg || 
-	      ! (ref ($arg) eq 'HASH')) 
-		{ die "Call to dsp_set() failed, argument must be hash reference"; }
-
-	if (! exists  $arg->{'dsp'} || 
-	    ! defined $arg->{'dsp'} || 
-	      ! (ref ($arg->{'dsp'}) eq 'ARRAY')) 
-		{ die "Call to dsp_set() failed, value associated w/ key 'dsp' must be array reference"; }
+	$self->check_args 
+	  ({ 'arg'  => $arg, 
+	     'func' => 'dsp_set', 
+	     'test' => 
+		[{'dsp' => 'arrayref'}] });
 
 	if (! (scalar (@{ $arg->{'dsp'} }) == $self->{'d_height'})) 
 		{ die "Call to dsp_set() failed, value associated w/ key 'dsp' did not have correct number of elements defined"; }
@@ -173,14 +151,11 @@ sub dsp_prev_set {
 	my $self = shift;
 	my $arg  = shift;
 
-	if (! defined $arg || 
-	      ! (ref ($arg) eq 'HASH')) 
-		{ die "Call to dsp_prev_set() failed, argument must be hash reference"; }
-
-	if (! exists  $arg->{'dsp_prev'} || 
-	    ! defined $arg->{'dsp_prev'} || 
-	      ! (ref ($arg->{'dsp_prev'}) eq 'ARRAY')) 
-		{ die "Call to dsp_prev_set() failed, value associated w/ key 'dsp_prev' must be array reference"; }
+	$self->check_args 
+	  ({ 'arg'  => $arg, 
+	     'func' => 'dsp_prev_set', 
+	     'test' => 
+		[{'dsp_prev' => 'arrayref'}] });
 
 	if (! (scalar (@{ $arg->{'dsp_prev'} }) == $self->{'d_height'})) 
 		{ die "Call to dsp_prev_set() failed, value associated w/ key 'dsp_prev' did not have correct number of elements defined"; }
@@ -195,21 +170,12 @@ sub dsp_prev_init {
 	my $self = shift;
 	my $arg  = shift;
 
-	if (! defined $arg || 
-	      ! (ref ($arg) eq 'HASH')) 
-		{ die "Call to dsp_prev_init() failed, argument must be hash reference"; }
-
-	if (! exists  $arg->{'d_width'} || 
-	    ! defined $arg->{'d_width'} || 
-	             ($arg->{'d_width'} eq '') || 
-	      ! ($arg->{'d_width'} =~ /^\d+?$/)) 
-		{ die "Call to dsp_prev_init() failed, value associated w/ key 'd_width' must be one or more digits"; }
-
-	if (! exists  $arg->{'d_height'} || 
-	    ! defined $arg->{'d_height'} || 
-	             ($arg->{'d_height'} eq '') || 
-	      ! ($arg->{'d_height'} =~ /^\d+?$/)) 
-		{ die "Call to dsp_prev_init() failed, value associated w/ key 'd_height' must be one or more digits"; }
+	$self->check_args 
+	  ({ 'arg'  => $arg, 
+	     'func' => 'dsp_prev_init', 
+	     'test' => 
+		[{'d_width' => 'arrayref'}, 
+	         {'d_height' => 'arrayref'}] });
 
 	my $dsp_prev = 
 	  $self->generate_blank_display 
@@ -821,21 +787,12 @@ sub generate_blank_e_contents {
 	my $self = shift;
 	my $arg  = shift;
 
-	if (! defined $arg || 
-	      ! (ref ($arg) eq 'HASH')) 
-		{ die "Call to generate_blank_e_contents() failed, argument must be hash reference"; }
-
-	if (! exists  $arg->{'e_width'} || 
-	    ! defined $arg->{'e_width'} || 
-	             ($arg->{'e_width'} eq '') || 
-	           ! ($arg->{'e_width'} =~ /^\d+?$/)) 
-		{ die "Call to generate_blank_e_contents() failed, value associated w/ key 'e_width' is undef/empty string/not of correct type"; }
-
-	if (! exists  $arg->{'e_height'} || 
-	    ! defined $arg->{'e_height'} || 
-	             ($arg->{'e_height'} eq '') || 
-	           ! ($arg->{'e_height'} =~ /^\d+?$/)) 
-		{ die "Call to generate_blank_e_contents() failed, value associated w/ key 'e_height' is undef/empty string/not of correct type"; }
+	$self->check_args 
+	  ({ 'arg'  => $arg, 
+	     'func' => 'generate_blank_e_contents', 
+	     'test' => 
+		[{'e_width'  => 'digits'}, 
+	         {'e_height' => 'digits'}] });
 
 	my $e_contents = [];
 	foreach my $lnum (1 .. $arg->{'e_height'}) 
@@ -849,21 +806,12 @@ sub generate_blank_display {
 	my $self = shift;
 	my $arg  = shift;
 
-	if (! defined $arg || 
-	      ! (ref ($arg) eq 'HASH')) 
-		{ die "Call to generate_blank_display() failed, argument must be hash reference"; }
-
-	if (! exists  $arg->{'d_width'} || 
-	    ! defined $arg->{'d_width'} || 
-	             ($arg->{'d_width'} eq '') || 
-	           ! ($arg->{'d_width'} =~ /^\d+?$/)) 
-		{ die "Call to generate_blank_display() failed, value associated w/ key 'd_width' must be one or more digits"; }
-
-	if (! exists  $arg->{'d_height'} || 
-	    ! defined $arg->{'d_height'} || 
-	             ($arg->{'d_height'} eq '') || 
-	           ! ($arg->{'d_height'} =~ /^\d+?$/)) 
-		{ die "Call to generate_blank_display() failed, value associated w/ key 'd_height' must be one or more digits"; }
+	$self->check_args 
+	  ({ 'arg'  => $arg, 
+	     'func' => 'generate_blank_display', 
+	     'test' => 
+		[{'d_width'  => 'digits'}, 
+	         {'d_height' => 'digits'}] });
 
 	# Initialize array of display lines with blank spaces (an empty display).
 
@@ -879,15 +827,11 @@ sub generate_editor_display {
 	my $self = shift;
 	my $arg  = shift;
 
-	if (! defined $arg || 
-	      ! (ref ($arg) eq 'HASH')) 
-		{ die "Call to generate_editor_display() failed, argument must be hash reference"; }
-
-	if (! exists  $arg->{'evt'} || 
-	    ! defined $arg->{'evt'} || 
-	             ($arg->{'evt'} eq '') || 
-	      ! (ref ($arg->{'evt'}) eq 'ARRAY')) 
-		{ die "Call to generate_editor_display() failed, value associated w/ key 'evt' must be array reference"; }
+	$self->check_args 
+	  ({ 'arg'  => $arg, 
+	     'func' => 'generate_editor_display', 
+	     'test' => 
+		[{'evt' => 'arrayref'}] });
 
 	my $display = 
 	  $self->generate_blank_display 

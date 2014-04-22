@@ -1,4 +1,4 @@
-#!/usr/bin/perl
+#!/usr/bin/perl -w
 
 package ZHex::EventHandler;
 
@@ -10,6 +10,7 @@ use ZHex::Common
   qw(new 
      init 
      obj_init 
+     check_args 
      $VERS 
      EDT_CTXT_DEFAULT 
      EDT_CTXT_INSERT 
@@ -1062,15 +1063,11 @@ sub lmouse {
 	my $self = shift;
 	my $arg  = shift;
 
-	if (! defined $arg || 
-	      ! (ref ($arg) eq 'HASH')) 
-		{ die "Call to lmouse() failed, argument must be hash reference"; }
-
-	if (! exists  $arg->{'evt'} || 
-	    ! defined $arg->{'evt'} || 
-	             ($arg->{'evt'} eq '') || 
-	      ! (ref ($arg->{'evt'}) eq 'ARRAY')) 
-		{ die "Call to lmouse() failed, value associated w/ key 'evt' must be array ref"; }
+	$self->check_args 
+	  ({ 'arg'  => $arg,
+	     'func' => 'lmouse',
+	     'test' => 
+		[{'evt' => 'arrayref'}] });
 
 	my $objMouse = $self->{'obj'}->{'mouse'};
 
@@ -1084,15 +1081,11 @@ sub rmouse {
 	my $self = shift;
 	my $arg  = shift;
 
-	if (! defined $arg || 
-	      ! (ref ($arg) eq 'HASH')) 
-		{ die "Call to rmouse() failed, argument must be hash reference"; }
-
-	if (! exists  $arg->{'evt'} || 
-	    ! defined $arg->{'evt'} || 
-	             ($arg->{'evt'} eq '') || 
-	      ! (ref ($arg->{'evt'}) eq 'ARRAY')) 
-		{ die "Call to rmouse() failed, value associated w/ key 'evt' must be array ref"; }
+	$self->check_args 
+	  ({ 'arg'  => $arg,
+	     'func' => 'rmouse',
+	     'test' => 
+		[{'evt' => 'arrayref'}] });
 
 	my $objMouse = $self->{'obj'}->{'mouse'};
 

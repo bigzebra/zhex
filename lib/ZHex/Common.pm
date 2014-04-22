@@ -1,4 +1,4 @@
-#!/usr/bin/perl
+#!/usr/bin/perl -w
 
 package ZHex::Common;
 
@@ -61,7 +61,9 @@ BEGIN {
 	# ...
 }
 
-BEGIN { require Exporter;
+BEGIN {
+
+	require Exporter;
 	our $VERS      = 0.02;
 	our $VERSION   = $VERS;
 	our @ISA       = qw(Exporter);
@@ -70,6 +72,7 @@ BEGIN { require Exporter;
 	  qw(new 
              init 
 	     obj_init 
+	     check_args 
 	     $VERS 
 
              CURS_CTXT_LINE 
@@ -145,14 +148,11 @@ sub obj_init {
 	my $self = shift;
 	my $arg  = shift;
 
-	if (! defined $arg || 
-	      ! (ref ($arg) eq 'HASH')) 
-		{ die "Call to obj_init() failed, argument must be hash reference"; }
-
-	if (! exists  $arg->{'obj'} || 
-	    ! defined $arg->{'obj'} || 
-	      ! (ref ($arg->{'obj'}) eq 'HASH')) 
-		{ die "Call to obj_init() failed, value associated w/ key 'obj' must be hash reference"; }
+	$self->check_args 
+	  ({ 'arg'  => $arg, 
+	     'func' => 'obj_init', 
+	     'test' => 
+		[{'obj' => 'hash'}] });
 
 	# Verify that obj hash defines correct key/value pairs:
 	#
@@ -219,6 +219,92 @@ sub obj_init {
 	# Store reference to obj hash in self.
 
 	$self->{'obj'} = $arg->{'obj'};
+
+	return (1);
+}
+
+sub check_args {
+
+	my $self = shift;
+	my $arg  = shift;
+
+	if (! defined $arg || 
+	      ! (ref ($arg) eq 'HASH')) 
+		{ die "Call to check_args() failed, argument must be hash reference"; }
+
+	if (! exists  $arg->{'arg'} || 
+	    ! defined $arg->{'arg'} || 
+	      ! (ref ($arg->{'arg'}) eq 'HASH')) 
+		{ die "Call to check_args() failed, value of key 'arg' must be hash reference"; }
+
+	if (! exists  $arg->{'func'} || 
+	    ! defined $arg->{'func'} || 
+	             ($arg->{'func'} eq '')) 
+		{ die "Call to check_args() failed, value of key 'func' may not be undef/empty"; }
+
+	if (! exists  $arg->{'test'} || 
+	    ! defined $arg->{'test'} || 
+	      ! (ref ($arg->{'test'}) eq 'ARRAY')) 
+		{ die "Call to check_args() failed, value of key 'test' must be hash reference"; }
+
+	foreach my $key_type_pair (@{ $arg->{'test'} }) {
+
+		foreach my $key (keys %{ $key_type_pair }) {
+
+			my $type = $key_type_pair->{$key};
+
+			if (($type eq 'digit') || 
+			    ($type eq 'digits')) {
+
+				if (! exists  $arg->{'arg'}->{$key} || 
+				    ! defined $arg->{'arg'}->{$key} || 
+				             ($arg->{'arg'}->{$key} eq '') || 
+				           ! ($arg->{'arg'}->{$key} =~ /^\d+?$/)) {
+
+					die "Call to " . $arg->{'func'} . "() failed, value of key '" . $key . "' must be one (or more) digits";
+				}
+			}
+			elsif ($type eq 'string') {
+
+				if (! exists  $arg->{'arg'}->{$key} || 
+				    ! defined $arg->{'arg'}->{$key} || 
+				             ($arg->{'arg'}->{$key} eq '')) {
+
+					die "Call to " . $arg->{'func'} . "() failed, value of key '" . $key . "' must not be undef/empty string";
+				}
+			}
+			elsif ($type eq 'hashref') {
+
+				if (! exists  $arg->{'arg'}->{$key} || 
+				    ! defined $arg->{'arg'}->{$key} || 
+				             ($arg->{'arg'}->{$key} eq '') || 
+				      ! (ref ($arg->{'arg'}->{$key}) eq 'HASH')) {
+
+					die "Call to " . $arg->{'func'} . "() failed, value of key '" . $key . "' must be type hash ref";
+				}
+			}
+			elsif ($type eq 'arrayref') {
+
+				if (! exists  $arg->{'arg'}->{$key} || 
+				    ! defined $arg->{'arg'}->{$key} || 
+				             ($arg->{'arg'}->{$key} eq '') || 
+				      ! (ref ($arg->{'arg'}->{$key}) eq 'ARRAY')) {
+
+					die "Call to " . $arg->{'func'} . "() failed, value of key '" . $key . "' must be type array ref";
+				}
+			}
+			elsif ($type eq 'coderef') {
+
+				if (! exists  $arg->{'arg'}->{$key} || 
+				    ! defined $arg->{'arg'}->{$key} || 
+				             ($arg->{'arg'}->{$key} eq '') || 
+				      ! (ref ($arg->{'arg'}->{$key}) eq 'CODE')) {
+
+					die "Call to " . $arg->{'func'} . "() failed, value of key '" . $key . "' must be type code ref";
+				}
+			}
+		}
+	}
 
 	return (1);
 }

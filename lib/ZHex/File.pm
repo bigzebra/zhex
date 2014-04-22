@@ -1,4 +1,4 @@
-#!/usr/bin/perl
+#!/usr/bin/perl -w
 
 package ZHex::File;
 
@@ -9,6 +9,7 @@ use warnings FATAL => 'all';
 use ZHex::Common 
   qw(new 
      obj_init 
+     check_args 
      $VERS 
      EDT_CTXT_DEFAULT 
      EDT_CTXT_INSERT 
@@ -78,14 +79,11 @@ sub set_file {
 	my $self = shift;
 	my $arg  = shift;
 
-	if (! defined $arg || 
-	      ! (ref ($arg) eq 'HASH')) 
-		{ die "Call to set_file() failed, argument must be hash reference"; }
-
-	if (! exists  $arg->{'fn'} || 
-	    ! defined $arg->{'fn'} || 
-	             ($arg->{'fn'} eq '')) 
-		{ die "Call to set_file() failed, value associated w/ key 'fn' was undef/empty string"; }
+	$self->check_args 
+	  ({ 'arg'  => $arg,
+	     'func' => 'set_file',
+	     'test' => 
+		[{'fn' => 'string'}] });
 
 	# Test filename argument: verify that file exists on filesystem.
 
@@ -105,14 +103,11 @@ sub stat_file {
 	my $self = shift;
 	my $arg  = shift;
 
-	if (! defined $arg || 
-	      ! (ref ($arg) eq 'HASH')) 
-		{ die "Call to stat_file() failed, argument must be hash reference"; }
-
-	if (! exists  $arg->{'fn'} || 
-	    ! defined $arg->{'fn'} || 
-	             ($arg->{'fn'} eq '')) 
-		{ die "Call to stat_file() failed, value associated w/ key 'fn' was undef/empty string"; }
+	$self->check_args 
+	  ({ 'arg'  => $arg,
+	     'func' => 'stat_file',
+	     'test' => 
+		[{'fn' => 'string'}] });
 
 	# This function defines keys (in $self):
 	#
@@ -166,14 +161,11 @@ sub read_file {
 	my $self = shift;
 	my $arg  = shift;
 
-	if (! defined $arg || 
-	      ! (ref ($arg) eq 'HASH')) 
-		{ die "Call to read_file() failed, argument must be hash reference"; }
-
-	if (! exists  $arg->{'fn'} || 
-	    ! defined $arg->{'fn'} || 
-	             ($arg->{'fn'} eq '')) 
-		{ die "Call to read_file() failed, value associated w/ key 'fn' was undef/empty string"; }
+	$self->check_args 
+	  ({ 'arg'  => $arg,
+	     'func' => 'read_file',
+	     'test' => 
+		[{'fn' => 'string'}] });
 
 	# Test filename argument: verify that file exists on filesystem.
 
@@ -242,19 +234,12 @@ sub file_bytes {
 	my $self = shift;
 	my $arg  = shift;
 
-	if (! defined $arg || 
-	      ! (ref ($arg) eq 'HASH')) 
-		{ die "Call to file_bytes() failed, argument must be hash reference"; }
-
-	if (! exists  $arg->{'ofs'} || 
-	    ! defined $arg->{'ofs'} || 
-	             ($arg->{'ofs'} eq '')) 
-		{ die "Call to file_bytes() failed, value associated w/ key 'ofs' was undef/empty string"; }
-
-	if (! exists  $arg->{'len'} || 
-	    ! defined $arg->{'len'} || 
-	             ($arg->{'len'} eq '')) 
-		{ die "Call to file_bytes() failed, value associated w/ key 'len' was undef/empty string"; }
+	$self->check_args 
+	  ({ 'arg'  => $arg,
+	     'func' => 'file_bytes',
+	     'test' => 
+		[{'ofs' => 'digits'}, 
+	         {'len' => 'digits'}] });
 
 	my $len = $self->file_len();
 
@@ -280,20 +265,12 @@ sub insert_str {
 	my $self = shift;
 	my $arg  = shift;
 
-	if (! defined $arg || 
-	      ! (ref ($arg) eq 'HASH')) 
-		{ die "Call to insert_str() failed, argument must be hash reference"; }
-
-	if (! exists  $arg->{'pos'} || 
-	    ! defined $arg->{'pos'} || 
-	             ($arg->{'pos'} eq '') || 
-	           ! ($arg->{'pos'} =~ /^\d+?$/)) 
-		{ die "Call to insert_str() failed, value associated w/ key 'pos' must be one or more digits"; }
-
-	if (! exists  $arg->{'str'} || 
-	    ! defined $arg->{'str'} || 
-	             ($arg->{'str'} eq '')) 
-		{ die "Call to insert_str() failed, value associated w/ key 'str' was undef/empty string"; }
+	$self->check_args 
+	  ({ 'arg'  => $arg,
+	     'func' => 'insert_str',
+	     'test' => 
+		[{'pos' => 'digits'}, 
+	         {'str' => 'string'}] });
 
 	# Determine file length. Verify that offset (where string to be 
 	# inserted) is within bounds of the file.
@@ -328,14 +305,11 @@ sub write_file {
 	my $self = shift;
 	my $arg  = shift;
 
-	if (! defined $arg || 
-	      ! (ref ($arg) eq 'HASH')) 
-		{ die "Call to read_file() failed, argument must be hash reference"; }
-
-	if (! exists  $arg->{'fn'} || 
-	    ! defined $arg->{'fn'} || 
-	             ($arg->{'fn'} eq '')) 
-		{ die "Call to read_file() failed, value associated w/ key 'fn' was undef/empty string"; }
+	$self->check_args 
+	  ({ 'arg'  => $arg,
+	     'func' => 'write_file',
+	     'test' => 
+		[{'fn' => 'string'}] });
 
 	# Test filename argument: verify file exists.
 
