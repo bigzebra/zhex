@@ -8,6 +8,8 @@ use warnings FATAL => 'all';
 
 BEGIN { 
 
+	use constant ZHEX_VERSION => 0.02;
+
 	# Constants used by more than one module:
 
 	use constant SZ_WORD   => 4;
@@ -64,8 +66,7 @@ BEGIN {
 BEGIN {
 
 	require Exporter;
-	our $VERS      = 0.02;
-	our $VERSION   = $VERS;
+	our $VERSION   = ZHEX_VERSION;
 	our @ISA       = qw(Exporter);
 	our @EXPORT    = qw();
 	our @EXPORT_OK = 
@@ -73,15 +74,13 @@ BEGIN {
              init 
 	     obj_init 
 	     check_args 
-	     $VERS 
-
+	     ZHEX_VERSION
              CURS_CTXT_LINE 
              CURS_CTXT_WORD 
              CURS_CTXT_BYTE 
              CURS_CTXT_INSR 
              CURS_CTXT 
              CURS_POS 
-
 	     DSP_WIDTH 
 	     DSP_HEIGHT 
 	     DSP_XPAD 
@@ -90,7 +89,6 @@ BEGIN {
 	     DSP_C_ELEMENTS 
 	     DSP 
 	     DSP_PREV 
-
              EDT_HORIZ_RULE_CHAR 
              EDT_OOB_CHAR 
              EDT_CTXT_DEFAULT 
@@ -98,7 +96,6 @@ BEGIN {
              EDT_CTXT_SEARCH 
              EDT_CTXT 
              EDT_POS 
-
 	     SZ_WORD 
 	     SZ_LINE 
 	     SZ_COLUMN 
@@ -341,10 +338,10 @@ submodules (files named ZHex/*.pm), they are:
 Usage:
 
     # Define my own init() function.
-    use ZHex::Common qw(new obj_init $VERS);
+    use ZHex::Common qw(new obj_init ZHEX_VERSION);
 
     # Use stub function init().
-    use ZHex::Common qw(new init obj_init $VERS);
+    use ZHex::Common qw(new init obj_init ZHEX_VERSION);
 
     ...
 
@@ -367,6 +364,10 @@ Method init()...
 
 =head2 obj_init
 Method obj_init()...
+= cut
+
+=head2 check_args
+Method check_args()...
 = cut
 
 =head1 AUTHOR

@@ -10,13 +10,13 @@ use ZHex::Common
   qw(new 
      obj_init 
      check_args 
-     $VERS 
+     ZHEX_VERSION
      EDT_CTXT_DEFAULT 
      EDT_CTXT_INSERT 
      EDT_CTXT_SEARCH);
 
 BEGIN { require Exporter;
-	our $VERSION   = $VERS;
+	our $VERSION   = ZHEX_VERSION;
 	our @ISA       = qw(Exporter);
 	our @EXPORT    = qw();
 	our @EXPORT_OK = qw(); 
@@ -36,10 +36,13 @@ sub init {
 
 	$self->{'d_width'}    = '';   # Set via member function dimensions_set().
 	$self->{'d_height'}   = '';   # Set via member function dimensions_set().
+
 	$self->{'dsp_xpad'}   = '';   # Set via member function padding_set().
 	$self->{'dsp_ypad'}   = '';   # Set via member function padding_set().
+
 	$self->{'d_elements'} = '';   # Set via member function d_elements_set().
 	$self->{'c_elements'} = '';   # Set via member function c_elements_set().
+
 	$self->{'dsp'}        = '';   # Set via member function dsp_set().
 	$self->{'dsp_prev'}   = '';   # Set via member function dsp_prev_set().
 
@@ -51,45 +54,74 @@ sub init {
 #   _____________		___________
 #   Function Name		Description
 #   _____________		___________
-#   dimensions_set()		Store width/height of display (X,Y values in characters).
-#   padding_set()		Store left/top margin: used to pad editor display (values in characters).
+#   dimension_x_set()		Store width  of display (in characters) (X value).
+#   dimension_y_set()		Store height of display (in characters) (Y value).
+#   padding_top_set()		Store top  margin (in characters) used to pad editor display.
+#   padding_left_set()		Store left margin (in characters) used to pad editor display.
 #   d_elements_set()		Accessor member function for $self->{'d_elements'} (member variable).
 #   c_elements_set()		Accessor member function for $self->{'c_elements'} (member variable).
 #   dsp_set()			Accessor member function for $self->{'dsp'} (member variable).
 #   dsp_prev_set()		Accessor member function for $self->{'dsp_prev'} (member variable).
-#   dsp_prev_init()		Initialization function for $self->{'dsp_prev'} (member variable).
 
-sub dimensions_set {
+sub dimension_x_set {
 
 	my $self = shift;
 	my $arg  = shift;
 
 	$self->check_args 
 	  ({ 'arg'  => $arg,
-	     'func' => 'dimensions_set',
+	     'func' => 'dimension_x_set',
 	     'test' => 
-		[{'d_width'  => 'digits'},
-	         {'d_height' => 'digits'}] });
+		[{'d_width' => 'digits'}] });
 
-	$self->{'d_width'}  = $arg->{'d_width'};    # Display width:  Number of characters in display console (horizontally).
-	$self->{'d_height'} = $arg->{'d_height'};   # Display height: Number of characters in display console (vertically).
+	$self->{'d_width'} = $arg->{'d_width'};    # Number of characters in display console (horizontally).
 
 	return (1);
 }
 
-sub padding_set {
+sub dimension_y_set {
 
 	my $self = shift;
 	my $arg  = shift;
 
 	$self->check_args 
 	  ({ 'arg'  => $arg,
-	     'func' => 'padding_set',
+	     'func' => 'dimension_y_set',
 	     'test' => 
-		[{'dsp_xpad' => 'digits'},
-	         {'dsp_ypad' => 'digits'}] });
+		[{'d_height' => 'digits'}] });
+
+	$self->{'d_height'} = $arg->{'d_height'};   # Number of characters in display console (vertically).
+
+	return (1);
+}
+
+sub padding_top_set {
+
+	my $self = shift;
+	my $arg  = shift;
+
+	$self->check_args 
+	  ({ 'arg'  => $arg,
+	     'func' => 'padding_top_set',
+	     'test' => 
+		[{'dsp_ypad' => 'digits'}] });
 
 	$self->{'dsp_ypad'} = $arg->{'dsp_ypad'};   # Display padding (Top margin):  number of chars padding the editor display vertically   from top.
+
+	return (1);
+}
+
+sub padding_left_set {
+
+	my $self = shift;
+	my $arg  = shift;
+
+	$self->check_args 
+	  ({ 'arg'  => $arg,
+	     'func' => 'padding_left_set',
+	     'test' => 
+		[{'dsp_xpad' => 'digits'}] });
+
 	$self->{'dsp_xpad'} = $arg->{'dsp_xpad'};   # Display padding (Left margin): number of chars padding the editor display horizontally from left.
 
 	return (1);
@@ -165,26 +197,6 @@ sub dsp_prev_set {
 	return (1);
 }
 
-sub dsp_prev_init {
-
-	my $self = shift;
-	my $arg  = shift;
-
-	$self->check_args 
-	  ({ 'arg'  => $arg, 
-	     'func' => 'dsp_prev_init', 
-	     'test' => 
-		[{'d_width' => 'arrayref'}, 
-	         {'d_height' => 'arrayref'}] });
-
-	my $dsp_prev = 
-	  $self->generate_blank_display 
-	    ({ 'd_width'  => $arg->{'d_width'}, 
-	       'd_height' => $arg->{'d_height'} });
-
-	return ($dsp_prev);
-}
-
 # Functions: Display handling.
 #
 #   _____________		___________
@@ -227,7 +239,7 @@ sub d_elements_tbl {
 
 	# Display Element Table: d_element_tbl
 	#
-	#   Each list item is a reference to array containing elements: 
+	#   Each list item is a reference to array containing: 
 	#
 	#     Element Name	Description
 	#     ____________	___________
@@ -880,7 +892,7 @@ sub generate_editor_display {
 		    ($nm eq 'dbg_keybd_evt') ||
 		    ($nm eq 'dbg_unmatched_evt')) {
 
-			my $rv = $self->{'d_elements'}->{$nm}->{'subref'}->({'evt' => $arg->{'evt'}});
+			my $rv = $self->{'d_elements'}->{$nm}->{'subref'}->({ 'evt' => $arg->{'evt'} });
 
 			if (defined $rv && 
 			         ! ($rv eq '')) {
@@ -1174,12 +1186,12 @@ Method d_elements_set()...
 Method d_elements_tbl()...
 = cut
 
-=head2 dimensions_set
-Method dimensions_set()...
+=head2 dimension_x_set
+Method dimension_x_set()...
 = cut
 
-=head2 dsp_prev_init
-Method dsp_prev_init()...
+=head2 dimension_y_set
+Method dimension_y_set()...
 = cut
 
 =head2 dsp_prev_set
@@ -1206,8 +1218,12 @@ Method generate_editor_display()...
 Method init()...
 = cut
 
-=head2 padding_set
-Method padding_set()...
+=head2 padding_top_set
+Method padding_top_set()...
+= cut
+
+=head2 padding_left_set
+Method padding_left_set()...
 = cut
 
 =head2 register_evt_callbacks

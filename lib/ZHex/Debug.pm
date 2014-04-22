@@ -11,12 +11,12 @@ use ZHex::Common
      init 
      obj_init 
      check_args 
-     $VERS);
+     ZHEX_VERSION);
 
 use constant DBG_LEVEL => 1;
 
 BEGIN { require Exporter;
-	our $VERSION   = $VERS;
+	our $VERSION   = ZHEX_VERSION;
 	our @ISA       = qw(Exporter);
 	our @EXPORT    = qw();
 	our @EXPORT_OK = qw(); 

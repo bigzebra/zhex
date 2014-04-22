@@ -10,13 +10,13 @@ use ZHex::Common
   qw(new 
      obj_init 
      check_args 
-     $VERS 
+     ZHEX_VERSION
      EDT_CTXT_DEFAULT 
      EDT_CTXT_INSERT 
      EDT_CTXT_SEARCH);
 
 BEGIN { require Exporter;
-	our $VERSION   = $VERS;
+	our $VERSION   = ZHEX_VERSION;
 	our @ISA       = qw(Exporter);
 	our @EXPORT    = qw();
 	our @EXPORT_OK = qw();
@@ -57,8 +57,8 @@ sub init {
 #   NAME			DESCRIPTION
 #   ____			___________
 #   evt_read()			Read/filter event information from console input buffer, return relevant events to caller.
-#   evt_filter()		...
-#   evt_mouse()			...
+#   evt_keyboard_filter()		...
+#   evt_mouse_filter()			...
 #   evt_loop()			...
 
 sub evt_read {
@@ -91,13 +91,13 @@ sub evt_read {
 
 		# Check for mouse pointer movement events/superflous events.
 
-		if ($self->evt_filter ({'evt' => $evt})) {
+		if ($self->evt_keyboard_filter ({'evt' => $evt})) {
 
 			# Back to the top, skipping the 'push' statement below.
 
 			next CONSOLE_EVENT;
 		}
-		elsif ($self->evt_mouse ({'evt' => $evt})) {
+		elsif ($self->evt_mouse_filter ({'evt' => $evt})) {
 
 			# Back to the top, skipping the 'push' statement below.
 
@@ -114,22 +114,60 @@ sub evt_read {
 	else { return (undef); }
 }
 
-sub evt_filter {
+sub evt_keyboard_filter {
 
 	my $self = shift;
 	my $arg  = shift;
 
 	$self->check_args 
 	  ({ 'arg'  => $arg,
-	     'func' => 'evt_filter',
+	     'func' => 'evt_keyboard_filter',
 	     'test' => 
 		[{'evt' => 'arrayref'}] });
 
-	# Check for keyboard "key up" events:
+	# Filter keyboard "key up" events:
 	#   These events cloud the debugging display, filter them from event stream.
 
-	if (defined $arg->{'evt'}->[0] && ($arg->{'evt'}->[0] == 1) &&   # Event_Type: 1 (keyboard event)
-	    defined $arg->{'evt'}->[1] && ($arg->{'evt'}->[1] == 0)) {   # Key_Down:   1 (key pressed)
+	if (defined $arg->{'evt'}->[0] && ($arg->{'evt'}->[0] == 1) &&   # Event_Type = 1 (keyboard event).
+	    defined $arg->{'evt'}->[1] && ($arg->{'evt'}->[1] == 0)) {   # Key_Down   = 0 (key pressed).
+
+		return (1);
+	}
+
+	# Filter keyboard "control key down" events.
+	#   CharCode    0   @evt->[5]
+	#   CtrlKeyS    8   @evt->[6]
+	#   EvntType    1   @evt->[0]
+	#   KeyDown?    1   @evt->[1]
+	#   RptCount    1   @evt->[2]
+	#   VirtKeyC   17   @evt->[3]
+	#   VirtScnC   29   @evt->[4]
+
+	if (defined $arg->{'evt'}->[0] && ($arg->{'evt'}->[0] ==  1) &&   # Event_Type = 1 (keyboard event).
+	    defined $arg->{'evt'}->[1] && ($arg->{'evt'}->[1] ==  1) &&   # Key_Down   = 0 (key pressed).
+	    defined $arg->{'evt'}->[3] && ($arg->{'evt'}->[3] == 17) &&
+	    defined $arg->{'evt'}->[4] && ($arg->{'evt'}->[4] == 29) && 
+	    defined $arg->{'evt'}->[5] && ($arg->{'evt'}->[5] ==  0) && 
+	    defined $arg->{'evt'}->[6] && ($arg->{'evt'}->[6] ==  8)) {
+
+		return (1);
+	}
+
+	# Filter keyboard "shift key down" events.
+	# CharCode        0   @evt->[5]
+	# CtrlKeyS       16   @evt->[6]
+	# EvntType        1   @evt->[0]
+	# KeyDown?        1   @evt->[1]
+	# RptCount        1   @evt->[2]
+	# VirtKeyC       16   @evt->[3]
+	# VirtScnC       42   @evt->[4]
+
+	if (defined $arg->{'evt'}->[0] && ($arg->{'evt'}->[0] ==  1) &&   # Event_Type = 1 (keyboard event).
+	    defined $arg->{'evt'}->[1] && ($arg->{'evt'}->[1] ==  1) &&   # Key_Down   = 0 (key pressed).
+	    defined $arg->{'evt'}->[3] && ($arg->{'evt'}->[3] == 16) &&
+	    defined $arg->{'evt'}->[4] && ($arg->{'evt'}->[4] == 42) && 
+	    defined $arg->{'evt'}->[5] && ($arg->{'evt'}->[5] ==  0) && 
+	    defined $arg->{'evt'}->[6] && ($arg->{'evt'}->[6] == 16)) {
 
 		return (1);
 	}
@@ -137,60 +175,59 @@ sub evt_filter {
 	return (0);
 }
 
-sub evt_mouse {
+sub evt_mouse_filter {
 
 	my $self = shift;
 	my $arg  = shift;
 
 	$self->check_args 
-	  ({ 'arg'  => $arg,
-	     'func' => 'evt_mouse',
+	  ({ 'arg'  => $arg, 
+	     'func' => 'evt_mouse_filter', 
 	     'test' => 
 		[{'evt' => 'arrayref'}] });
 
 	my $objConsole = $self->{'obj'}->{'console'};
 	my $objMouse   = $self->{'obj'}->{'mouse'};
 
-	# Check for mouse pointer movement events:
-	#   These events must be handled out-of-band (immediately).
+	if (defined $arg->{'evt'}->[0] && 
+	         ! ($arg->{'evt'}->[0] == 2)) 
+		{ return (0); }   # Event_Type = 2 (indicates 'mouse' event).
 
-	if (defined $arg->{'evt'}->[0] && ($arg->{'evt'}->[0] == 2) &&              # Event_Type:    2 (indicates 'mouse' event).
-	    defined $arg->{'evt'}->[1] && ($arg->{'evt'}->[1] =~ /^\d\d?\d?$/) &&   # X Coordinate:  One to three digits.
+	# Check for mouse pointer movement events:
+	#   These events are handled out-of-band (immediately), or otherwise filtered.
+
+	if (defined $arg->{'evt'}->[1] && ($arg->{'evt'}->[1] =~ /^\d\d?\d?$/) &&   # X Coordinate:  One to three digits.
 	    defined $arg->{'evt'}->[2] && ($arg->{'evt'}->[2] =~ /^\d\d?\d?$/) &&   # Y Coordinate:  One to three digits.
 	    defined $arg->{'evt'}->[3] && ($arg->{'evt'}->[3] == 0) &&              # Button state:  0 (indicates no mouse button was clicked).
 	    defined $arg->{'evt'}->[5] && ($arg->{'evt'}->[5] == 1)) {              # Event flags:   1 (???).
 
-		# Check to see if mouse pointer has moved enough to change either the X or Y coordinate.
+		# Did pointer move enough to change either the X or Y coordinate?
 
-		if (($arg->{'evt'}->[1] eq $self->{'mouse_over_x'}) && 
-		    ($arg->{'evt'}->[2] eq $self->{'mouse_over_y'})) {
+		if (! ($arg->{'evt'}->[1] eq $self->{'mouse_over_x'}) || 
+		    ! ($arg->{'evt'}->[2] eq $self->{'mouse_over_y'})) {
 
-			return (0);
+			# Pointer movement caused one (or both) X,Y coordinates to change: 
+			#
+			#   1) Copy previous X,Y coordinates of mouse pointer to mouse_over_x_prev/mouse_over_y_prev.
+			#   2) Store new X,Y coordinates of mouse pointer in mouse_over_x/mouse_over_y.
+			#   3) Update display console to indicate new position of mouse pointer.
+
+			$self->{'mouse_over_x_prev'} = $self->{'mouse_over_x'};
+			$self->{'mouse_over_y_prev'} = $self->{'mouse_over_y'};
+			$self->{'mouse_over_x'} = $arg->{'evt'}->[1];
+			$self->{'mouse_over_y'} = $arg->{'evt'}->[2];
+
+			$objMouse->mouse_over 
+			  ({ 'mouse_over_x'      => $self->{'mouse_over_x'}, 
+			     'mouse_over_y'      => $self->{'mouse_over_y'}, 
+			     'mouse_over_x_prev' => $self->{'mouse_over_x_prev'}, 
+			     'mouse_over_y_prev' => $self->{'mouse_over_y_prev'} });
 		}
-	}
-	else {
 
-		return (0);
+		return (1);
 	}
 
-	# Pointer movement caused one (or both) X,Y coordinates to change: 
-	#
-	#   1) Copy previous X,Y coordinates of mouse pointer to mouse_over_x_prev/mouse_over_y_prev.
-	#   2) Store new X,Y coordinates of mouse pointer in mouse_over_x/mouse_over_y.
-	#   3) Update display console to indicate new position of mouse pointer.
-
-	$self->{'mouse_over_x_prev'} = $self->{'mouse_over_x'};
-	$self->{'mouse_over_y_prev'} = $self->{'mouse_over_y'};
-	$self->{'mouse_over_x'}	     = $arg->{'evt'}->[1];
-	$self->{'mouse_over_y'}      = $arg->{'evt'}->[2];
-
-	$objMouse->mouse_over 
-	  ({ 'mouse_over_x'      => $self->{'mouse_over_x'}, 
-	     'mouse_over_y'      => $self->{'mouse_over_y'}, 
-	     'mouse_over_x_prev' => $self->{'mouse_over_x_prev'}, 
-	     'mouse_over_y_prev' => $self->{'mouse_over_y_prev'} });
-
-	return (1);
+	return (0);
 }
 
 sub evt_loop {
@@ -370,11 +407,11 @@ Method evt_loop()...
 =head2 evt_read
 Method evt_read()...
 
-=head2 evt_filter
-Method evt_filter()...
+=head2 evt_keyboard_filter
+Method evt_keyboard_filter()...
 
-=head2 evt_mouse
-Method evt_mouse()...
+=head2 evt_mouse_filter
+Method evt_mouse_filter()...
 
 = cut
 

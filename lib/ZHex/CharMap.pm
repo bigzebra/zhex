@@ -10,10 +10,10 @@ use ZHex::Common
   qw(new 
      obj_init 
      check_args 
-     $VERS);
+     ZHEX_VERSION);
 
 BEGIN { require Exporter;
-	our $VERSION   = $VERS;
+	our $VERSION   = ZHEX_VERSION;
 	our @ISA       = qw(Exporter);
 	our @EXPORT    = qw();
 	our @EXPORT_OK = qw();

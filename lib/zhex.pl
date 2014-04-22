@@ -15,9 +15,22 @@ use ZHex;
 my $zhex = ZHex->new();
 
 $zhex->init_cli_opts_main();
+
 $zhex->init_objects_main();
-$zhex->init_console();
-$zhex->set_accessors_main();
+
+$zhex->init_console_obj();
+$zhex->init_display_obj();
+
+$zhex->init_cursor_obj();
+$zhex->init_editor_obj();
+
+$zhex->init_display_elements();
+
+$zhex->init_file_obj();
+
+$zhex->clear_console();
+
+$zhex->write_editor_to_display();
 
 $zhex->run();
 

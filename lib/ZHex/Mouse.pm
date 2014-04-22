@@ -11,14 +11,14 @@ use ZHex::Common
      init 
      obj_init 
      check_args 
-     $VERS 
+     ZHEX_VERSION
      EDT_CTXT_DEFAULT 
      EDT_CTXT_INSERT 
      EDT_CTXT_SEARCH 
      SZ_READ);
 
 BEGIN { require Exporter;
-	our $VERSION   = $VERS;
+	our $VERSION   = ZHEX_VERSION;
 	our @ISA       = qw(Exporter);
 	our @EXPORT    = qw();
 	our @EXPORT_OK = qw(); 

@@ -9,7 +9,7 @@
 <body>
 	<h2>ZHex Editor v0.02</h2>
 	<p>ZHex Editor source code filename: ../zhex.pl</p>
-	<div><pre class="prettyprint"><span class="com">#!/usr/bin/perl
+	<div><pre class="prettyprint"><span class="com">#!/usr/bin/perl -w
 </span><span class="pln">
 </span><span class="com"># ______________________________________________________________________
 </span><span class="com"># ZHex - ZHex Editor (v0.02) (4/14/2014) (by Double Z)
@@ -26,9 +26,22 @@
 </span><span class="kwd">my</span><span class="pln"> </span><span class="typ">$zhex</span><span class="pln"> </span><span class="pun">=</span><span class="pln"> </span><span class="pln">ZHex</span><span class="pun">-&gt;</span><span class="typ">new</span><span class="pun">(</span><span class="pun">)</span><span class="pun">;</span><span class="pln">
 </span><span class="pln">
 </span><span class="typ">$zhex</span><span class="pun">-&gt;</span><span class="typ">init_cli_opts_main</span><span class="pun">(</span><span class="pun">)</span><span class="pun">;</span><span class="pln">
+</span><span class="pln">
 </span><span class="typ">$zhex</span><span class="pun">-&gt;</span><span class="typ">init_objects_main</span><span class="pun">(</span><span class="pun">)</span><span class="pun">;</span><span class="pln">
-</span><span class="typ">$zhex</span><span class="pun">-&gt;</span><span class="typ">init_console</span><span class="pun">(</span><span class="pun">)</span><span class="pun">;</span><span class="pln">
-</span><span class="typ">$zhex</span><span class="pun">-&gt;</span><span class="typ">set_accessors_main</span><span class="pun">(</span><span class="pun">)</span><span class="pun">;</span><span class="pln">
+</span><span class="pln">
+</span><span class="typ">$zhex</span><span class="pun">-&gt;</span><span class="typ">init_console_obj</span><span class="pun">(</span><span class="pun">)</span><span class="pun">;</span><span class="pln">
+</span><span class="typ">$zhex</span><span class="pun">-&gt;</span><span class="typ">init_display_obj</span><span class="pun">(</span><span class="pun">)</span><span class="pun">;</span><span class="pln">
+</span><span class="pln">
+</span><span class="typ">$zhex</span><span class="pun">-&gt;</span><span class="typ">init_cursor_obj</span><span class="pun">(</span><span class="pun">)</span><span class="pun">;</span><span class="pln">
+</span><span class="typ">$zhex</span><span class="pun">-&gt;</span><span class="typ">init_editor_obj</span><span class="pun">(</span><span class="pun">)</span><span class="pun">;</span><span class="pln">
+</span><span class="pln">
+</span><span class="typ">$zhex</span><span class="pun">-&gt;</span><span class="typ">init_display_elements</span><span class="pun">(</span><span class="pun">)</span><span class="pun">;</span><span class="pln">
+</span><span class="pln">
+</span><span class="typ">$zhex</span><span class="pun">-&gt;</span><span class="typ">init_file_obj</span><span class="pun">(</span><span class="pun">)</span><span class="pun">;</span><span class="pln">
+</span><span class="pln">
+</span><span class="typ">$zhex</span><span class="pun">-&gt;</span><span class="typ">clear_console</span><span class="pun">(</span><span class="pun">)</span><span class="pun">;</span><span class="pln">
+</span><span class="pln">
+</span><span class="typ">$zhex</span><span class="pun">-&gt;</span><span class="typ">write_editor_to_display</span><span class="pun">(</span><span class="pun">)</span><span class="pun">;</span><span class="pln">
 </span><span class="pln">
 </span><span class="typ">$zhex</span><span class="pun">-&gt;</span><span class="typ">run</span><span class="pun">(</span><span class="pun">)</span><span class="pun">;</span><span class="pln">
 </span><span class="pln">

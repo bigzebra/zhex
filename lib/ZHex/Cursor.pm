@@ -10,7 +10,7 @@ use ZHex::Common
   qw(new 
      obj_init 
      check_args 
-     $VERS
+     ZHEX_VERSION
      CURS_CTXT_LINE 
      CURS_CTXT_WORD 
      CURS_CTXT_BYTE 
@@ -25,7 +25,7 @@ use ZHex::Common
      SZ_COLUMN);
 
 BEGIN { require Exporter;
-	our $VERSION   = $VERS;
+	our $VERSION   = ZHEX_VERSION;
 	our @ISA       = qw(Exporter);
 	our @EXPORT    = qw();
 	our @EXPORT_OK = qw();

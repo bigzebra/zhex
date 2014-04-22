@@ -6,32 +6,14 @@ use 5.006;
 use strict;
 use warnings FATAL => 'all';
 
-my $class;
-my $version;
-my $singleton;
-
-BEGIN {
-
-	$class   = 'ZHex';
-	$version = '0.02';
-
-	$singleton = 
-	  { 'class_nm' => $class,       # <--- These are just examples of setting member variables at creation...
-	    'version'  => $version };   # <--- These are just examples of setting member variables at creation...
-
-	bless $singleton, $class;
-}
-
 use ZHex::Common 
-  qw($VERS 
-
+  qw(ZHEX_VERSION 
      CURS_CTXT_LINE
      CURS_CTXT_WORD
      CURS_CTXT_BYTE
      CURS_CTXT_INSR
      CURS_CTXT
      CURS_POS
-
      DSP_WIDTH 
      DSP_HEIGHT 
      DSP_XPAD 
@@ -40,7 +22,6 @@ use ZHex::Common
      DSP_C_ELEMENTS 
      DSP
      DSP_PREV 
-
      EDT_HORIZ_RULE_CHAR 
      EDT_OOB_CHAR 
      EDT_CTXT_DEFAULT 
@@ -48,12 +29,10 @@ use ZHex::Common
      EDT_CTXT_SEARCH 
      EDT_CTXT 
      EDT_POS 
-
      SZ_WORD
      SZ_LINE
      SZ_COLUMN
      SZ_READ 
-
      W32CONS_TITLE);
 
 use ZHex::CharMap;
@@ -70,11 +49,32 @@ use ZHex::Mouse;
 
 use Getopt::Long;
 
+# ______________________________________________________________________________
+# Attempt to implement enforce singleton pattern here...
+
+my $class;
+my $version;
+my $singleton;
+
+BEGIN {
+
+	$class = 'ZHex';
+	$version = ZHEX_VERSION;
+
+	$singleton = 
+	  {'class_nm' => $class,      # <--- These are just examples of setting member variables at creation...
+	   'version'  => $version};   # <--- These are just examples of setting member variables at creation...
+
+	bless $singleton, $class;
+}
+
+# ______________________________________________________________________________
+
 BEGIN { require Exporter;
-	our $VERSION   = $VERS;
+	our $VERSION   = ZHEX_VERSION;
 	our @ISA       = qw(Exporter);
 	our @EXPORT    = qw();
-	our @EXPORT_OK = qw(); 
+	our @EXPORT_OK = qw();
 }
 
 # Functions
@@ -184,6 +184,19 @@ sub init_cli_opts_main {
 	return (1);
 }
 
+sub display_help_msg {
+
+	print 
+	  "--------------------------------------------------------------------------------- \n" . 
+	  " Command Line Options                  EXAMPLE:   ./ZHex.pl -f file.txt -v 3      \n" . 
+	  "--------------------------   -----   -------------------------------------------- \n" . 
+	  "  Option Name   Long Form    Short   Description                         Req/Opt  \n" . 
+	  "  -----------   ----------   -----   -----------                         -------- \n" . 
+	  "  FILENAME      --filename   -f      Filename                            REQUIRED \n" . 
+	  "  DEBUG INFO    --dbg        -v      Increase amount of info displayed   Optional \n" . 
+	  "  HELP  TEXT    --help       -?      Display help text (this page)       Optional \n";
+}
+
 sub init_objects_main {
 
 	my $self = shift;
@@ -207,35 +220,122 @@ sub init_objects_main {
 
 	foreach my $module (sort keys %{ $self->{'obj'} }) {
 
-		if (! $self->{'obj'}->{ $module }->obj_init ({ 'obj' => $self->{'obj'} })) 
-		  { die "Call to obj_init() within module '" . $module . "' returned w/ failure"; }
+		my $rv = $self->{'obj'}->{ $module }->obj_init 
+		           ({ 'obj' => $self->{'obj'} });
+
+		if (! defined $rv || 
+		             ($rv eq '')) { 
+
+			die "Call to obj_init() within module '" . $module . "' returned w/ failure";
+		}
 	}
 
 	return (1);
 }
 
-sub init_console {
+sub init_console_obj {
 
 	my $self = shift;
 
-	INIT_W32_CONSOLE: {
+	# Initialize the system console:
+	#
+	#   1) Initialize console object.
+	#   2) Store terminal settings/characteristics.
 
-		# Initialize the system console:
-		#
-		#   1) Initialize console object.
-		#   2) Store terminal settings/characteristics.
+	if (! ($self->{'obj'}->{'console'}->w32cons_init())) 
+		{ die "Call to w32cons_init() returned w/ failure"; }
 
-		if (! ($self->{'obj'}->{'console'}->w32cons_init())) 
-			{ die "Call to w32cons_init() returned w/ failure"; }
-
-		if (! ($self->{'obj'}->{'console'}->w32cons_termcap())) 
-			{ die "Call to w32cons_termcap() returned w/ failure"; }
-	}
+	if (! ($self->{'obj'}->{'console'}->w32cons_termcap())) 
+		{ die "Call to w32cons_termcap() returned w/ failure"; }
 
 	return (1);
 }
 
-sub set_accessors_main {
+sub init_display_obj {
+
+	my $self = shift;
+
+	# ___________________________
+	# Set variables in Display.pm.
+	#
+	#   1) Set width/height of editor display.
+	#   2) Set vertical/horizontal padding (space at the top/left of editor display).
+
+	$self->{'obj'}->{'display'}->dimension_x_set 
+	  ({ 'd_width' => (($self->{'obj'}->{'console'}->{'w32cons_last_col'} + 1) - DSP_XPAD) });
+
+	$self->{'obj'}->{'display'}->dimension_y_set 
+	  ({ 'd_height' => (($self->{'obj'}->{'console'}->{'w32cons_bottom_row'} + 1) - DSP_YPAD) });
+
+	$self->{'obj'}->{'display'}->padding_top_set 
+	  ({ 'dsp_ypad' => DSP_YPAD });
+
+	$self->{'obj'}->{'display'}->padding_left_set 
+	  ({ 'dsp_xpad' => DSP_XPAD });
+
+	# Initialize display.
+	#   1) Generate/store (blank) display      array.
+	#   2) Generate/store (blank) display_prev array.
+
+	$self->{'obj'}->{'display'}->dsp_set 
+	  ({ 'dsp' =>
+	        $self->{'obj'}->{'display'}->generate_blank_display 
+	          ({ 'd_width'  => $self->{'obj'}->{'display'}->{'d_width'}, 
+	             'd_height' => $self->{'obj'}->{'display'}->{'d_height'} }) });
+
+	$self->{'obj'}->{'display'}->dsp_prev_set 
+	  ({ 'dsp_prev' => 
+	        $self->{'obj'}->{'display'}->generate_blank_display 
+	          ({ 'd_width'  => $self->{'obj'}->{'display'}->{'d_width'}, 
+	             'd_height' => $self->{'obj'}->{'display'}->{'d_height'} }) });
+
+	return (1);
+}
+
+sub init_editor_obj {
+
+	my $self = shift;
+
+	# ___________________________
+	# Set variables in Editor.pm.
+
+	$self->{'obj'}->{'editor'}->set_horiz_rule_char ({ 'char' => EDT_HORIZ_RULE_CHAR });
+	$self->{'obj'}->{'editor'}->set_oob_char  ({ 'char'      => EDT_OOB_CHAR });
+	$self->{'obj'}->{'editor'}->set_edt_ctxt  ({ 'edt_ctxt'  => EDT_CTXT_DEFAULT });
+	$self->{'obj'}->{'editor'}->set_edt_pos   ({ 'edt_pos'   => EDT_POS });
+	$self->{'obj'}->{'editor'}->set_sz_word   ({ 'sz_word'   => SZ_WORD });
+	$self->{'obj'}->{'editor'}->set_sz_line   ({ 'sz_line'   => SZ_LINE });
+	$self->{'obj'}->{'editor'}->set_sz_column ({ 'sz_column' => SZ_COLUMN });
+
+	return (1);
+}
+
+sub init_display_elements {
+
+	my $self = shift;
+
+	# Initialize editor display.
+	#   1) Initialize editor display elements: 
+	#        X,Y coordinates within display, padding, enabled.
+	#   2) Initialize colorization elements.
+	#        Associate them with editor display element.
+	#   3) Store references to: 
+	#        Display elements data structure, 
+	#        Colorization elements data structure.
+	#   4) Initialize content of display elements: 'e_contents' 
+	#      (key/value pair, container for content of each display 
+	#      element).
+
+	$self->{'obj'}->{'display'}->d_elements_set 
+	  ({ 'd_elements' => $self->{'obj'}->{'display'}->d_elements_init() });
+
+	$self->{'obj'}->{'display'}->c_elements_set 
+	  ({ 'c_elements' => $self->{'obj'}->{'display'}->c_elements_init() });
+
+	return (1);
+}
+
+sub init_cursor_obj {
 
 	my $self = shift;
 
@@ -248,51 +348,101 @@ sub set_accessors_main {
 	$self->{'obj'}->{'cursor'}->set_sz_line   ({ 'sz_line'   => SZ_LINE });
 	$self->{'obj'}->{'cursor'}->set_sz_column ({ 'sz_column' => SZ_COLUMN });
 
-	# ___________________________
-	# Set variables in Display.pm.
+	return (1);
+}
+
+sub init_file_obj {
+
+	my $self = shift;
+
+	# Open, stat, and read file from filesystem.
+	#   1) Verify that file exists on filesystem.
+	#   2) Store file name (inside "file" object, using set_file() method).
+	#   3) Stat file (system call, returns w/ file attributes).
+	#   4) Read file into memory.
+
+	if (! ($self->{'obj'}->{'file'}->stat_file ({ 'fn' => $self->{'opt'}->{'cla_fn'} }))) 
+		{ die "Call to stat_file() returned w/ failure"; }
+
+	if (! ($self->{'obj'}->{'file'}->set_file ({ 'fn' => $self->{'opt'}->{'cla_fn'} }))) 
+		{ die "Call to set_file() returned w/ failure"; }
+
+	if (! ($self->{'obj'}->{'file'}->read_file ({ 'fn' => $self->{'obj'}->{'file'}->{'fn'} }))) 
+		{ die "Call to read_file() returned w/ failure"; }
+
+	return (1);
+}
+
+sub clear_console {
+
+	my $self = shift;
+
+	# Prepare the display console for editor display:
 	#
-	#   1) Set width/height of editor display.
-	#   2) Set vertical/horizontal padding (space at the top/left of editor display).
+	#   1) Store value of display console title.
+	#   2) Update display console title.
+	#   3) Clear  display console.
+	#   4) Set    display console to white text on black background.
+	#   5) Set    Win32   console cursor to invisible.
+	#   6) Move   Win32   console cursor to top left corner.
+	
+	if (! ($self->{'obj'}->{'console'}->w32cons_title_get())) 
+		{ die "Call to w32cons_title_get() returned w/ failure"; }
 
-	$self->{'obj'}->{'display'}->dimensions_set 
-	  ({ 'd_width'  => (($self->{'obj'}->{'console'}->{'w32cons_last_col'} + 1) - 
-			     DSP_XPAD), 
-	     'd_height' => (($self->{'obj'}->{'console'}->{'w32cons_bottom_row'} + 1) - 
-			     DSP_YPAD) });
+	if (! ($self->{'obj'}->{'console'}->w32cons_title_set 
+		({ 'w32cons_title' => W32CONS_TITLE }))) 
+		{ die "Call to w32cons_title_set() returned w/ failure"; }
 
-	$self->{'obj'}->{'display'}->padding_set
-	  ({ 'dsp_xpad' => DSP_XPAD,  
-	     'dsp_ypad' => DSP_YPAD });
+	if (! ($self->{'obj'}->{'console'}->w32cons_mode_set())) 
+		{ die "Call to w32cons_mode_set() returned w/ failure"; }
 
-	# Initialize the editor display.
-	#   1) Initialize/store (blank) display_prev array.
+	if (! ($self->{'obj'}->{'console'}->w32cons_clear())) 
+		{ die "Call to w32cons_clear() returned w/ failure"; }
 
-	my $dsp = 
-	  $self->{'obj'}->{'display'}->generate_blank_display 
-	    ({ 'd_width'  => (($self->{'obj'}->{'console'}->{'w32cons_last_col'} + 1) - 
-			      DSP_XPAD), 
-	       'd_height' => (($self->{'obj'}->{'console'}->{'w32cons_bottom_row'} + 1) - 
-			      DSP_YPAD) });
+	if (! ($self->{'obj'}->{'console'}->w32cons_fg_white_bg_black())) 
+		{ die "Call to w32cons_fg_white_bg_black() returned w/ failure"; }
 
-	$self->{'obj'}->{'display'}->dsp_set      ({ 'dsp'      => $dsp });
-	$self->{'obj'}->{'display'}->dsp_prev_set ({ 'dsp_prev' => $dsp });
+	if (! ($self->{'obj'}->{'console'}->w32cons_cursor_invisible())) 
+		{ die "Call to w32cons_cursor_invisible() returned w/ failure"; }
 
-	# $self->{'obj'}->{'display'}->dsp_prev_set 
-	#   ({ 'dsp_prev' => 
-	# 	$self->{'obj'}->{'display'}->dsp_prev_init 
-	# 	  ({ 'd_width'  => $self->{'obj'}->{'display'}->{'d_width'}, 
-	# 	     'd_height' => $self->{'obj'}->{'display'}->{'d_height'} }) });
+	if (! ($self->{'obj'}->{'console'}->w32cons_cursor_tleft_dsp())) 
+		{ die "Call to w32cons_cursor_tleft_dsp() returned w/ failure"; }
 
-	# ___________________________
-	# Set variables in Editor.pm.
+	return (1);
+}
 
-	$self->{'obj'}->{'editor'}->set_horiz_rule_char ({ 'char'      => EDT_HORIZ_RULE_CHAR });
-	$self->{'obj'}->{'editor'}->set_oob_char        ({ 'char'      => EDT_OOB_CHAR });
-	$self->{'obj'}->{'editor'}->set_edt_ctxt        ({ 'edt_ctxt'  => EDT_CTXT_DEFAULT });
-	$self->{'obj'}->{'editor'}->set_edt_pos         ({ 'edt_pos'   => EDT_POS });
-	$self->{'obj'}->{'editor'}->set_sz_word         ({ 'sz_word'   => SZ_WORD });
-	$self->{'obj'}->{'editor'}->set_sz_line         ({ 'sz_line'   => SZ_LINE });
-	$self->{'obj'}->{'editor'}->set_sz_column       ({ 'sz_column' => SZ_COLUMN });
+sub write_editor_to_display {
+
+	my $self = shift;
+
+	# 1) Generate the editor display, store within display object 
+	#    under key 'display' (confusing choice of variable names,  
+	#    I know).
+	# 2) Write editor display to display console.
+
+	$self->{'obj'}->{'display'}->dsp_set 
+	  ({ 'dsp' => $self->{'obj'}->{'display'}->generate_editor_display 
+			({ 'evt' => \@{ [ '', '', '', '', '', '' ] } }) });
+
+	$self->{'obj'}->{'console'}->w32cons_refresh_display 
+	  ({ 'dsp'      => $self->{'obj'}->{'display'}->{'dsp'}, 
+	     'dsp_prev' => $self->{'obj'}->{'display'}->{'dsp_prev'}, 
+	     'dsp_xpad' => $self->{'obj'}->{'display'}->{'dsp_xpad'}, 
+	     'dsp_ypad' => $self->{'obj'}->{'display'}->{'dsp_ypad'}, 
+	     'd_width'  => $self->{'obj'}->{'display'}->{'d_width'} });
+
+	# 1) Colorize elements of the editor display.
+	# 2) Highlight the cursor within the editor display.
+
+	$self->{'obj'}->{'console'}->colorize_display 
+	  ({ 'c_elements' => $self->{'obj'}->{'display'}->active_c_elements(), 
+	     'dsp_xpad'   => $self->{'obj'}->{'display'}->{'dsp_xpad'}, 
+	     'dsp_ypad'   => $self->{'obj'}->{'display'}->{'dsp_ypad'} });
+
+	$self->{'obj'}->{'cursor'}->curs_display 
+	  ({ 'dsp_xpad' => $self->{'obj'}->{'display'}->{'dsp_xpad'}, 
+	     'dsp_ypad' => $self->{'obj'}->{'display'}->{'dsp_ypad'}, 
+	     'force'    => 0});
 
 	return (1);
 }
@@ -300,111 +450,6 @@ sub set_accessors_main {
 sub run {
 
 	my $self = shift;
-
-	OPEN_AND_READ_FILE: {
-
-		# Open, stat, and read file from filesystem.
-		#   1) Verify that file exists on filesystem.
-		#   2) Store file name (inside "file" object, using set_file() method).
-		#   3) Stat file (system call, returns w/ file attributes).
-		#   4) Read file into memory.
-
-		if (! ($self->{'obj'}->{'file'}->stat_file ({ 'fn' => $self->{'opt'}->{'cla_fn'} }))) 
-			{ die "Call to stat_file() returned w/ failure"; }
-
-		if (! ($self->{'obj'}->{'file'}->set_file ({ 'fn' => $self->{'opt'}->{'cla_fn'} }))) 
-			{ die "Call to set_file() returned w/ failure"; }
-
-		if (! ($self->{'obj'}->{'file'}->read_file ({ 'fn' => $self->{'obj'}->{'file'}->{'fn'} }))) 
-			{ die "Call to read_file() returned w/ failure"; }
-	}
-
-	PREPARE_W32_CONSOLE: {
-
-		# Prepare the display console for editor display:
-		#
-		#   1) Store value of display console title.
-		#   2) Update display console title.
-		#   3) Clear  display console.
-		#   4) Set    display console to white text on black background.
-		#   5) Set    Win32   console cursor to invisible.
-		#   6) Move   Win32   console cursor to top left corner.
-		
-		if (! ($self->{'obj'}->{'console'}->w32cons_title_get())) 
-			{ die "Call to w32cons_title_get() returned w/ failure"; }
-
-		if (! ($self->{'obj'}->{'console'}->w32cons_title_set 
-			({ 'w32cons_title' => W32CONS_TITLE }))) 
-			{ die "Call to w32cons_title_set() returned w/ failure"; }
-
-		if (! ($self->{'obj'}->{'console'}->w32cons_mode_set())) 
-			{ die "Call to w32cons_mode_set() returned w/ failure"; }
-
-		if (! ($self->{'obj'}->{'console'}->w32cons_clear())) 
-			{ die "Call to w32cons_clear() returned w/ failure"; }
-
-		if (! ($self->{'obj'}->{'console'}->w32cons_fg_white_bg_black())) 
-			{ die "Call to w32cons_fg_white_bg_black() returned w/ failure"; }
-
-		if (! ($self->{'obj'}->{'console'}->w32cons_cursor_invisible())) 
-			{ die "Call to w32cons_cursor_invisible() returned w/ failure"; }
-
-		if (! ($self->{'obj'}->{'console'}->w32cons_cursor_tleft_dsp())) 
-			{ die "Call to w32cons_cursor_tleft_dsp() returned w/ failure"; }
-	}
-
-	INIT_EDITOR_DISPLAY: {
-
-		# Initialize editor display.
-		#   1) Initialize editor display elements: 
-		#        X,Y coordinates within display, padding, enabled.
-		#   2) Initialize colorization elements.
-		#        Associate them with editor display element.
-		#   3) Store references to: 
-		#        Display elements data structure, 
-		#        Colorization elements data structure.
-		#   4) Initialize content of display elements: 'e_contents' 
-		#      (key/value pair, container for content of each display 
-		#      element).
-
-		$self->{'obj'}->{'display'}->d_elements_set 
-		  ({ 'd_elements' => $self->{'obj'}->{'display'}->d_elements_init() });
-
-		$self->{'obj'}->{'display'}->c_elements_set 
-		  ({ 'c_elements' => $self->{'obj'}->{'display'}->c_elements_init() });
-	}
-
-	WRITE_EDITOR_DISPLAY_TO_CONSOLE: {
-
-		# 1) Generate the editor display, store within display object 
-		#    under key 'display' (confusing choice of variable names,  
-		#    I know).
-		# 2) Write editor display to display console.
-
-		$self->{'obj'}->{'display'}->dsp_set 
-		  ({ 'dsp' => $self->{'obj'}->{'display'}->generate_editor_display 
-		                ({ 'evt' => \@{ [ '', '', '', '', '', '' ] } }) });
-
-		$self->{'obj'}->{'console'}->w32cons_refresh_display 
-		  ({ 'dsp'      => $self->{'obj'}->{'display'}->{'dsp'}, 
-		     'dsp_prev' => $self->{'obj'}->{'display'}->{'dsp_prev'}, 
-		     'dsp_xpad' => $self->{'obj'}->{'display'}->{'dsp_xpad'}, 
-		     'dsp_ypad' => $self->{'obj'}->{'display'}->{'dsp_ypad'}, 
-		     'd_width'  => $self->{'obj'}->{'display'}->{'d_width'} });
-
-		# 1) Colorize elements of the editor display.
-		# 2) Highlight the cursor within the editor display.
-
-		$self->{'obj'}->{'console'}->colorize_display 
-		  ({ 'c_elements' => $self->{'obj'}->{'display'}->active_c_elements(), 
-		     'dsp_xpad'   => $self->{'obj'}->{'display'}->{'dsp_xpad'}, 
-		     'dsp_ypad'   => $self->{'obj'}->{'display'}->{'dsp_ypad'} });
-
-		$self->{'obj'}->{'cursor'}->curs_display 
-		  ({ 'dsp_xpad' => $self->{'obj'}->{'display'}->{'dsp_xpad'}, 
-		     'dsp_ypad' => $self->{'obj'}->{'display'}->{'dsp_ypad'}, 
-		     'force'    => 0});
-	}
 
 	INSTALL_ERROR_MESSAGE_HANDLER: {
 
@@ -438,19 +483,6 @@ sub run {
 	}
 
 	return (1);
-}
-
-sub display_help_msg {
-
-	print 
-	  "--------------------------------------------------------------------------------- \n" . 
-	  " Command Line Options                  EXAMPLE:   ./ZHex.pl -f file.txt -v 3      \n" . 
-	  "--------------------------   -----   -------------------------------------------- \n" . 
-	  "  Option Name   Long Form    Short   Description                         Req/Opt  \n" . 
-	  "  -----------   ----------   -----   -----------                         -------- \n" . 
-	  "  FILENAME      --filename   -f      Filename                            REQUIRED \n" . 
-	  "  DEBUG INFO    --dbg        -v      Increase amount of info displayed   Optional \n" . 
-	  "  HELP  TEXT    --help       -?      Display help text (this page)       Optional \n";
 }
 
 
@@ -524,6 +556,38 @@ Method display_help_msg()...
 
 =head2 set_accessors_main
 Method set_accessors_main()...
+= cut
+
+=head2 clear_console
+Method clear_console()...
+= cut
+
+=head2 init_console_obj
+Method init_console_obj()...
+= cut
+
+=head2 init_cursor_obj
+Method init_cursor_obj()...
+= cut
+
+=head2 init_display_elements
+Method init_display_elements()...
+= cut
+
+=head2 init_display_obj
+Method init_display_obj()...
+= cut
+
+=head2 init_editor_obj
+Method init_editor_obj()...
+= cut
+
+=head2 init_file_obj
+Method init_file_obj()...
+= cut
+
+=head2 write_editor_to_display
+Method write_editor_to_display()...
 = cut
 
 =head1 AUTHOR
