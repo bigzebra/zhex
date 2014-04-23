@@ -8,13 +8,16 @@ use warnings FATAL => 'all';
 
 use ZHex::Common 
   qw(new 
-     obj_init 
+     init_obj 
+     init_child_obj 
      check_args 
      ZHEX_VERSION
      EDT_CTXT_DEFAULT 
      EDT_CTXT_INSERT 
      EDT_CTXT_SEARCH 
      SZ_READ);
+
+# NOTE: Not using errmsg() within this module.
 
 use IO::File;
 use Fcntl qw(:DEFAULT :Fcompat);
@@ -371,7 +374,7 @@ reading, and writing files which are being edited (within the hex editor).
 
 Usage:
 
-    use ZHex::Common qw(new obj_init $VERS);
+    use ZHex::Common qw(new init_obj $VERS);
     my $objFile = $self->{'obj'}->{'file'};
     $objFile->stat_file ({'fn' => $abspath_w_filename});
 

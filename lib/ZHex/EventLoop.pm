@@ -8,8 +8,10 @@ use warnings FATAL => 'all';
 
 use ZHex::Common 
   qw(new 
-     obj_init 
+     init_obj 
+     init_child_obj 
      check_args 
+     errmsg 
      ZHEX_VERSION
      EDT_CTXT_DEFAULT 
      EDT_CTXT_INSERT 
@@ -235,10 +237,10 @@ sub evt_loop {
 	my $self = shift;
 
 	my $objConsole = $self->{'obj'}->{'console'};
-	my $objCursor  = $self->{'obj'}->{'cursor'};
-	my $objDebug   = $self->{'obj'}->{'debug'};
+	my $objCursor  = $self->{'obj'}->{'display'}->{'obj'}->{'cursor'};
+	my $objDebug   = $self->{'obj'}->{'display'}->{'obj'}->{'debug'};
 	my $objDisplay = $self->{'obj'}->{'display'};
-	my $objEditor  = $self->{'obj'}->{'editor'};
+	my $objEditor  = $self->{'obj'}->{'display'}->{'obj'}->{'editor'};
 	my $objEvent   = $self->{'obj'}->{'event'};
 
 	# ___________________________________________________________________________________
@@ -378,7 +380,7 @@ including the main event loop.
 
 Usage:
 
-    use ZHex::Common qw(new obj_init $VERS);
+    use ZHex::Common qw(new init_obj $VERS);
     my $objEventLoop = $self->{'obj'}->{'eventloop'};
     $objEventLoop->evt_read();
 
@@ -396,8 +398,8 @@ Method new()...
 Method init()...
 = cut
 
-=head2 obj_init
-Method obj_init()...
+=head2 init_obj
+Method init_obj()...
 = cut
 
 =head2 evt_loop

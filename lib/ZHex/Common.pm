@@ -72,8 +72,10 @@ BEGIN {
 	our @EXPORT_OK = 
 	  qw(new 
              init 
-	     obj_init 
+	     init_obj 
+	     init_child_obj 
 	     check_args 
+	     errmsg 
 	     ZHEX_VERSION
              CURS_CTXT_LINE 
              CURS_CTXT_WORD 
@@ -110,7 +112,7 @@ BEGIN {
 #   _____________	___________
 #   new()		Object constructor method
 #   init()		Global variable declarations
-#   obj_init()		Takes arguement: reference to hash w/ key/value 
+#   init_obj()		Takes arguement: reference to hash w/ key/value 
 #   			pairs in the form: 
 #   			    object_name => object_reference.
 #   			Evaluates argument to make sure that key/value 
@@ -140,14 +142,14 @@ sub init {
 
 # Object hash initialization function: used by all modules.
 
-sub obj_init {
+sub init_obj {
 
 	my $self = shift;
 	my $arg  = shift;
 
 	$self->check_args 
 	  ({ 'arg'  => $arg, 
-	     'func' => 'obj_init', 
+	     'func' => 'init_obj', 
 	     'test' => 
 		[{'obj' => 'hash'}] });
 
@@ -155,41 +157,25 @@ sub obj_init {
 	#
 	#   Hash Key		Perl Module		Package
 	#   ________		___________		_______
-	#   charmap		CharMap.pm		ZHex::CharMap
+	#   charmap		CharMap.pm		ZHex::CharMap   <--- NOT INITIALIZED HERE...
 	#   console		Console.pm		ZHex::Console
-	#   cursor		Cursor.pm		ZHex::Cursor
-	#   debug		Debug.pm		ZHex::Debug
+	#   cursor		Cursor.pm		ZHex::Cursor    <--- NOT INITIALIZED HERE...
+	#   debug		Debug.pm		ZHex::Debug     <--- NOT INITIALIZED HERE...
 	#   display		Display.pm		ZHex::Display
-	#   editor		Editor.pm		ZHex::Editor
+	#   editor		Editor.pm		ZHex::Editor    <--- NOT INITIALIZED HERE...
 	#   event		Event.pm		ZHex::Event
 	#   eventhandler	EventHandler.pm		ZHex::EventHandler
 	#   eventloop		EventLoop.pm		ZHex::EventLoop
 	#   file		File.pm			ZHex::File
 	#   mouse		Mouse.pm		ZHex::Mouse
 
-	if (! exists  $arg->{'obj'}->{'charmap'} || 
-	    ! defined $arg->{'obj'}->{'charmap'} || 
-	      ! (ref ($arg->{'obj'}->{'charmap'}) eq 'ZHex::CharMap') || 
-
-	    ! exists  $arg->{'obj'}->{'console'} || 
+	if (! exists  $arg->{'obj'}->{'console'} || 
 	    ! defined $arg->{'obj'}->{'console'} || 
 	      ! (ref ($arg->{'obj'}->{'console'}) eq 'ZHex::Console') || 
-
-	    ! exists  $arg->{'obj'}->{'cursor'} || 
-	    ! defined $arg->{'obj'}->{'cursor'} || 
-	      ! (ref ($arg->{'obj'}->{'cursor'}) eq 'ZHex::Cursor') || 
-
-	    ! exists  $arg->{'obj'}->{'debug'} || 
-	    ! defined $arg->{'obj'}->{'debug'} || 
-	      ! (ref ($arg->{'obj'}->{'debug'}) eq 'ZHex::Debug') || 
 
 	    ! exists  $arg->{'obj'}->{'display'} || 
 	    ! defined $arg->{'obj'}->{'display'} || 
 	      ! (ref ($arg->{'obj'}->{'display'}) eq 'ZHex::Display') || 
-
-	    ! exists  $arg->{'obj'}->{'editor'} || 
-	    ! defined $arg->{'obj'}->{'editor'} || 
-	      ! (ref ($arg->{'obj'}->{'editor'}) eq 'ZHex::Editor') || 
 
 	    ! exists  $arg->{'obj'}->{'event'} || 
 	    ! defined $arg->{'obj'}->{'event'} || 
@@ -211,11 +197,20 @@ sub obj_init {
 	    ! defined $arg->{'obj'}->{'mouse'} || 
 	      ! (ref ($arg->{'obj'}->{'mouse'}) eq 'ZHex::Mouse')) 
 
-		{ die "Call to obj_init() failed: argument 'obj' missing one (or more) required key/value pairs"; }
+		{ die "Call to init_obj() failed: argument 'obj' missing one (or more) required key/value pairs"; }
 
 	# Store reference to obj hash in self.
 
 	$self->{'obj'} = $arg->{'obj'};
+
+	return (1);
+}
+
+# Function stub: init_child_obj() function (used by modules with no child objects to initialize).
+
+sub init_child_obj {
+
+	my $self = shift;
 
 	return (1);
 }
@@ -306,6 +301,49 @@ sub check_args {
 	return (1);
 }
 
+sub errmsg {
+
+	my $self = shift;
+	my $msg  = shift;
+
+	my $objDisplay = $self->{'obj'}->{'display'};
+
+	if (! defined $msg || 
+	             ($msg eq '')) {
+
+		return (undef);
+	}
+
+	if (! exists  $objDisplay->{'d_elements'} || 
+	    ! defined $objDisplay->{'d_elements'} || 
+	             ($objDisplay->{'d_elements'} eq '') || 
+	      ! (ref ($objDisplay->{'d_elements'}) eq 'HASH') || 
+	    ! exists  $objDisplay->{'d_elements'}->{'errmsg_queue'} || 
+	    ! defined $objDisplay->{'d_elements'}->{'errmsg_queue'} || 
+	             ($objDisplay->{'d_elements'}->{'errmsg_queue'} eq '') || 
+	      ! (ref ($objDisplay->{'d_elements'}->{'errmsg_queue'}) eq 'HASH') || 
+	    ! exists  $objDisplay->{'d_elements'}->{'errmsg_queue'}->{'e_width'} || 
+	    ! defined $objDisplay->{'d_elements'}->{'errmsg_queue'}->{'e_width'} || 
+	             ($objDisplay->{'d_elements'}->{'errmsg_queue'}->{'e_width'} eq '')) {
+
+		return (undef);
+	}
+
+	# Generate format string for sprintf() call.
+
+	my $fmt_str = 
+	  "%-" . 
+	  $objDisplay->{'d_elements'}->{'errmsg_queue'}->{'e_width'} . 
+	  "." . 
+	  $objDisplay->{'d_elements'}->{'errmsg_queue'}->{'e_width'} . 
+	  "s";
+
+	push @{ $objDisplay->{'obj'}->{'debug'}->{'errmsg_queue'} }, 
+	     sprintf ($fmt_str, $msg);
+
+	return (1);
+}
+
 
 END { undef; }
 1;
@@ -333,15 +371,15 @@ submodules (files named ZHex/*.pm), they are:
 
     new()        Constructor method.
     init()       Function stub (for modules that don't need an init() function.
-    obj_init()   Initialize table of references to each submodule.
+    init_obj()   Initialize table of references to each submodule.
 
 Usage:
 
     # Define my own init() function.
-    use ZHex::Common qw(new obj_init ZHEX_VERSION);
+    use ZHex::Common qw(new init_obj ZHEX_VERSION);
 
     # Use stub function init().
-    use ZHex::Common qw(new init obj_init ZHEX_VERSION);
+    use ZHex::Common qw(new init init_obj ZHEX_VERSION);
 
     ...
 
@@ -362,12 +400,16 @@ Method new()...
 Method init()...
 = cut
 
-=head2 obj_init
-Method obj_init()...
+=head2 init_obj
+Method init_obj()...
 = cut
 
 =head2 check_args
 Method check_args()...
+= cut
+
+=head2 errmsg
+Method errmsg()...
 = cut
 
 =head1 AUTHOR

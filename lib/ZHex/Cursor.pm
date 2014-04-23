@@ -8,7 +8,8 @@ use warnings FATAL => 'all';
 
 use ZHex::Common 
   qw(new 
-     obj_init 
+     init_obj 
+     init_child_obj  
      check_args 
      ZHEX_VERSION
      CURS_CTXT_LINE 
@@ -23,6 +24,8 @@ use ZHex::Common
      SZ_WORD 
      SZ_LINE 
      SZ_COLUMN);
+
+# NOTE: Not using errmsg() within this module.
 
 BEGIN { require Exporter;
 	our $VERSION   = ZHEX_VERSION;
@@ -189,9 +192,9 @@ sub dsp_coord {
 	         {'dsp_xpad' => 'digits'}, 
 	         {'dsp_ypad' => 'digits'}] });
 
-	my $objDebug   = $self->{'obj'}->{'debug'};
+	my $objDebug   = $self->{'obj'}->{'display'}->{'obj'}->{'debug'};
 	my $objDisplay = $self->{'obj'}->{'display'};
-	my $objEditor  = $self->{'obj'}->{'editor'};
+	my $objEditor  = $self->{'obj'}->{'display'}->{'obj'}->{'editor'};
 
 	if ($arg->{'curs_pos'} < $arg->{'edt_pos'}) {
 		
@@ -281,9 +284,9 @@ sub curs_display {
 		{ die "Call to colorize_display() failed, value of key 'force' must be numeric [0|1]"; }
 
 	my $objConsole = $self->{'obj'}->{'console'};
-	my $objDebug   = $self->{'obj'}->{'debug'};
+	my $objDebug   = $self->{'obj'}->{'display'}->{'obj'}->{'debug'};
 	my $objDisplay = $self->{'obj'}->{'display'};
-	my $objEditor  = $self->{'obj'}->{'editor'};
+	my $objEditor  = $self->{'obj'}->{'display'}->{'obj'}->{'editor'};
 
 	# Calculate the new X,Y coordinates of cursor position within 
 	# the editor display.
@@ -391,8 +394,8 @@ sub calc_coord_array {
 	        {'dsp_xpad'  => 'digits'}, 
 	        {'dsp_ypad'  => 'digits'}] });
 
-	my $objDebug  = $self->{'obj'}->{'debug'};
-	my $objEditor = $self->{'obj'}->{'editor'};
+	my $objDebug  = $self->{'obj'}->{'display'}->{'obj'}->{'debug'};
+	my $objEditor = $self->{'obj'}->{'display'}->{'obj'}->{'editor'};
 
 	# $objDebug->errmsg ("calc_coord_array: curs_pos='" . $arg->{'curs_pos'} . "'.");
 
@@ -769,7 +772,7 @@ sub curs_ctxt_incr {
 
 	my $objConsole   = $self->{'obj'}->{'console'};
 	my $objDisplay   = $self->{'obj'}->{'display'};
-	my $objEditor    = $self->{'obj'}->{'editor'};
+	my $objEditor    = $self->{'obj'}->{'display'}->{'obj'}->{'editor'};
 	my $objEventLoop = $self->{'obj'}->{'eventloop'};
 
 	if ($self->{'curs_ctxt'} > 2) 
@@ -883,7 +886,7 @@ Specifically, the ZHex::Cursor module defines functions which allow for:
 
 Usage:
 
-    use ZHex::Common qw(new obj_init $VERS);
+    use ZHex::Common qw(new init_obj $VERS);
     my $objCursor = $self->{'obj'}->{'cursor'};
     $objCursor->curs_mv_right();
 

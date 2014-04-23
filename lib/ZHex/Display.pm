@@ -8,12 +8,30 @@ use warnings FATAL => 'all';
 
 use ZHex::Common 
   qw(new 
-     obj_init 
+     init_obj 
      check_args 
      ZHEX_VERSION
      EDT_CTXT_DEFAULT 
      EDT_CTXT_INSERT 
-     EDT_CTXT_SEARCH);
+     EDT_CTXT_SEARCH
+     EDT_HORIZ_RULE_CHAR 
+     EDT_OOB_CHAR 
+     EDT_POS 
+     CURS_CTXT_LINE
+     CURS_CTXT_WORD
+     CURS_CTXT_BYTE
+     CURS_CTXT_INSR
+     CURS_CTXT
+     CURS_POS
+     SZ_WORD
+     SZ_LINE
+     SZ_COLUMN);
+
+# NOTE: Not using errmsg() within this module.
+
+use ZHex::Cursor;
+use ZHex::Debug;
+use ZHex::Editor;
 
 BEGIN { require Exporter;
 	our $VERSION   = ZHEX_VERSION;
@@ -45,6 +63,78 @@ sub init {
 
 	$self->{'dsp'}        = '';   # Set via member function dsp_set().
 	$self->{'dsp_prev'}   = '';   # Set via member function dsp_prev_set().
+
+	return (1);
+}
+
+sub init_child_obj {
+
+	my $self = shift;
+
+	# ___________________________
+	# Cursor object (Cursor.pm).
+
+	$self->{'obj'}->{'cursor'} = ZHex::Cursor->new();
+
+	if (! exists  $self->{'obj'}->{'cursor'} || 
+	    ! defined $self->{'obj'}->{'cursor'} || 
+	      ! (ref ($self->{'obj'}->{'cursor'}) eq 'ZHex::Cursor')) 
+		{ die "Call to init_child_obj() failed: 'cursor' object could not be created"; }
+
+	CALL_INIT_OBJ_FUNCTION_ON_CURSOR_OBJ: 
+		{ my $rv = $self->{'obj'}->{'cursor'}->init_obj ({ 'obj' => $self->{'obj'} }); }
+
+	CALL_INIT_CHILD_OBJ_FUNCTION_ON_CURSOR_OBJ: 
+		{ my $rv = $self->{'obj'}->{'cursor'}->init_child_obj(); }
+
+	$self->{'obj'}->{'cursor'}->set_curs_ctxt ({ 'curs_ctxt' => CURS_CTXT_LINE });
+	$self->{'obj'}->{'cursor'}->set_curs_pos  ({ 'curs_pos'  => CURS_POS });
+	$self->{'obj'}->{'cursor'}->set_sz_word   ({ 'sz_word'   => SZ_WORD });
+	$self->{'obj'}->{'cursor'}->set_sz_line   ({ 'sz_line'   => SZ_LINE });
+	$self->{'obj'}->{'cursor'}->set_sz_column ({ 'sz_column' => SZ_COLUMN });
+
+	# ___________________________
+	# Debug object (Debug.pm).
+
+	$self->{'obj'}->{'debug'} = ZHex::Debug->new();
+
+	if (! exists  $self->{'obj'}->{'debug'} || 
+	    ! defined $self->{'obj'}->{'debug'} || 
+	      ! (ref ($self->{'obj'}->{'debug'}) eq 'ZHex::Debug')) 
+		{ die "Call to init_child_obj() failed: 'debug' object could not be created"; }
+
+	CALL_INIT_OBJ_FUNCTION_ON_DEBUG_OBJ: 
+		{ my $rv = $self->{'obj'}->{'debug'}->init_obj ({ 'obj' => $self->{'obj'} }); }
+
+	CALL_INIT_CHILD_OBJ_FUNCTION_ON_DEBUG_OBJ: 
+		{ my $rv = $self->{'obj'}->{'debug'}->init_child_obj(); }
+
+	CALL_ERRMSG_HANDLER_FUNCTION_ON_DEBUG_OBJ: 
+		{ my $rv = $self->{'obj'}->{'debug'}->errmsg_handler(); }
+
+	# ___________________________
+	# Editor object (Editor.pm).
+
+	$self->{'obj'}->{'editor'} = ZHex::Editor->new();
+
+	if (! exists  $self->{'obj'}->{'editor'} || 
+	    ! defined $self->{'obj'}->{'editor'} || 
+	      ! (ref ($self->{'obj'}->{'editor'}) eq 'ZHex::Editor')) 
+		{ die "Call to init_child_obj() failed: 'editor' object could not be created"; }
+
+	CALL_INIT_OBJ_FUNCTION_ON_EDITOR_OBJ: 
+		{ my $rv = $self->{'obj'}->{'editor'}->init_obj ({ 'obj' => $self->{'obj'} }); }
+
+	CALL_INIT_CHILD_OBJ_FUNCTION_ON_EDITOR_OBJ: 
+		{ my $rv = $self->{'obj'}->{'editor'}->init_child_obj(); }
+
+	$self->{'obj'}->{'editor'}->set_horiz_rule_char ({ 'char' => EDT_HORIZ_RULE_CHAR });
+	$self->{'obj'}->{'editor'}->set_oob_char  ({ 'char'      => EDT_OOB_CHAR });
+	$self->{'obj'}->{'editor'}->set_edt_ctxt  ({ 'edt_ctxt'  => EDT_CTXT_DEFAULT });
+	$self->{'obj'}->{'editor'}->set_edt_pos   ({ 'edt_pos'   => EDT_POS });
+	$self->{'obj'}->{'editor'}->set_sz_word   ({ 'sz_word'   => SZ_WORD });
+	$self->{'obj'}->{'editor'}->set_sz_line   ({ 'sz_line'   => SZ_LINE });
+	$self->{'obj'}->{'editor'}->set_sz_column ({ 'sz_column' => SZ_COLUMN });
 
 	return (1);
 }
@@ -1132,7 +1222,7 @@ Specifically, the ZHex::Display module functions provide for:
 
 Usage:
 
-    use ZHex::Common qw(new obj_init $VERS);
+    use ZHex::Common qw(new init_obj $VERS);
     my $objDisplay = $self->{'obj'}->{'display'};
     $objDisplay->padding_set ({ 'dsp_ypad' => 2, 'dsp_xpad' => 2 });
 

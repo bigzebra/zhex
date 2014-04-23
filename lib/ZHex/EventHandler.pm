@@ -9,18 +9,45 @@ use warnings FATAL => 'all';
 use ZHex::Common 
   qw(new 
      init 
-     obj_init 
+     init_obj 
      check_args 
+     errmsg 
      ZHEX_VERSION
      EDT_CTXT_DEFAULT 
      EDT_CTXT_INSERT 
      EDT_CTXT_SEARCH);
+
+use ZHex::CharMap;
 
 BEGIN { require Exporter;
 	our $VERSION   = ZHEX_VERSION;
 	our @ISA       = qw(Exporter);
 	our @EXPORT    = qw();
 	our @EXPORT_OK = qw();
+}
+
+# Functions: Initialization.
+#
+#   ____				___________
+#   NAME				DESCRIPTION
+#   ____				___________
+#   init_child_obj()			...
+
+sub init_child_obj {
+
+	my $self = shift;
+
+	$self->{'obj'}->{'charmap'} = ZHex::CharMap->new();
+
+	if (! exists  $self->{'obj'}->{'charmap'} || 
+	    ! defined $self->{'obj'}->{'charmap'} || 
+	      ! (ref ($self->{'obj'}->{'charmap'}) eq 'ZHex::CharMap')) 
+		{  };
+
+	$self->{'obj'}->{'charmap'}->chr_map_set 
+	  ({ 'chr_map' => $self->{'obj'}->{'charmap'}->chr_map() });
+
+	return (1);
 }
 
 # Functions: Event Handling Functions.
@@ -765,8 +792,8 @@ sub curs_move_beg {
 
 	my $self = shift;
 
-	my $objCursor = $self->{'obj'}->{'cursor'};
-	my $objEditor = $self->{'obj'}->{'editor'};
+	my $objCursor = $self->{'obj'}->{'display'}->{'obj'}->{'cursor'};
+	my $objEditor = $self->{'obj'}->{'display'}->{'obj'}->{'editor'};
 
 	$objCursor->set_curs_pos 
 	  ({'curs_pos' => 0});
@@ -780,8 +807,8 @@ sub curs_move_end {
 
 	my $self = shift;
 
-	my $objCursor = $self->{'obj'}->{'cursor'};
-	my $objEditor = $self->{'obj'}->{'editor'};
+	my $objCursor = $self->{'obj'}->{'display'}->{'obj'}->{'cursor'};
+	my $objEditor = $self->{'obj'}->{'display'}->{'obj'}->{'editor'};
 	my $objFile    = $self->{'obj'}->{'file'};
 
 	$objCursor->set_curs_ctxt 
@@ -798,7 +825,7 @@ sub curs_ctxt_incr {
 
 	my $self = shift;
 
-	my $objCursor = $self->{'obj'}->{'cursor'};
+	my $objCursor = $self->{'obj'}->{'display'}->{'obj'}->{'cursor'};
 
 	$objCursor->curs_ctxt_incr();
 
@@ -809,7 +836,7 @@ sub curs_ctxt_decr {
 
 	my $self = shift;
 
-	my $objCursor = $self->{'obj'}->{'cursor'};
+	my $objCursor = $self->{'obj'}->{'display'}->{'obj'}->{'cursor'};
 
 	$objCursor->curs_ctxt_decr();
 
@@ -820,8 +847,8 @@ sub curs_mv_back {
 
 	my $self = shift;
 
-	my $objCursor = $self->{'obj'}->{'cursor'};
-	my $objEditor = $self->{'obj'}->{'editor'};
+	my $objCursor = $self->{'obj'}->{'display'}->{'obj'}->{'cursor'};
+	my $objEditor = $self->{'obj'}->{'display'}->{'obj'}->{'editor'};
 
 	$objCursor->curs_mv_back();
 	$objEditor->dsp_pos_adjust 
@@ -834,8 +861,8 @@ sub curs_mv_fwd {
 
 	my $self = shift;
 
-	my $objCursor = $self->{'obj'}->{'cursor'};
-	my $objEditor = $self->{'obj'}->{'editor'};
+	my $objCursor = $self->{'obj'}->{'display'}->{'obj'}->{'cursor'};
+	my $objEditor = $self->{'obj'}->{'display'}->{'obj'}->{'editor'};
 	my $objFile   = $self->{'obj'}->{'file'};
 
 	$objCursor->curs_mv_fwd ({'file_len' => $objFile->file_len()});
@@ -849,8 +876,8 @@ sub curs_mv_up {
 
 	my $self = shift;
 
-	my $objCursor = $self->{'obj'}->{'cursor'};
-	my $objEditor = $self->{'obj'}->{'editor'};
+	my $objCursor = $self->{'obj'}->{'display'}->{'obj'}->{'cursor'};
+	my $objEditor = $self->{'obj'}->{'display'}->{'obj'}->{'editor'};
 
 	$objCursor->curs_mv_up();
 	$objEditor->dsp_pos_adjust 
@@ -863,8 +890,8 @@ sub curs_mv_down {
 
 	my $self = shift;
 
-	my $objCursor = $self->{'obj'}->{'cursor'};
-	my $objEditor = $self->{'obj'}->{'editor'};
+	my $objCursor = $self->{'obj'}->{'display'}->{'obj'}->{'cursor'};
+	my $objEditor = $self->{'obj'}->{'display'}->{'obj'}->{'editor'};
 	my $objFile   = $self->{'obj'}->{'file'};
 
 	$objCursor->curs_mv_down ({'file_len' => $objFile->file_len()});
@@ -878,7 +905,7 @@ sub curs_mv_left {
 
 	my $self = shift;
 
-	my $objCursor = $self->{'obj'}->{'cursor'};
+	my $objCursor = $self->{'obj'}->{'display'}->{'obj'}->{'cursor'};
 
 	$objCursor->curs_mv_left();
 
@@ -889,7 +916,7 @@ sub curs_mv_right {
 
 	my $self = shift;
 
-	my $objCursor = $self->{'obj'}->{'cursor'};
+	my $objCursor = $self->{'obj'}->{'display'}->{'obj'}->{'cursor'};
 	my $objFile   = $self->{'obj'}->{'file'};
 
 	$objCursor->curs_mv_right ({'file_len' => $objFile->file_len()});
@@ -927,8 +954,8 @@ sub vstretch {
 
 	my $self = shift;
 
-	my $objCursor  = $self->{'obj'}->{'cursor'};
-	my $objEditor  = $self->{'obj'}->{'editor'};
+	my $objCursor  = $self->{'obj'}->{'display'}->{'obj'}->{'cursor'};
+	my $objEditor  = $self->{'obj'}->{'display'}->{'obj'}->{'editor'};
 	my $objDisplay = $self->{'obj'}->{'display'};
 	my $objFile    = $self->{'obj'}->{'file'};
 
@@ -946,8 +973,8 @@ sub vcompress {
 
 	my $self = shift;
 
-	my $objCursor  = $self->{'obj'}->{'cursor'};
-	my $objEditor  = $self->{'obj'}->{'editor'};
+	my $objCursor  = $self->{'obj'}->{'display'}->{'obj'}->{'cursor'};
+	my $objEditor  = $self->{'obj'}->{'display'}->{'obj'}->{'editor'};
 	my $objDisplay = $self->{'obj'}->{'display'};
 	my $objFile    = $self->{'obj'}->{'file'};
 
@@ -965,8 +992,8 @@ sub scroll_up_1x_line {
 
 	my $self = shift;
 
-	my $objCursor  = $self->{'obj'}->{'cursor'};
-	my $objEditor  = $self->{'obj'}->{'editor'};
+	my $objCursor  = $self->{'obj'}->{'display'}->{'obj'}->{'cursor'};
+	my $objEditor  = $self->{'obj'}->{'display'}->{'obj'}->{'editor'};
 
 	$objEditor->scroll_up_1x_line(); 
 	$objCursor->curs_adjust 
@@ -979,8 +1006,8 @@ sub scroll_up_1x_page {
 
 	my $self = shift;
 
-	my $objCursor  = $self->{'obj'}->{'cursor'};
-	my $objEditor  = $self->{'obj'}->{'editor'};
+	my $objCursor  = $self->{'obj'}->{'display'}->{'obj'}->{'cursor'};
+	my $objEditor  = $self->{'obj'}->{'display'}->{'obj'}->{'editor'};
 
 	$objEditor->scroll_up_1x_page();
 	$objCursor->curs_adjust 
@@ -993,8 +1020,8 @@ sub scroll_down_1x_line {
 
 	my $self = shift;
 
-	my $objCursor  = $self->{'obj'}->{'cursor'};
-	my $objEditor  = $self->{'obj'}->{'editor'};
+	my $objCursor  = $self->{'obj'}->{'display'}->{'obj'}->{'cursor'};
+	my $objEditor  = $self->{'obj'}->{'display'}->{'obj'}->{'editor'};
 	my $objFile    = $self->{'obj'}->{'file'};
 
 	$objEditor->scroll_down_1x_line
@@ -1009,8 +1036,8 @@ sub scroll_down_1x_page {
 
 	my $self = shift;
 
-	my $objCursor  = $self->{'obj'}->{'cursor'};
-	my $objEditor  = $self->{'obj'}->{'editor'};
+	my $objCursor  = $self->{'obj'}->{'display'}->{'obj'}->{'cursor'};
+	my $objEditor  = $self->{'obj'}->{'display'}->{'obj'}->{'editor'};
 	my $objFile    = $self->{'obj'}->{'file'};
 
 	$objEditor->scroll_down_1x_page
@@ -1025,7 +1052,7 @@ sub insert_mode {
 
 	my $self = shift;
 
-	my $objEditor = $self->{'obj'}->{'editor'};
+	my $objEditor = $self->{'obj'}->{'display'}->{'obj'}->{'editor'};
 
 	$objEditor->insert_mode(); 
 
@@ -1036,7 +1063,7 @@ sub search_mode {
 
 	my $self = shift;
 
-	my $objEditor = $self->{'obj'}->{'editor'};
+	my $objEditor = $self->{'obj'}->{'display'}->{'obj'}->{'editor'};
 
 	$objEditor->search_mode(); 
 
@@ -1132,10 +1159,10 @@ sub insert_char {
 	my $self = shift;
 
 	my $objConsole   = $self->{'obj'}->{'console'};
-	my $objCursor    = $self->{'obj'}->{'cursor'};
-	my $objDebug     = $self->{'obj'}->{'debug'};
+	my $objCursor    = $self->{'obj'}->{'display'}->{'obj'}->{'cursor'};
+	my $objDebug     = $self->{'obj'}->{'display'}->{'obj'}->{'debug'};
 	my $objDisplay   = $self->{'obj'}->{'display'};
-	my $objEditor    = $self->{'obj'}->{'editor'};
+	my $objEditor    = $self->{'obj'}->{'display'}->{'obj'}->{'editor'};
 	my $objEventLoop = $self->{'obj'}->{'eventloop'};
 	my $objFile      = $self->{'obj'}->{'file'};
 
@@ -1216,9 +1243,9 @@ sub insert_enter {
 	my $self = shift;
 
 	my $objConsole   = $self->{'obj'}->{'console'};
-	my $objCursor    = $self->{'obj'}->{'cursor'};
+	my $objCursor    = $self->{'obj'}->{'display'}->{'obj'}->{'cursor'};
 	my $objDisplay   = $self->{'obj'}->{'display'};
-	my $objEditor    = $self->{'obj'}->{'editor'};
+	my $objEditor    = $self->{'obj'}->{'display'}->{'obj'}->{'editor'};
 	my $objEventLoop = $self->{'obj'}->{'eventloop'};
 
 	# Switch editor context to EDT_CTXT_DEFAULT.
@@ -1244,8 +1271,8 @@ sub insert_escape {
 	my $self = shift;
 
 	my $objConsole   = $self->{'obj'}->{'console'};
-	my $objCursor    = $self->{'obj'}->{'cursor'};
-	my $objEditor    = $self->{'obj'}->{'editor'};
+	my $objCursor    = $self->{'obj'}->{'display'}->{'obj'}->{'cursor'};
+	my $objEditor    = $self->{'obj'}->{'display'}->{'obj'}->{'editor'};
 	my $objEventLoop = $self->{'obj'}->{'eventloop'};
 
 	# Switch editor context to EDT_CTXT_DEFAULT.
@@ -1271,7 +1298,7 @@ sub insert_l_arrow {
 	my $self = shift;
 
 	my $objConsole   = $self->{'obj'}->{'console'};
-	my $objCursor    = $self->{'obj'}->{'cursor'};
+	my $objCursor    = $self->{'obj'}->{'display'}->{'obj'}->{'cursor'};
 	my $objEventLoop = $self->{'obj'}->{'eventloop'};
 
 	# ...
@@ -1284,7 +1311,7 @@ sub insert_r_arrow {
 	my $self = shift;
 
 	my $objConsole   = $self->{'obj'}->{'console'};
-	my $objCursor    = $self->{'obj'}->{'cursor'};
+	my $objCursor    = $self->{'obj'}->{'display'}->{'obj'}->{'cursor'};
 	my $objEventLoop = $self->{'obj'}->{'eventloop'};
 
 	# ...
@@ -1309,7 +1336,7 @@ sub search_backspace {
 	my $self = shift;
 
 	my $objConsole   = $self->{'obj'}->{'console'};
-	my $objCursor    = $self->{'obj'}->{'cursor'};
+	my $objCursor    = $self->{'obj'}->{'display'}->{'obj'}->{'cursor'};
 	my $objEventLoop = $self->{'obj'}->{'eventloop'};
 
 	if (exists  $self->{'search_str'} && 
@@ -1345,7 +1372,7 @@ sub search_char {
 	my $self = shift;
 
 	my $objConsole   = $self->{'obj'}->{'console'};
-	my $objCursor    = $self->{'obj'}->{'cursor'};
+	my $objCursor    = $self->{'obj'}->{'display'}->{'obj'}->{'cursor'};
 	my $objEventLoop = $self->{'obj'}->{'eventloop'};
 
 	my $char = chr ($objEventLoop->{'evt'}->[5]);
@@ -1381,10 +1408,10 @@ sub search_enter {
 	my $self = shift;
 
 	my $objConsole   = $self->{'obj'}->{'console'};
-	my $objCursor    = $self->{'obj'}->{'cursor'};
-	my $objDebug     = $self->{'obj'}->{'debug'};
+	my $objCursor    = $self->{'obj'}->{'display'}->{'obj'}->{'cursor'};
+	my $objDebug     = $self->{'obj'}->{'display'}->{'obj'}->{'debug'};
 	my $objDisplay   = $self->{'obj'}->{'display'};
-	my $objEditor    = $self->{'obj'}->{'editor'};
+	my $objEditor    = $self->{'obj'}->{'display'}->{'obj'}->{'editor'};
 	my $objEventLoop = $self->{'obj'}->{'eventloop'};
 	my $objFile      = $self->{'obj'}->{'file'};
 
@@ -1499,9 +1526,9 @@ sub search_escape {
 	my $self = shift;
 
 	my $objConsole   = $self->{'obj'}->{'console'};
-	my $objCursor    = $self->{'obj'}->{'cursor'};
+	my $objCursor    = $self->{'obj'}->{'display'}->{'obj'}->{'cursor'};
 	my $objDisplay   = $self->{'obj'}->{'display'};
-	my $objEditor    = $self->{'obj'}->{'editor'};
+	my $objEditor    = $self->{'obj'}->{'display'}->{'obj'}->{'editor'};
 	my $objEventLoop = $self->{'obj'}->{'eventloop'};
 
 	# Switch editor context to EDT_CTXT_DEFAULT.
@@ -1654,7 +1681,7 @@ the console).
 
 Usage:
 
-    use ZHex::Common qw(new obj_init $VERS);
+    use ZHex::Common qw(new init_obj $VERS);
     my $objEventHandler = $self->{'obj'}->{'eventhandler'};
     $objEventHandler->evt_read();
 
@@ -1672,8 +1699,8 @@ Method new()...
 Method init()...
 = cut
 
-=head2 obj_init
-Method obj_init()...
+=head2 init_obj
+Method init_obj()...
 = cut
 
 =head2 debug_off

@@ -8,12 +8,6 @@ use warnings FATAL => 'all';
 
 use ZHex::Common 
   qw(ZHEX_VERSION 
-     CURS_CTXT_LINE
-     CURS_CTXT_WORD
-     CURS_CTXT_BYTE
-     CURS_CTXT_INSR
-     CURS_CTXT
-     CURS_POS
      DSP_WIDTH 
      DSP_HEIGHT 
      DSP_XPAD 
@@ -35,12 +29,8 @@ use ZHex::Common
      SZ_READ 
      W32CONS_TITLE);
 
-use ZHex::CharMap;
 use ZHex::Console;
-use ZHex::Cursor;
-use ZHex::Debug;
 use ZHex::Display;
-use ZHex::Editor;
 use ZHex::Event;
 use ZHex::EventHandler;
 use ZHex::EventLoop;
@@ -206,12 +196,9 @@ sub init_objects_main {
 	# Store reference to obj hash in each object.
 
 	$self->{'obj'} = 
-	  { 'charmap'      => ZHex::CharMap->new(), 
-	    'console'      => ZHex::Console->new(), 
-	    'cursor'       => ZHex::Cursor->new(), 
+	  { 'console'      => ZHex::Console->new(), 
 	    'debug'        => ZHex::Debug->new(), 
 	    'display'      => ZHex::Display->new(), 
-	    'editor'       => ZHex::Editor->new(), 
 	    'event'        => ZHex::Event->new(), 
 	    'eventhandler' => ZHex::EventHandler->new(), 
 	    'eventloop'    => ZHex::EventLoop->new(), 
@@ -220,13 +207,24 @@ sub init_objects_main {
 
 	foreach my $module (sort keys %{ $self->{'obj'} }) {
 
-		my $rv = $self->{'obj'}->{ $module }->obj_init 
+		my $rv = $self->{'obj'}->{ $module }->init_obj 
 		           ({ 'obj' => $self->{'obj'} });
 
 		if (! defined $rv || 
 		             ($rv eq '')) { 
 
-			die "Call to obj_init() within module '" . $module . "' returned w/ failure";
+			die "Call to init_obj() within module '" . $module . "' returned w/ failure";
+		}
+	}
+
+	foreach my $module (sort keys %{ $self->{'obj'} }) {
+
+		my $rv = $self->{'obj'}->{ $module }->init_child_obj();
+
+		if (! defined $rv || 
+		             ($rv eq '')) { 
+
+			die "Call to init_child_obj() within module '" . $module . "' returned w/ failure";
 		}
 	}
 
@@ -292,24 +290,6 @@ sub init_display_obj {
 	return (1);
 }
 
-sub init_editor_obj {
-
-	my $self = shift;
-
-	# ___________________________
-	# Set variables in Editor.pm.
-
-	$self->{'obj'}->{'editor'}->set_horiz_rule_char ({ 'char' => EDT_HORIZ_RULE_CHAR });
-	$self->{'obj'}->{'editor'}->set_oob_char  ({ 'char'      => EDT_OOB_CHAR });
-	$self->{'obj'}->{'editor'}->set_edt_ctxt  ({ 'edt_ctxt'  => EDT_CTXT_DEFAULT });
-	$self->{'obj'}->{'editor'}->set_edt_pos   ({ 'edt_pos'   => EDT_POS });
-	$self->{'obj'}->{'editor'}->set_sz_word   ({ 'sz_word'   => SZ_WORD });
-	$self->{'obj'}->{'editor'}->set_sz_line   ({ 'sz_line'   => SZ_LINE });
-	$self->{'obj'}->{'editor'}->set_sz_column ({ 'sz_column' => SZ_COLUMN });
-
-	return (1);
-}
-
 sub init_display_elements {
 
 	my $self = shift;
@@ -331,22 +311,6 @@ sub init_display_elements {
 
 	$self->{'obj'}->{'display'}->c_elements_set 
 	  ({ 'c_elements' => $self->{'obj'}->{'display'}->c_elements_init() });
-
-	return (1);
-}
-
-sub init_cursor_obj {
-
-	my $self = shift;
-
-	# ___________________________
-	# Set variables in Cursor.pm.
-
-	$self->{'obj'}->{'cursor'}->set_curs_ctxt ({ 'curs_ctxt' => CURS_CTXT_LINE });
-	$self->{'obj'}->{'cursor'}->set_curs_pos  ({ 'curs_pos'  => CURS_POS });
-	$self->{'obj'}->{'cursor'}->set_sz_word   ({ 'sz_word'   => SZ_WORD });
-	$self->{'obj'}->{'cursor'}->set_sz_line   ({ 'sz_line'   => SZ_LINE });
-	$self->{'obj'}->{'cursor'}->set_sz_column ({ 'sz_column' => SZ_COLUMN });
 
 	return (1);
 }
@@ -439,7 +403,7 @@ sub write_editor_to_display {
 	     'dsp_xpad'   => $self->{'obj'}->{'display'}->{'dsp_xpad'}, 
 	     'dsp_ypad'   => $self->{'obj'}->{'display'}->{'dsp_ypad'} });
 
-	$self->{'obj'}->{'cursor'}->curs_display 
+	$self->{'obj'}->{'display'}->{'obj'}->{'cursor'}->curs_display 
 	  ({ 'dsp_xpad' => $self->{'obj'}->{'display'}->{'dsp_xpad'}, 
 	     'dsp_ypad' => $self->{'obj'}->{'display'}->{'dsp_ypad'}, 
 	     'force'    => 0});
@@ -450,17 +414,6 @@ sub write_editor_to_display {
 sub run {
 
 	my $self = shift;
-
-	INSTALL_ERROR_MESSAGE_HANDLER: {
-
-		$self->{'obj'}->{'debug'}->errmsg_handler();
-	}
-
-	LOAD_CHARACTER_MAP_DATA_STRUCTURE: {
-
-		$self->{'obj'}->{'charmap'}->chr_map_set 
-		  ({'chr_map' => $self->{'obj'}->{'charmap'}->chr_map()});
-	}
 
 	REGISTER_EVENT_HANDLERS: {
 

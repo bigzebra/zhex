@@ -8,12 +8,15 @@ use warnings FATAL => 'all';
 
 use ZHex::Common 
   qw(new 
-     obj_init 
+     init_obj 
+     init_child_obj 
      check_args 
      ZHEX_VERSION
      EDT_CTXT_DEFAULT 
      EDT_CTXT_INSERT 
      EDT_CTXT_SEARCH);
+
+# NOTE: Not using errmsg() within this module.
 
 BEGIN { require Exporter;
 	our $VERSION   = ZHEX_VERSION;
@@ -828,9 +831,8 @@ sub insert_mode {
 	my $self = shift;
 
 	my $objConsole   = $self->{'obj'}->{'console'};     # Used.
-	my $objCursor    = $self->{'obj'}->{'cursor'};      # Used.
+	my $objCursor    = $self->{'obj'}->{'display'}->{'obj'}->{'cursor'};      # Used.
 	my $objDisplay   = $self->{'obj'}->{'display'};     # Used.
-	my $objEditor    = $self->{'obj'}->{'editor'};      # Used.
 	my $objEventLoop = $self->{'obj'}->{'eventloop'};   # Used.
 
 	# Switch context to EDT_CTXT_INSERT.
@@ -880,7 +882,7 @@ sub search_mode {
 
 	my $self = shift;
 
-	my $objCursor    = $self->{'obj'}->{'cursor'};
+	my $objCursor    = $self->{'obj'}->{'display'}->{'obj'}->{'cursor'};
 	my $objConsole   = $self->{'obj'}->{'console'};
 	my $objDisplay   = $self->{'obj'}->{'display'};
 	my $objEventLoop = $self->{'obj'}->{'eventloop'};
@@ -954,7 +956,7 @@ within the display (with color).
 
 Usage:
 
-    use ZHex::Common qw(new obj_init $VERS);
+    use ZHex::Common qw(new init_obj $VERS);
     my $objEditor = $self->{'obj'}->{'editor'};
     $objEditor->scroll_up_1x_line();
 

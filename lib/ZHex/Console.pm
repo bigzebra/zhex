@@ -8,12 +8,15 @@ use warnings FATAL => 'all';
 
 use ZHex::Common 
   qw(new 
-     obj_init 
+     init_obj 
+     init_child_obj  
      check_args 
      ZHEX_VERSION
      EDT_CTXT_DEFAULT 
      EDT_CTXT_INSERT 
      EDT_CTXT_SEARCH);
+
+# NOTE: Not using errmsg() within this module.
 
 BEGIN { require Exporter;
 	our $VERSION   = ZHEX_VERSION;
@@ -920,7 +923,7 @@ author.
 
 Usage:
 
-    use ZHex::Common qw(new obj_init $VERS);
+    use ZHex::Common qw(new init_obj $VERS);
     my $objConsole = $self->{'obj'}->{'console'};
     $objConsole->w32cons_cursor_invisible();
 

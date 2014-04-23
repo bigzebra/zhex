@@ -9,8 +9,10 @@ use warnings FATAL => 'all';
 use ZHex::Common 
   qw(new 
      init 
-     obj_init 
+     init_obj 
+     init_child_obj 
      check_args 
+     errmsg 
      ZHEX_VERSION);
 
 use constant DBG_LEVEL => 1;
@@ -269,8 +271,8 @@ sub dbg_curs {
 
 	my $self = shift;
 
-	my $objCursor = $self->{'obj'}->{'cursor'};
-	my $objEditor = $self->{'obj'}->{'editor'};
+	my $objCursor = $self->{'obj'}->{'display'}->{'obj'}->{'cursor'};
+	my $objEditor = $self->{'obj'}->{'display'}->{'obj'}->{'editor'};
 
 	# Display cursor debugging information: 
 	#   Character block area (23 chars wide x 5 chars high).
@@ -313,7 +315,7 @@ sub dbg_display {
 	my $self = shift;
 
 	my $objDisplay = $self->{'obj'}->{'display'};
-	my $objEditor  = $self->{'obj'}->{'editor'};
+	my $objEditor  = $self->{'obj'}->{'display'}->{'obj'}->{'editor'};
 	my $objFile    = $self->{'obj'}->{'file'};
 
 	# Display display event debug info: 
@@ -356,7 +358,7 @@ sub dbg_count {
 
 	my $self = shift;
 
-	my $objEditor    = $self->{'obj'}->{'editor'};
+	my $objEditor    = $self->{'obj'}->{'display'}->{'obj'}->{'editor'};
 	my $objEventLoop = $self->{'obj'}->{'eventloop'};
 
 	$objEventLoop->{'ct_evt_total'}++;
@@ -464,34 +466,6 @@ sub errmsg_handler {
 	return (1);
 }
 
-sub errmsg {
-
-	my $self = shift;
-	my $msg  = shift;
-
-	my $objDisplay = $self->{'obj'}->{'display'};
-
-	if (! defined $msg || 
-	             ($msg eq '')) {
-
-		return (undef);
-	}
-
-	# Generate format string for sprintf() call.
-
-	my $fmt_str = 
-	  "%-" . 
-	  $objDisplay->{'d_elements'}->{'errmsg_queue'}->{'e_width'} . 
-	  "." . 
-	  $objDisplay->{'d_elements'}->{'errmsg_queue'}->{'e_width'} . 
-	  "s";
-
-	push @{ $self->{'errmsg_queue'} }, 
-	     sprintf ($fmt_str, $msg);
-
-	return (1);
-}
-
 sub errmsg_queue {
 
 	my $self = shift;
@@ -547,7 +521,7 @@ Used for development/debugging purposes.
 
 Usage:
 
-    use ZHex::Common qw(new obj_init $VERS);
+    use ZHex::Common qw(new init_obj $VERS);
     my $objDebug = $self->{'obj'}->{'debug'};
     $objDebug->errmsg ("This error message to be displayed inside editor.");
 
@@ -587,10 +561,6 @@ Method dbg_mouse_evt()...
 
 =head2 dbg_unmatched_evt
 Method dbg_unmatched_evt()...
-= cut
-
-=head2 errmsg
-Method errmsg()...
 = cut
 
 =head2 errmsg_handler

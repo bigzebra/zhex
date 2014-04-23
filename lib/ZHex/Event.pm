@@ -8,8 +8,10 @@ use warnings FATAL => 'all';
 
 use ZHex::Common 
   qw(new 
-     obj_init 
+     init_obj 
+     init_child_obj 
      check_args 
+     errmsg 
      ZHEX_VERSION
      EDT_CTXT_DEFAULT 
      EDT_CTXT_INSERT 
@@ -93,7 +95,7 @@ sub register_callback {
 		     'evt'      => $evt_sig });
 	}
 
-	# $self->{'obj'}->{'debug'}->errmsg ("Registered callback for '" . $arg->{'evt_nm'} . "' (context='" . $arg->{'edt_ctxt'} . "'.\n");
+	# $self->errmsg ("Registered callback for '" . $arg->{'evt_nm'} . "' (context='" . $arg->{'edt_ctxt'} . "'.\n");
 	# warn ("Registered callback for '" . $arg->{'evt_nm'} . "' (context='" . $arg->{'edt_ctxt'} . "').");
 
 	return (1);
@@ -137,18 +139,6 @@ sub register_evt_sig {
 
 	push @{ $self->{'evt_sig'}->{ $arg->{'edt_ctxt'} }->{ $arg->{'evt_nm'} } }, 
 	     $arg->{'evt'};
-
-	# $self->{'obj'}->{'debug'}->errmsg ("Registered event signature for '" . $arg->{'evt_nm'} . "'.\n");
-	# warn ("Registered event signature for '" . $arg->{'evt_nm'} . "' (context='" . $arg->{'edt_ctxt'} . "'.");
-
-	# warn 
-	#   ("evt0='" . $arg->{'evt'}->[0] . "', " . 
-	#    "evt1='" . $arg->{'evt'}->[1] . "', " . 
-	#    "evt2='" . $arg->{'evt'}->[2] . "', " . 
-	#    "evt3='" . $arg->{'evt'}->[3] . "', " . 
-	#    "evt4='" . $arg->{'evt'}->[4] . "', " . 
-	#    "evt5='" . $arg->{'evt'}->[5] . "', " . 
-	#    "evt6='" . $arg->{'evt'}->[6] . "'.");
 
 	return (1);
 }
@@ -222,9 +212,6 @@ sub evt_map {
 	     'test' => 
 		[{'edt_ctxt' => 'string'}, 
 	         {'evt'      => 'arrayref'}] });
-
-	my $objCharMap = $self->{'obj'}->{'charmap'};
-	my $objDebug   = $self->{'obj'}->{'debug'};
 
 	# EVT Array Idx	Element Name		Values
 	# _____________	____________		______
@@ -304,33 +291,9 @@ sub evt_map {
 			     ( ($func_evt->[6] eq '') || (! ($func_evt->[6] eq '') && ($func_evt->[6] eq $evt->[6]) ) ) ) {
 
 				$func = $func_nm;
-
-				# $self->{'obj'}->{'debug'}->errmsg ("FUNCTION MATCHED '" . $func_nm . "'.");
 			}
-			# else {
-			# 
-			# 	for (my $idx = 0; $idx < 6; $idx++) {
-			# 
-			# 		if (! exists  $func_evt->[$idx] || 
-			# 		    ! defined $func_evt->[$idx]) {
-			# 
-			# 			$func_evt->[$idx] = "<undef>";
-			# 		}
-			# 
-			# 		if (! exists  $evt->[$idx] || 
-			# 		    ! defined $evt->[$idx]) {
-			# 
-			# 			$evt->[$idx] = "<undef>";
-			# 		}
-			# 
-			# 		$objDebug->errmsg 
-			# 		  (sprintf ("Event array field " . $idx . ": %10.10s %10.10s", $func_evt->[$idx], $evt->[$idx]));
-			# 	}
-			# }
 		}
 	}
-
-	# $objDebug->errmsg ("at bottom, edt_ctxt=" . $arg->{'edt_ctxt'} . ".");
 
 	if (! defined $func || 
 	             ($func eq '')) 
@@ -350,10 +313,6 @@ sub evt_dispatch {
 		[{'evt_nm'   => 'string'}, 
 	         {'edt_ctxt' => 'string'}, 
 	         {'evt'      => 'arrayref'}] });
-
-	my $objCharMap = $self->{'obj'}->{'charmap'};
-	my $objDebug   = $self->{'obj'}->{'debug'};
-	my $objEditor  = $self->{'obj'}->{'editor'};
 
 	if (exists  $self->{'cb'} && 
 	    defined $self->{'cb'} && 
@@ -405,7 +364,7 @@ based upon which context the hex editor is currently operating within.
 
 Usage:
 
-    use ZHex::Common qw(new obj_init $VERS);
+    use ZHex::Common qw(new init_obj $VERS);
     my $objEvent = $self->{'obj'}->{'event'};
     $objEvent->register_callback (@evt_array);
 
@@ -423,8 +382,8 @@ Method new()...
 Method init()...
 = cut
 
-=head2 obj_init
-Method obj_init()...
+=head2 init_obj
+Method init_obj()...
 = cut
 
 =head2 register_callback

@@ -8,7 +8,8 @@ use warnings FATAL => 'all';
 
 use ZHex::Common 
   qw(new 
-     obj_init 
+     init_obj 
+     init_child_obj 
      check_args 
      ZHEX_VERSION);
 
@@ -59,32 +60,6 @@ sub chr_map_set {
 	$self->{'chr_map'} = $arg->{'chr_map'};
 
 	return (1);
-}
-
-sub chr_map_hex_val {
-
-	my $self = shift;
-	my $arg  = shift;
-
-	$self->check_args 
-	  ({ 'arg'  => $arg,
-	     'func' => 'chr_map_hex_val',
-	     'test' => 
-		[{'lname' => 'string'}] });
-
-	if (exists  $self->{'chr_map'} && 
-	    defined $self->{'chr_map'} && 
-	    exists  $self->{'chr_map'}->{ $arg->{'lname'} } && 
-	    defined $self->{'chr_map'}->{ $arg->{'lname'} } && 
-	    exists  $self->{'chr_map'}->{ $arg->{'lname'} }->{'hex'} && 
-	    defined $self->{'chr_map'}->{ $arg->{'lname'} }->{'hex'}) {
-
-		return ($self->{'chr_map'}->{ $arg->{'lname'} }->{'hex'});
-	}
-	else {
-
-		return (undef);
-	}
 }
 
 sub chr_map_ord_val {
@@ -537,7 +512,7 @@ defined by the chr_map() function:
 
 Usage:
 
-    use ZHex::Common qw(new obj_init $VERS);
+    use ZHex::Common qw(new init_obj $VERS);
     my $objCharMap = $self->{'obj'}->{'charmap'};
     my $chr_map = $objCharMap->chr_map();
     $objCharMap->chr_map ({ 'chr_map' => $chr_map });
@@ -554,10 +529,6 @@ Method init()...
 
 =head2 chr_map_set
 Method chr_map_set()...
-= cut
-
-=head2 chr_map_hex_val
-Method chr_map_hex_val()...
 = cut
 
 =head2 chr_map_ord_val

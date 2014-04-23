@@ -9,13 +9,16 @@ use warnings FATAL => 'all';
 use ZHex::Common 
   qw(new 
      init 
-     obj_init 
+     init_obj 
+     init_child_obj 
      check_args 
      ZHEX_VERSION
      EDT_CTXT_DEFAULT 
      EDT_CTXT_INSERT 
      EDT_CTXT_SEARCH 
      SZ_READ);
+
+# NOTE: Not using errmsg() within this module.
 
 BEGIN { require Exporter;
 	our $VERSION   = ZHEX_VERSION;
@@ -45,9 +48,9 @@ sub lmouse {
 		[{'xpos' => 'digits'}, 
 	         {'ypos' => 'digits'}] });
 
-	my $objCursor    = $self->{'obj'}->{'cursor'};
+	my $objCursor    = $self->{'obj'}->{'display'}->{'obj'}->{'cursor'};
 	my $objDisplay   = $self->{'obj'}->{'display'};
-	my $objEditor    = $self->{'obj'}->{'editor'};
+	my $objEditor    = $self->{'obj'}->{'display'}->{'obj'}->{'editor'};
 	my $objEventLoop = $self->{'obj'}->{'eventloop'};
 
 	my $xpos = $objEventLoop->{'evt'}->[1];
@@ -249,7 +252,7 @@ The ZHex::Mouse module defines functions which provide...
 
 Usage:
 
-    use ZHex::Common qw(new init obj_init $VERS);
+    use ZHex::Common qw(new init init_obj $VERS);
     my $objMouse = $self->{'obj'}->{'mouse'};
     $objMouse->lmouse();
 
@@ -267,8 +270,8 @@ Method new()...
 Method init()...
 = cut
 
-=head2 obj_init
-Method obj_init()...
+=head2 init_obj
+Method init_obj()...
 = cut
 
 =head2 lmouse
